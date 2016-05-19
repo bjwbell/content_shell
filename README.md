@@ -18,6 +18,13 @@ IdentityFile ~/.ssh/id_rsa
 	url = ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome
 	fetch = +refs/heads/*:refs/remotes/origin/*
 ```
+
+# amazon ec2 container service (docker)
+
+## docker registry url
+ `https://118807234198.dkr.ecr.us-east-1.amazonaws.com/ironframe`
+
+
 # jenkins
 
 ## ubuntu installation
