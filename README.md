@@ -1,7 +1,7 @@
 # content_shell
 Copy content_shell from chromium build
 
-# syncing with upstream
+# upstream syncing
 The [crontab](crontab) file contains a cron job for daily merging from upstream into the ironframe branch.
 
 # amazon aws
