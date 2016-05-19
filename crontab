@@ -20,4 +20,4 @@
 # For more information see the manual pages of crontab(5) and cron(8)
 # 
 # m h  dom mon dow   command
-  0 *  *   *   *     cd /home/bjwbell/src && /usr/bin/git checkout ironframe && /usr/bin/git pull --no-edit upstream master
+  0 5  *   *   *     cd /home/bjwbell/src && /usr/bin/git checkout ironframe && /usr/bin/git pull --no-edit upstream master
