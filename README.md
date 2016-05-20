@@ -42,6 +42,9 @@ IdentityFile ~/.ssh/id_rsa
 
 # jenkins
 
+## centos installation
+execute [jenkins-centos.sh](jenkins-centos.sh)
+
 ## ubuntu installation
 1. `wget -q -O - http://pkg.jenkins-ci.org/debian-stable/jenkins-ci.org.key | sudo apt-key add -`
 2. In `/etc/apt/sources.list` add `deb http://pkg.jenkins-ci.org/debian-stable binary/`
