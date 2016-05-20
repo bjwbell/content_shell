@@ -19,7 +19,7 @@ sudo -H pip install awscli
 File `~/.ssh/config`:
 ```
 Host git-codecommit.us-east-1.amazonaws.com
-User PUBLIC_CODECOMMIT_RSA_KEY_ID e.g. DQLBE6UBHSLICOQENFZQ
+User CODECOMMIT_RSA_KEY_ID e.g. DQLBE6UBHSLICOQENFZQ
 IdentityFile ~/.ssh/id_rsa
 ```
 ### git config
