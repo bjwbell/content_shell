@@ -16,6 +16,7 @@ sudo -H pip install awscli
 ## amazon aws codedeploy
 
 ### ssh config
+File `~/.ssh/config`:
 ```
 Host git-codecommit.us-east-1.amazonaws.com
 User AWS_USER e.g. DQLBE6UBHSLICOQENFZQ
