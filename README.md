@@ -62,3 +62,12 @@ node {
    echo 'Hello World '2
 }
 ```
+
+
+## Add depot_tools to jenkins PATH
+
+1. Add EnjInject plugin to jenkins
+2. Clone depot_tools to /var/lib/jenkins - `git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git`.
+3. Modify PATH for jenkins job - `PATH=/var/lib/jenkins/depot_tools:$PATH`.
+   Section `Prepare an environment for the run` and subsection - `Properties Content`.
+    
