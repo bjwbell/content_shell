@@ -29,18 +29,6 @@ IdentityFile ~/.ssh/id_rsa
 	fetch = +refs/heads/*:refs/remotes/origin/*
 ```
 
-## amazon ec2 container service (docker)
-
-### docker registry url
- `https://118807234198.dkr.ecr.us-east-1.amazonaws.com/ironframe`
-
-### docker instructions
-1. Retrieve the docker login command that you can use to authenticate your Docker client to your registry: `aws ecr get-login --region us-east-1`
-2. Run the docker login command that was returned in the previous step.
-3. Build your Docker image using the following command. For information on building a Docker file from scratch see the instructions here. You can skip this step if your image is already built: `docker build -t test1 .`
-4. After the build completes, tag your image so you can push the image to this repository: `docker tag test1:latest :latest`
-5. Run the following command to push this image to your newly created AWS repository: `docker push :latest`
-
 # jenkins
 
 ## centos installation
