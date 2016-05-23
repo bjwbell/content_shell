@@ -43,3 +43,10 @@ execute [jenkins-centos.sh](jenkins-centos.sh)
 
 1. Execute `sudo service jenkins start`
 2. Goto `http://ipaddr:8080` to begin jenkins install.
+
+
+Add codecommit keys to jenkins user:
+
+1. Execute `sudo su -s /bin/bash jenkins` to login as jenkins user.
+2. Execute `ssh git-codecommit.us-east-1.amazonaws.com` to add host to `~/.ssh/known_hosts`.
+
