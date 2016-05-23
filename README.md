@@ -41,3 +41,5 @@ execute [jenkins-centos.sh](jenkins-centos.sh)
 
 ## configuration
 
+1. Execute `sudo service jenkins start`
+2. Goto `http://ipaddr:8080` to begin jenkins install.
