@@ -53,27 +53,53 @@ Add codecommit keys to jenkins user:
 
 ## Jenkins Pipeline
 *Ironframe*
+
+First run:
 ```
 node {
    stage 'Checkout'
-   sh "fetch --nohooks --no-history chromium" -- only for first run
-   sh "gclient runhooks"
-   sh "gclient sync"
-   // checkout([$class: 'GitSCM', branches: [[name: '*/ironframe']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', noTags: true, reference: '', shallow: true, timeout: 180]], submoduleCfg: [], userRemoteConfigs: [[url: 'ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome']]])
+   sh "fetch --nohooks --no-history chromium"
+   sh "cd src/; gclient runhooks"
+   sh "cd src/; gclient sync"
+   sh "cd src/; gn gen out/Default"
+   sh "cd src/; ninja -C out/Default content_shell"
    sh "cd src/; git remote add codecommit ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome"
-   sh "cd src/; git pull --depth=1 codecommit ironframe"
+   sh "cd src/; git fetch --depth=256 codecommit ironframe"
    sh "cd src/; git checkout ironframe"
    stage 'Build'
-   sh "gn gen out/Default"
-   sh "ninja -C out/Default content_shell"
+   sh "cd src/; ninja -C out/Default content_shell"
+}
+```
+
+Subsequent runs:
+```
+node {
+   stage 'Checkout'
+   sh "cd src/; git fetch --depth=1 codecommit ironframe"
+   sh "cd src/; git checkout ironframe"
+   stage 'Build'
+   sh "cd src/; ninja -C out/Default content_shell"
 }
 ```
 
 *Chromium*
+First run:
 ```
 node {
    stage 'Checkout'
-   //sh "fetch --nohooks --no-history chromium" -- only for first run
+   sh "fetch --nohooks --no-history chromium"
+   sh "gclient sync"
+   sh "gclient runhooks"
+   stage 'Build'
+   sh "cd src/; gn gen out/Default"
+   sh "cd src/; ninja -C out/Default content_shell"
+}
+```
+
+Subsequent runs:
+```
+node {
+   stage 'Checkout'
    sh "gclient sync"
    sh "gclient runhooks"
    stage 'Build'
