@@ -56,7 +56,13 @@ Add codecommit keys to jenkins user:
 ```
 node {
    stage 'Checkout'
-   checkout([$class: 'GitSCM', branches: [[name: '*/ironframe']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', noTags: true, reference: '', shallow: true, timeout: 180]], submoduleCfg: [], userRemoteConfigs: [[url: 'ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome']]])
+   sh "fetch --nohooks --no-history chromium" -- only for first run
+   sh "gclient runhooks"
+   sh "gclient sync"
+   // checkout([$class: 'GitSCM', branches: [[name: '*/ironframe']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', noTags: true, reference: '', shallow: true, timeout: 180]], submoduleCfg: [], userRemoteConfigs: [[url: 'ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome']]])
+   sh "cd src/; git remote add codecommit ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome"
+   sh "cd src/; git pull --depth=1 codecommit ironframe"
+   sh "cd src/; git checkout ironframe"
    stage 'Build'
    sh "gn gen out/Default"
    sh "ninja -C out/Default content_shell"
@@ -67,10 +73,12 @@ node {
 ```
 node {
    stage 'Checkout'
-   sh "fetch --nohooks --no-history chromium"
+   //sh "fetch --nohooks --no-history chromium" -- only for first run
+   sh "gclient sync"
+   sh "gclient runhooks"
    stage 'Build'
-   sh "gn gen out/Default"
-   sh "ninja -C out/Default content_shell"
+   sh "cd src/; gn gen out/Default"
+   sh "cd src/; ninja -C out/Default content_shell"
 }
 ```
 
