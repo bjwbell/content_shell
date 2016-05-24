@@ -59,7 +59,7 @@ node {
    checkout([$class: 'GitSCM', branches: [[name: '*/ironframe']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', noTags: true, reference: '', shallow: true, timeout: 180]], submoduleCfg: [], userRemoteConfigs: [[url: 'ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome']]])
    stage 'Build'
    sh "gn gen out/Default"
-   sh "ninja -C out/Default chrome"
+   sh "ninja -C out/Default content_shell"
 }
 ```
 
