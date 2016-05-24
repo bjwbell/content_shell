@@ -58,12 +58,11 @@ First run:
 ```
 node {
    stage 'Checkout'
-   sh "fetch --nohooks chromium"
+   sh "fetch --nohooks --no-history chromium"
    sh "cd src/; git remote add codecommit ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome"
-   sh "cd src/; git fetch codecommit ironframe"
+   sh "cd src/; git fetch --depth=1 codecommit ironframe"
    sh "cd src/; git checkout ironframe"
    sh "cd src/; gclient runhooks"
-   sh "cd src/; gclient sync"
    sh "cd src/; gn gen out/Default"
    stage 'Build'
    sh "cd src/; ninja -C out/Default content_shell"
@@ -74,11 +73,10 @@ Subsequent runs:
 ```
 node {
    stage 'Checkout'
-   sh "cd src/; git fetch --depth=4096 codecommit ironframe"
+   sh "cd src/; git fetch --depth=1 codecommit ironframe"
    sh "cd src/; git checkout ironframe"
    stage 'Build'
    sh "cd src/; gclient runhooks"
-   sh "cd src/; gclient sync"
    sh "cd src/; gn gen out/Default"
    sh "cd src/; ninja -C out/Default content_shell"
 }
