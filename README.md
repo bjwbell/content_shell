@@ -25,8 +25,8 @@ IdentityFile ~/.ssh/id_rsa
 ### git config
 ```
 [remote "origin"]
-	url = ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome
-	fetch = +refs/heads/*:refs/remotes/origin/*
+    url = ssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome
+    fetch = +refs/heads/*:refs/remotes/origin/*
 ```
 
 # jenkins
@@ -57,9 +57,9 @@ Add codecommit keys to jenkins user:
 node {
    stage 'Checkout'
    checkout([$class: 'GitSCM', branches: [[name: '*/ironframe']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', noTags: true, reference: '', shallow: true, timeout: 180]], submoduleCfg: [], userRemoteConfigs: [[url: 'ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome']]])
-   checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', noTags: true, reference: '', shallow: true, timeout: 180]], submoduleCfg: [], userRemoteConfigs: [[url: 'ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome']]])
-   stage 'Stage 2'
-   echo 'Hello World '2
+   stage 'Build'
+   sh "gn gen out/Default"
+   sh "ninja -C out/Default chrome"
 }
 ```
 
@@ -70,4 +70,3 @@ node {
 2. Clone depot_tools to /var/lib/jenkins - `git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git`.
 3. Modify PATH for jenkins job - `PATH=/var/lib/jenkins/depot_tools:$PATH`.
    Section `Prepare an environment for the run` and subsection - `Properties Content`.
-    
