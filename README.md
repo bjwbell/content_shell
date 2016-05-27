@@ -73,11 +73,11 @@ Subsequent runs:
 ```
 node {
    stage 'Checkout'
-   sh "cd src/; git fetch --depth=1 codecommit ironframe"
    sh "cd src/; git checkout ironframe"
-   stage 'Build'
+   sh "cd src/; git pull codecommit ironframe"
    sh "cd src/; gclient runhooks"
    sh "cd src/; gn gen out/Default"
+   stage 'Build'
    sh "cd src/; ninja -C out/Default content_shell"
 }
 ```
