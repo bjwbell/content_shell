@@ -1,0 +1,19 @@
+node {
+   stage 'Checkout'
+   sh "fetch --nohooks chromium"
+   sh "cd src/; git remote add codecommit ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome"
+   sh "cd src/; git fetch codecommit ironframe"
+   sh "cd src/; git checkout ironframe"
+   sh "cd src/; gclient runhooks"
+   sh "cd src/; gn gen out/Default"
+   stage 'Build Current'
+   sh "cd src/; ninja -C out/Default content_shell"
+   stage 'Merge'
+   sh "cd src/; git pull --no-edit origin master"
+   stage 'Build Merge'
+   sh "cd src/; gn gen out/Default"
+   sh "cd src/; ninja -C out/Default content_shell"
+   stage 'Push'
+   sh "cd src/; git push codecommit ironframe"
+   sh "cd src/; git push codecommit master"
+}

@@ -54,20 +54,7 @@ Add codecommit keys to jenkins user:
 ## Jenkins Pipeline
 *Ironframe*
 
-First run:
-```
-node {
-   stage 'Checkout'
-   sh "fetch --nohooks --no-history chromium"
-   sh "cd src/; git remote add codecommit ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome"
-   sh "cd src/; git fetch --depth=1 codecommit ironframe"
-   sh "cd src/; git checkout ironframe"
-   sh "cd src/; gclient runhooks"
-   sh "cd src/; gn gen out/Default"
-   stage 'Build'
-   sh "cd src/; ninja -C out/Default content_shell"
-}
-```
+Use [Ironframe-FulBuild-Pipeline](Ironframe-FulBuild-Pipeline).
 
 Subsequent runs:
 ```
@@ -81,6 +68,9 @@ node {
    sh "cd src/; ninja -C out/Default content_shell"
 }
 ```
+
+*Ironframe merge master*
+Use [Ironframe-Merge-Upstream-Pipeline](Ironframe-Merge-Upstream-Pipeline).
 
 *Chromium*
 First run:
