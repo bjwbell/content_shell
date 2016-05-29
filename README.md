@@ -51,7 +51,7 @@ Add codecommit keys to jenkins user:
 ## Jenkins Pipeline
 *Ironframe*
 
-For the pipeline file, use [Ironframe-FulBuild-Pipeline](Ironframe-FulBuild-Pipeline).
+For the pipeline file, use [Ironframe-FullBuild-Pipeline](Ironframe-FullBuild-Pipeline).
 
 Subsequent runs:
 ```
