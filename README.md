@@ -31,9 +31,6 @@ IdentityFile ~/.ssh/id_rsa
 
 # jenkins
 
-## centos installation
-execute [jenkins-centos.sh](jenkins-centos.sh)
-
 ## ubuntu installation
 1. `wget -q -O - http://pkg.jenkins-ci.org/debian-stable/jenkins-ci.org.key | sudo apt-key add -`
 2. In `/etc/apt/sources.list` add `deb http://pkg.jenkins-ci.org/debian-stable binary/`
@@ -54,7 +51,7 @@ Add codecommit keys to jenkins user:
 ## Jenkins Pipeline
 *Ironframe*
 
-Use [Ironframe-FulBuild-Pipeline](Ironframe-FulBuild-Pipeline).
+For the pipeline file, use [Ironframe-FulBuild-Pipeline](Ironframe-FulBuild-Pipeline).
 
 Subsequent runs:
 ```
@@ -70,7 +67,8 @@ node {
 ```
 
 *Ironframe merge master*
-Use [Ironframe-Merge-Upstream-Pipeline](Ironframe-Merge-Upstream-Pipeline).
+
+For the pipeline file, use [Ironframe-Merge-Upstream-Pipeline](Ironframe-Merge-Upstream-Pipeline).
 
 *Chromium*
 First run:
