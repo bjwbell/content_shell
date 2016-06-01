@@ -10,4 +10,6 @@ node {
    sh "cd src/; gn gen out/Default"
    stage 'Build'
    sh "cd src/; ninja -C out/Default content_shell"
+   stage 'Archive'
+   archive '**/out/Default/**'
 }
