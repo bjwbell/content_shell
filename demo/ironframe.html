@@ -1,0 +1,158 @@
+<head>
+    <style>
+     body{
+
+         font-family: 'Open Sans', sans-serif !important;
+         font-size: 14px;
+     }
+    </style>
+</head>
+<body>
+    <img height=50 src="http://www.whiteops.com/img/nav/logo-whiteops.png"><br><br>
+    <input id="input_occlude" onchange="doocclude(this)" type="checkbox">Occlude</input>
+    <input onchange="doshrink(this)"  type="checkbox">Shrink Frame</input>
+    <input onchange="doshrinkdiv(this)"  type="checkbox">Shrink Div</input>
+    <input onchange="doblur(this)"    type="checkbox">Blur</input>
+    <input onchange="doshadow(this)"  type="checkbox">Drop Shadow</input>
+    <input onchange="doclippath(this)"  type="checkbox">Clip Path</input>
+    <br>
+    <input onchange="doleft(this)" type="checkbox">CSS Shift Left</input>
+    <input onchange="dofollow(this)" type="checkbox">Mousefollow</input>
+    <input onchange="domidscroll(this)" type="checkbox">Scroll Midframe</input>
+    <input onchange="dodouble(this)" type="checkbox">Overlapping Ironframe</input>
+    <input onchange="doscale(this)"   type="checkbox"><i>Scale3D</i></input>
+    <hr>
+    <div id="protinfo">Secured with Ironframe (document.requestVisibility() on the iframe two levels deep)</div>
+    <div id=prot style="height:280;width:600;background-image:url('tile.gif');">
+        <iframe id=protfr border=0 frameBorder=0 scrolling="no" src="openskies3.html" style="height:270;width:333"></iframe>
+        <img id=shadowprotimg src="ishi.jpg" height=170 style="display:none;box-shadow:-180px 8px 60px 71px rgba(0,0,0,0.8);"></img>
+    </div>
+    <hr>
+    Normal iframe
+    <div id=unprot style="height:280;width:600;background-image:url('tile.gif');">
+        <iframe id=unprotfr border=0 frameBorder=0 scrolling="no" src="openskies3.html" style="height:270;width:333;"></iframe>
+        <img id=shadowunprotimg src="ishi.jpg" height=170 style="display:none;box-shadow:-180px 8px 60px 71px rgba(0,0,0,0.8);"></img>
+        <iframe id="eviliron" style="height:500;width:600;position:absolute;top:200;left:-1000" src="eviliron.html"></iframe>
+    </div>
+    <hr>
+    <iframe src="viz.html" id="viz" style="top:140px;left:675px;position:absolute;height:600px;background-color:white;width:400;transform:translateZ(0);"></iframe>
+    <hr>
+    <iframe height=2000></iframe>
+    <script>
+     if(!document.requestVisibility){
+         prot.style.display="none";
+         protinfo.innerHTML="IronFrame (document.requestVisibility) support not detected in this browser.  Click <a href='https://www.youtube.com/watch?v=c9ed399c3ik'>here</a> for video.";
+         input_occlude.check(False);
+     }
+
+     var imgprot, imgunprot;
+
+     function doocclude(e){
+         if(imgprot==null){
+             imgprot=new Image();
+             imgunprot=new Image();
+             imgprot.src=imgunprot.src="price.png";
+             //imgprot.style.opacity=imgunprot.style.opacity="0.5";
+             imgprot.style.position=imgunprot.style.position="absolute";
+             imgprot.style.display=imgunprot.style.display="none";
+             imgprot.style.zIndex=imgunprot.style.zIndex=1000;
+             document.body.appendChild(imgprot);
+             document.body.appendChild(imgunprot);
+         }
+         setTimeout(function(){
+             var rectprot = prot.getBoundingClientRect();
+             var rectunprot = unprot.getBoundingClientRect();
+             imgprot.style.top = rectprot.top+71;
+             imgprot.style.left = rectprot.left+191;
+             imgunprot.style.top = rectunprot.top+71;
+             imgunprot.style.left = rectunprot.left+191;
+             if(e.checked) { imgprot.style.display=imgunprot.style.display="block";}
+             else          { imgprot.style.display=imgunprot.style.display="none"; }
+         }, 500);
+     }
+
+     function doblur(e){
+         if(e.checked) { prot.style.webkitFilter=unprot.style.webkitFilter="blur(10px)"; }
+         else          { prot.style.webkitFilter=unprot.style.webkitFilter=""; }
+     }
+
+     function doshrink(e){
+         if(e.checked) { protfr.style.width=unprotfr.style.width="133px"; }
+         else          { protfr.style.width=unprotfr.style.width="333px"; }
+     }
+
+     function doshrinkdiv(e){
+         if(e.checked) {
+             prot.style.overflow=unprot.style.overflow="hidden";
+             prot.style.width=unprot.style.width="133px";
+         }
+         else          {
+             prot.style.overflow=unprot.style.overflow="";
+             prot.style.width=unprot.style.width="600px";
+         }
+     }
+
+     function doscale(e){
+         if(e.checked) { prot.style.transform=unprot.style.transform="scale3d(0.5, -0.5, 1.5)"; }
+         else          { prot.style.transform=unprot.style.transform=""; }
+     }
+
+     function doshadow(e){
+         if(e.checked) { shadowprotimg.style.display=shadowunprotimg.style.display="inline"; }
+         else          { shadowprotimg.style.display=shadowunprotimg.style.display="none"; }
+     }
+
+     function doclippath(e){
+         if(e.checked) { prot.style.webkitClipPath=unprot.style.webkitClipPath="polygon(20% 0%, 0% 20%, 30% 50%, 0% 80%, 20% 100%, 50% 70%, 80% 100%, 100% 80%, 70% 50%, 100% 20%, 80% 0%, 50% 30%)" }
+         else { prot.style.webkitClipPath=unprot.style.webkitClipPath=""; }
+     }
+
+     function doleft(e){
+         if(e.checked) {
+             prot.style.position=unprot.style.position=viz.style.position="absolute";
+             prot.style.left=unprot.style.left="-100px";
+             prot.style.top = "125px";
+             unprot.style.top = "425px";
+         } else {
+             prot.style.position=unprot.style.position=viz.style.position="";
+             prot.style.left=unprot.style.left="";
+             prot.style.top=unprot.style.top=viz.style.top="";
+         }
+     }
+
+     function dofollow(e){
+         if(e.checked) {
+             prot.style.position=unprot.style.position="absolute";
+             document.body.onmousemove = function(m) {
+                 prot.style.top = m.y+50;
+                 unprot.style.top = m.y+350;
+                 prot.style.left = unprot.style.left = m.x+50;
+             }
+         } else {
+             prot.style.position=unprot.style.position="";
+             document.body.onmousemove = null;
+         }
+     }
+
+     function domidscroll(e){
+         if(e.checked){
+             protfr.contentWindow.scrollTo(200,200);
+             unprotfr.contentWindow.scrollTo(200,200);
+         } else {
+             protfr.contentWindow.scrollTo(0,0);
+             unprotfr.contentWindow.scrollTo(0,0);
+         }
+
+     }
+
+     function dodouble(e){
+         if(e.checked){
+             eviliron.style.left=10;
+         } else {
+             eviliron.style.left=-1000;
+         }
+     }
+
+     input_occlude.checked = true;
+     doocclude(input_occlude);
+    </script>
