@@ -11,7 +11,7 @@ node {
    stage 'Build Current'
    sh "cd src/; ninja -C out/Default content_shell"
    stage 'Merge'
-   sh "cd src/; git pull --no-edit origin master"
+   sh "cd src/; git pull --no-edit . master"
    stage 'Build Merge'
    sh "cd src/; gn gen out/Default"
    sh "cd src/; ninja -C out/Default content_shell"
