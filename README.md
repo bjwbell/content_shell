@@ -50,49 +50,9 @@ Add codecommit keys to jenkins user:
 
 For the pipeline file, use [Ironframe-FullBuild-Pipeline](Ironframe-FullBuild-Pipeline).
 
-Subsequent runs:
-```
-node {
-   stage 'Checkout'
-   sh "cd src/; git checkout ironframe"
-   sh "cd src/; git pull codecommit ironframe"
-   sh "cd src/; gclient runhooks"
-   sh "cd src/; gn gen out/Default"
-   stage 'Build'
-   sh "cd src/; ninja -C out/Default content_shell"
-}
-```
-
 *Ironframe merge master*
 
 For the pipeline file, use [Ironframe-Merge-Upstream-Pipeline](Ironframe-Merge-Upstream-Pipeline).
-
-*Chromium*
-First run:
-```
-node {
-   stage 'Checkout'
-   sh "fetch --nohooks --no-history chromium"
-   sh "gclient sync"
-   sh "gclient runhooks"
-   stage 'Build'
-   sh "cd src/; gn gen out/Default"
-   sh "cd src/; ninja -C out/Default content_shell"
-}
-```
-
-Subsequent runs:
-```
-node {
-   stage 'Checkout'
-   sh "gclient sync"
-   sh "gclient runhooks"
-   stage 'Build'
-   sh "cd src/; gn gen out/Default"
-   sh "cd src/; ninja -C out/Default content_shell"
-}
-```
-
 
 ## Add depot_tools to jenkins PATH
 
