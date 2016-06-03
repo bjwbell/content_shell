@@ -5,7 +5,7 @@ node {
    sh "cd chrome/; git fetch --depth=1 origin master"
    sh "cd chrome/; git checkout ironframe"
    stage 'Diff'
-   sh "cd chrome/; git diff master...ironframe > ../../../ironframe/diffs/ironframe-`date -Iminutes`.diff"
+   sh "cd chrome/; git diff origin/master...origin/ironframe > ../../../ironframe/diffs/ironframe-`date -Iminutes`.diff"
    stage 'Push'
    sh "cd ../../ironframe; git add diffs/*.diff"
    sh "cd ../../ironframe; git commit -m \"Add `date -Iminutes` diff\""
