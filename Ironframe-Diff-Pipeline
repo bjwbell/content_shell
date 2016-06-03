@@ -1,12 +1,16 @@
 node {
    stage 'Checkout'
+   sh "cd ../../ironframe; git pull origin master"
    sh "rm -rf src/"
    sh "rm -f .gclient .gclient_entries"
    sh "fetch --nohooks --no-history chromium"
    sh "cd src/; git remote add codecommit ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome"
    sh "cd src/; git fetch --depth=1 codecommit ironframe"
    sh "cd src/; git checkout ironframe"
-   sh "cd src/; git diff master...ironframe > ../../../ironframe/diffs/ironframe-$BUILD_DISPLAY_NAME.diff"
+   stage 'Diff'
+   sh "cd src/; git diff master...ironframe > ../../../ironframe/diffs/ironframe-`date -Iminutes`.diff"
    stage 'Push'
+   sh "cd ../../ironframe; git add diffs/*.diff"
+   sh "cd ../../ironframe; git commit -m \"Add `date -Iminutes` diff\""
    sh "cd ../../ironframe; git push origin master"
 }
