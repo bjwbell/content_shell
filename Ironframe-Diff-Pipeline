@@ -1,14 +1,10 @@
 node {
    stage 'Checkout'
-   sh "rm -rf src/"
-   sh "rm -f .gclient .gclient_entries"
-   sh "fetch --nohooks --no-history chromium"
-   sh "cd src/; git remote add codecommit ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome"
-   sh "cd src/; git fetch --depth=1 codecommit ironframe"
-   sh "cd src/; git checkout ironframe"
+   sh "rm -rf chrome/"
+   sh "git clone --depth=1 ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome"
+   sh "cd chrome/; git checkout ironframe"
    stage 'Diff'
-   sh "cd ../../ironframe; git pull origin master"
-   sh "cd src/; git diff master...ironframe > ../../../ironframe/diffs/ironframe-`date -Iminutes`.diff"
+   sh "cd chrome/; git diff master...ironframe > ../../../ironframe/diffs/ironframe-`date -Iminutes`.diff"
    stage 'Push'
    sh "cd ../../ironframe; git add diffs/*.diff"
    sh "cd ../../ironframe; git commit -m \"Add `date -Iminutes` diff\""
