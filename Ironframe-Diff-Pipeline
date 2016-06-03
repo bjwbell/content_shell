@@ -2,6 +2,7 @@ node {
    stage 'Checkout'
    sh "rm -rf chrome/"
    sh "git clone --depth=1 ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome"
+   sh "cd chrome/; git fetch --depth=1 origin master"
    sh "cd chrome/; git checkout ironframe"
    stage 'Diff'
    sh "cd chrome/; git diff master...ironframe > ../../../ironframe/diffs/ironframe-`date -Iminutes`.diff"
