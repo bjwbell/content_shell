@@ -1,6 +1,5 @@
 node {
    stage 'Checkout'
-   sh "cd ../../ironframe; git pull origin master"
    sh "rm -rf src/"
    sh "rm -f .gclient .gclient_entries"
    sh "fetch --nohooks --no-history chromium"
@@ -8,6 +7,7 @@ node {
    sh "cd src/; git fetch --depth=1 codecommit ironframe"
    sh "cd src/; git checkout ironframe"
    stage 'Diff'
+   sh "cd ../../ironframe; git pull origin master"
    sh "cd src/; git diff master...ironframe > ../../../ironframe/diffs/ironframe-`date -Iminutes`.diff"
    stage 'Push'
    sh "cd ../../ironframe; git add diffs/*.diff"
