@@ -6,9 +6,7 @@
              document.requestVisibility();
              enabled=true;
          }
-
         </script>
-
         <img src="paypal.png" style="position:absolute;top:0;left:0">
         <script>
          var prev;
@@ -37,19 +35,6 @@
          }
 
          function go() { document.documentElement.onerror = function(e) {
-             if(e.message!=prevMsg){
-                 prev=e.timeStamp;
-                 prevMsg=e.message;
-             }
-             v = JSON.parse(e.message);
-             v.innerHeight = innerHeight;
-             v.innerWidth  = innerWidth;
-             v.timestamp   = e.timeStamp;
-             v.ancestorOrigins = document.location.ancestorOrigins;
-             viz.innerText = JSON.stringify(v);
-             var x = viz.innerText;
-             update();
-             //console.log(viz.innerText);
          }
          }
          if(enabled) { window.onload=go; }
