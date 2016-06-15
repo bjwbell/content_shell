@@ -1,23 +1,21 @@
 <html requestVisibility=1 style="transform:translateZ(0)">
-    <body>
-        <script>
-         var enabled=false;
-         if(parent.frameElement.id!="unprotfr"){
-             document.requestVisibility();
-             enabled=true;
-         }
-        </script>
-        <img src="paypal.png" style="position:absolute;top:0;left:0">
-        <script>
-         var prev;
-         var prevMsg="";
-         var v={};
-         var visible=false;
-         var viz = top.document.getElementById("viz").contentWindow.document.getElementById("render");
-
-         var update = function(){
-             if(v.visible.width < 333 ||
-                v.visible.height< 270 ) {
+  <body>
+    <script>
+      var enabled=false;
+      if(parent.frameElement.id!="unprotfr"){
+      document.requestVisibility();
+      enabled=true;
+      }
+    </script>
+    <img src="paypal.png" style="position:absolute;top:0;left:0">
+    <script>
+      var prev;
+      var prevMsg="";
+      var v={};
+      var visible=false;
+      var viz = top.document.getElementById("viz").contentWindow.document.getElementById("render");
+      var update = function(){
+      if(v.visible.width < 333 || v.visible.height< 270 ) {
                     visible=false;
              } else {
                  visible=true;
@@ -34,7 +32,8 @@
              }
          }
 
-         function go() { document.documentElement.onerror = function(e) {
+	 function go() { document.documentElement.onerror = function(e) {
+             
          }
          }
          if(enabled) { window.onload=go; }
