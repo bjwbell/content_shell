@@ -1,10 +1,13 @@
+<html>
+<!-- could also be 
 <html requestVisibility=1 style="transform:translateZ(0)">
+!-->
   <body>
     <script>
       var enabled=false;
       if(parent.frameElement.id!="unprotfr"){
-      document.requestVisibility();
-      enabled=true;
+        document.requestVisibility();
+        enabled=true;
       }
     </script>
     <img src="paypal.png" style="position:absolute;top:0;left:0">
