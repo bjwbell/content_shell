@@ -1,0 +1,372 @@
+diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
+index 7f25af0..1643cae 100644
+--- a/third_party/WebKit/Source/core/core.gypi
++++ b/third_party/WebKit/Source/core/core.gypi
+@@ -129,7 +129,7 @@
+             'events/CustomEvent.idl',
+             'events/DragEvent.idl',
+             'events/ErrorEvent.idl',
+-	    'events/RequestedVisibilityEvent.idl',
++            'events/RequestedVisibilityEvent.idl',
+             'events/Event.idl',
+             'events/EventTarget.idl',
+             'events/FocusEvent.idl',
+@@ -472,7 +472,7 @@
+             'events/CustomEvent.idl',
+             'events/DragEvent.idl',
+             'events/ErrorEvent.idl',
+-	    'events/RequestedVisibilityEvent.idl',
++            'events/RequestedVisibilityEvent.idl',
+             'events/Event.idl',
+             'events/FocusEvent.idl',
+             'events/HashChangeEvent.idl',
+@@ -2764,8 +2764,8 @@
+             'events/DragEvent.h',
+             'events/ErrorEvent.cpp',
+             'events/ErrorEvent.h',
+-	    'events/RequestedVisibilityEvent.cpp',
+-	    'events/RequestedVisibilityEvent.h',
++            'events/RequestedVisibilityEvent.cpp',
++            'events/RequestedVisibilityEvent.h',
+             'events/Event.cpp',
+             'events/EventDispatchMediator.cpp',
+             'events/EventDispatchMediator.h',
+@@ -3738,7 +3738,7 @@
+             'events/CustomEventInit.idl',
+             'events/DragEventInit.idl',
+             'events/ErrorEventInit.idl',
+-	    'events/RequestedVisibilityEventInit.idl',
++            'events/RequestedVisibilityEventInit.idl',
+             'events/EventInit.idl',
+             'events/EventListenerOptions.idl',
+             'events/EventModifierInit.idl',
+@@ -3817,8 +3817,8 @@
+             '<(blink_core_output_dir)/events/DragEventInit.h',
+             '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
+             '<(blink_core_output_dir)/events/ErrorEventInit.h',
+-	    '<(blink_core_output_dir)/events/RequestedVisibilityEventInit.cpp',
+-	    '<(blink_core_output_dir)/events/RequestedVisibilityEventInit.h',
++            '<(blink_core_output_dir)/events/RequestedVisibilityEventInit.cpp',
++            '<(blink_core_output_dir)/events/RequestedVisibilityEventInit.h',
+             '<(blink_core_output_dir)/events/EventInit.cpp',
+             '<(blink_core_output_dir)/events/EventInit.h',
+             '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 5bc50c0..1d3faf0 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5803,7 +5803,7 @@ bool Document::hasFocus() const
+ }
+ 
+ VisibilityDocumentSet *Document::requestedVisibility() {
+-  return m_requestedVisibility;
++    return m_requestedVisibility;
+ }
+ 
+ void Document::requestVisibility(){
+@@ -5811,122 +5811,114 @@ void Document::requestVisibility(){
+     Document *target;
+     target=this;
+     target->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
+-    target->documentElement()->style()->setProperty("transform", "translateZ(0px)", "", ASSERT_NO_EXCEPTION);
+-    // XXX DMK everything below is just trying to force a paint event or be paranoid about things
+-    //         this happens in a separate function also to force the async rescheduling
+-    target->documentElement()->style()->setProperty("position", "relative", "", ASSERT_NO_EXCEPTION);
+-    target->documentElement()->style()->setProperty("z-index", "2147483648", "", ASSERT_NO_EXCEPTION);
+-    target->view()->updateAllLifecyclePhases();
+-    target->page()->deprecatedLocalMainFrame()->view()->updateAllLifecyclePhases();
+-    target->domWindow()->scrollBy(0,10,ScrollBehavior::ScrollBehaviorAuto);
+-    target->domWindow()->scrollBy(0,-10,ScrollBehavior::ScrollBehaviorAuto);    
++    target->documentElement()->style()->setProperty("transform", "translateZ(0px)", "", ASSERT_NO_EXCEPTION);    
+ }
+ 
+ void Document::requestVisibilityImpl(){
+-  // Step 1:  Block obvious failure modes.  Probably insert SVG test here?
+-  if(this->domWindow() == this->domWindow()->top()) {return;}
+-
+-  // Step 2:  Collect useful handles
+-  DOMWindow *testWindow = this->domWindow();
+-  PaintLayer* iframePaintLayer = this->documentElement()->layoutObject()->enclosingLayer();//->enclosingLayerForPaintInvalidationCrossingFrameBoundaries();
+-
+-  if(!iframePaintLayer) { return; }
+-  GraphicsLayer* iframeGraphicsLayer = iframePaintLayer->graphicsLayerBacking();
+-  const PaintLayer* rootPaintLayer = this->domWindow()->top()->document()->body()->layoutObject()->enclosingLayer()->root(); // XXX DMK top scrolling layer
+-  GraphicsLayer* rootGraphicsLayer = rootPaintLayer->graphicsLayerBacking();
+-  if(!iframeGraphicsLayer || !rootGraphicsLayer) {
+-    printf("ERROR: Couldn't find required GraphicsLayer.  One may not have been created for this document.");
+-    addConsoleMessage(ConsoleMessage::create(RenderingMessageSource, ErrorMessageLevel, "Couldn't find required GraphicsLayer.  One may not have been created for this document."));
+-    return;
+-  }
+-  // Step 3:  Discover our effective Bounds.  We are effectively trying to compute the "keyhole" that reaches us,
+-  //          through multiple iframes and scroll/translateX values.  The "sacred" transform is position and size.
+-  //          This is presently being done via boundsInViewportSpace, which works through almost everything.
+-  //          Almost.  (Scale3d needs to be corrected for, or rejected.)
+-
+-  IntRect bounds = this->documentElement()->boundsInViewport();
+-  IntRect origBounds = bounds;
+-
+-  testWindow = this->domWindow();
+-  float sx, sy;
+-  sx=sy=0;
+-  bool moreElements=true;
+-  Element *testElement = this->documentElement();
+-  Document *testDocument = this;
+-
+-  bool do_move = true;
+-  bool hostile=false;
+-  while(moreElements){
+-    if(testDocument->documentElement()==testElement){
+-      testElement=testDocument->domWindow()->frameElement();
+-      testDocument=&testElement->document();
+-      sx+=testWindow->scrollX();
+-      sy+=testWindow->scrollY();
+-      testWindow=testWindow->parent();
+-    } else {
+-      testElement=testElement->parentElement();
+-    }
+-    // HACK!! Remove use of childrenClipRect
+-    IntRect child = IntRect(testElement->layoutObject()->enclosingLayer()->clipper().childrenClipRect());
+-    if(testElement->tagName()=="foreignObject"){
+-      hostile=true;
+-    }
+-    if(testElement->tagName()=="IFRAME") {
+-      IntRect ifrBounds = testElement->boundsInViewport();
+-      child.setWidth(fmin(ifrBounds.size().width(), child.size().width()));
+-      child.setHeight(fmin(ifrBounds.size().height(), child.size().height()));
+-    }
+-    bounds.intersect(child);
+-    if(testElement == this->domWindow()->top()->document()->documentElement()) {
+-      moreElements=false;
+-    }
+-  }
+-  // intersect with visible viewport.  XXX stop using IntRect, start using FloatRect
+-  FrameView *mainFrameView = this->page()->deprecatedLocalMainFrame()->view();
+-  LayoutRect mainViewRect = mainFrameView->layoutView()->viewRect();
+-  IntRect mainViewIntRect = IntRect(mainViewRect);
+-  bounds.intersect(mainViewIntRect);
+-
+-  FloatRect mainViewFloatRect = FloatRect(mainViewRect);
+-  if(!bounds.size().width() || !bounds.size().height()) do_move=false;
+-  // XXX for each registered visibility req, look for collisions with us, if so block the raise
+-  VisibilityDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
+-
+-  for(Document *reqdoc : *ds){
+-    if(reqdoc == this) break; // maybe this is right?
+-    if(reqdoc->m_requestVisibilityRect && reqdoc->m_requestVisibilityRect->intersects(bounds)) {
+-      // XXX DMK better would be to run bounds.subtract but then there'd have to *be* a bounds.subtract method.
+-      //         Also, subtraction is a not quite so defined as intersection.  Largest contiguous from 0,0?
+-      //         Largest contiguous from any corner?  God forbid, pile-o-rects?  Let's just run for the hills for now
+-      hostile=true;
+-      //return;  // there is a rather fun attack if you try this
+-    }
+-  }
+-
+-  if(hostile){
+-    do_move=false;
+-    bounds.setWidth(0);
+-    bounds.setHeight(0);
+-  }
+-  if(this->documentElement()->hasAttribute("visibilityOnly")) { do_move=false; } // XXX DMK expand on this, there are uses
+-  if (do_move) {
+-    FloatRect fbounds = bounds;
+-    this->set_requestVisibilityRect(&fbounds);
+-    rootGraphicsLayer->addChild(iframeGraphicsLayer);
+-    iframeGraphicsLayer->setPosition(FloatPoint(bounds.x(), bounds.y()));
+-    iframeGraphicsLayer->setSize(FloatSize(bounds.size().width(), bounds.size().height()));
+-    iframeGraphicsLayer->setBackgroundColor(Color::black);
+-    iframeGraphicsLayer->setMasksToBounds(true);
+-    iframeGraphicsLayer->setOpacity(1.0);
+-    IntSize offset = IntSize(bounds.x()-origBounds.x()-topDocument().domWindow()->scrollX(), bounds.y()-origBounds.y()-topDocument().domWindow()->scrollY());
+-    iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);// const IntSize & offset,ShouldSetNeedsDisplay shouldSetNeedsDisplay)
+-  }
+-  // report.  sx and sy are
+-  bounds.setWidth(fmax(bounds.size().width() - sx, 0));
+-  bounds.setHeight(fmax(bounds.size().height()- sy, 0));
+-  //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
+-  String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
+-  this->enqueueRequestedVisibilityEvent(s);
++    // Step 1:  Block obvious failure modes.  Probably insert SVG test here?
++    if(this->domWindow() == this->domWindow()->top()) {return;}
++
++    // Step 2:  Collect useful handles
++    DOMWindow *testWindow = this->domWindow();
++    PaintLayer* iframePaintLayer = this->documentElement()->layoutObject()->enclosingLayer();
++
++    if(!iframePaintLayer) { return; }
++    GraphicsLayer* iframeGraphicsLayer = iframePaintLayer->graphicsLayerBacking();
++    const PaintLayer* rootPaintLayer = this->domWindow()->top()->document()->body()->layoutObject()->enclosingLayer()->root(); // XXX DMK top scrolling layer
++    GraphicsLayer* rootGraphicsLayer = rootPaintLayer->graphicsLayerBacking();
++    if(!iframeGraphicsLayer || !rootGraphicsLayer) {
++        printf("ERROR: Couldn't find required GraphicsLayer.  One may not have been created for this document.");
++        addConsoleMessage(ConsoleMessage::create(RenderingMessageSource, ErrorMessageLevel, "Couldn't find required GraphicsLayer.  One may not have been created for this document."));
++        return;
++    }
++    // Step 3:  Discover our effective Bounds.  We are effectively trying to compute the "keyhole" that reaches us,
++    //          through multiple iframes and scroll/translateX values.  The "sacred" transform is position and size.
++    //          This is presently being done via boundsInViewportSpace, which works through almost everything.
++    //          Almost.  (Scale3d needs to be corrected for, or rejected.)
++
++    IntRect bounds = this->documentElement()->boundsInViewport();
++    IntRect origBounds = bounds;
++
++    testWindow = this->domWindow();
++    float sx, sy;
++    sx=sy=0;
++    bool moreElements=true;
++    Element *testElement = this->documentElement();
++    Document *testDocument = this;
++
++    bool do_move = true;
++    bool hostile=false;
++    while(moreElements){
++        if(testDocument->documentElement()==testElement){
++            testElement=testDocument->domWindow()->frameElement();
++            testDocument=&testElement->document();
++            sx+=testWindow->scrollX();
++            sy+=testWindow->scrollY();
++            testWindow=testWindow->parent();
++        } else {
++            testElement=testElement->parentElement();
++        }
++        // HACK!! Remove use of childrenClipRect
++        IntRect child = IntRect(testElement->layoutObject()->enclosingLayer()->clipper().childrenClipRect());
++        if(testElement->tagName()=="foreignObject"){
++            hostile=true;
++        }
++        if(testElement->tagName()=="IFRAME") {
++            IntRect ifrBounds = testElement->boundsInViewport();
++            child.setWidth(fmin(ifrBounds.size().width(), child.size().width()));
++            child.setHeight(fmin(ifrBounds.size().height(), child.size().height()));
++        }
++        bounds.intersect(child);
++        if(testElement == this->domWindow()->top()->document()->documentElement()) {
++            moreElements=false;
++        }
++    }
++    // intersect with visible viewport.  XXX stop using IntRect, start using FloatRect
++    FrameView *mainFrameView = this->page()->deprecatedLocalMainFrame()->view();
++    LayoutRect mainViewRect = mainFrameView->layoutView()->viewRect();
++    IntRect mainViewIntRect = IntRect(mainViewRect);
++    bounds.intersect(mainViewIntRect);
++
++    FloatRect mainViewFloatRect = FloatRect(mainViewRect);
++    if(!bounds.size().width() || !bounds.size().height()) do_move=false;
++    // XXX for each registered visibility req, look for collisions with us, if so block the raise
++    VisibilityDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
++
++    for(Document *reqdoc : *ds){
++        if(reqdoc == this) break; // maybe this is right?
++        if(reqdoc->m_requestVisibilityRect && reqdoc->m_requestVisibilityRect->intersects(bounds)) {
++            // XXX DMK better would be to run bounds.subtract but then there'd have to *be* a bounds.subtract method.
++            //         Also, subtraction is a not quite so defined as intersection.  Largest contiguous from 0,0?
++            //         Largest contiguous from any corner?  God forbid, pile-o-rects?  Let's just run for the hills for now
++            hostile=true;
++            //return;  // there is a rather fun attack if you try this
++        }
++    }
++
++    if(hostile){
++        do_move=false;
++        bounds.setWidth(0);
++        bounds.setHeight(0);
++    }
++    if(this->documentElement()->hasAttribute("visibilityOnly")) { do_move=false; } // XXX DMK expand on this, there are uses
++    if (do_move) {
++        FloatRect fbounds = bounds;
++        this->set_requestVisibilityRect(&fbounds);
++        rootGraphicsLayer->addChild(iframeGraphicsLayer);
++        iframeGraphicsLayer->setPosition(FloatPoint(bounds.x(), bounds.y()));
++        iframeGraphicsLayer->setSize(FloatSize(bounds.size().width(), bounds.size().height()));
++        iframeGraphicsLayer->setBackgroundColor(Color::black);
++        iframeGraphicsLayer->setMasksToBounds(true);
++        iframeGraphicsLayer->setOpacity(1.0);
++        IntSize offset = IntSize(bounds.x()-origBounds.x()-topDocument().domWindow()->scrollX(), bounds.y()-origBounds.y()-topDocument().domWindow()->scrollY());
++        iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);// const IntSize & offset,ShouldSetNeedsDisplay shouldSetNeedsDisplay)
++    }
++    // report.  sx and sy are
++    bounds.setWidth(fmax(bounds.size().width() - sx, 0));
++    bounds.setHeight(fmax(bounds.size().height()- sy, 0));
++    //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
++    String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
++    this->enqueueRequestedVisibilityEvent(s);
+ };
+ 
+ template<unsigned type>
+diff --git a/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp
+index e4a5427..5f17327 100644
+--- a/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp
++++ b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (C) 2009 Google Inc. All rights reserved.
++ * Copyright (C) 2016 Google Inc. All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions are
+diff --git a/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.idl b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.idl
+index fc6f1ac..aae3453 100644
+--- a/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.idl
++++ b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.idl
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (C) 2009 Google Inc. All rights reserved.
++ * Copyright (C) 2016 Google Inc. All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions are
+diff --git a/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl b/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
+index 490b8bc..977fb87 100644
+--- a/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
++++ b/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
+@@ -1,4 +1,4 @@
+-// Copyright 2015 The Chromium Authors. All rights reserved.
++// Copyright 2016 The Chromium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
+index 746336c..b0ff836 100644
+--- a/third_party/WebKit/Source/core/frame/UseCounter.h
++++ b/third_party/WebKit/Source/core/frame/UseCounter.h
+@@ -1221,7 +1221,7 @@ public:
+         MediaStreamOnActive = 1415,
+         MediaStreamOnInactive = 1416,
+ 
+-	DocumentCreateEventRequestedVisibilityEvent = 1405,
++	DocumentCreateEventRequestedVisibilityEvent = 1510,
+ 	
+         // Add new features immediately above this line. Don't change assigned
+         // numbers of any item, and don't reuse removed slots.
+diff --git a/third_party/WebKit/Source/core/paint/PaintLayer.cpp b/third_party/WebKit/Source/core/paint/PaintLayer.cpp
+index 3bac515..37f7d4a 100644
+--- a/third_party/WebKit/Source/core/paint/PaintLayer.cpp
++++ b/third_party/WebKit/Source/core/paint/PaintLayer.cpp
+@@ -1005,8 +1005,7 @@ void PaintLayer::didUpdateCompositingInputs()
+ 
+ bool PaintLayer::hasNonIsolatedDescendantWithBlendMode() const
+ {
+-  // XXX bjwbell
+-  // ASSERT(!m_needsDescendantDependentCompositingInputsUpdate);
++    ASSERT(!m_needsDescendantDependentCompositingInputsUpdate);
+     if (m_hasNonIsolatedDescendantWithBlendMode)
+         return true;
+     if (layoutObject()->isSVGRoot())
+@@ -1751,8 +1750,7 @@ PaintLayer* PaintLayer::hitTestLayer(PaintLayer* rootLayer, PaintLayer* containe
+     const LayoutRect& hitTestRect, const HitTestLocation& hitTestLocation, bool appliedTransform,
+     const HitTestingTransformState* transformState, double* zOffset)
+ {
+-  // XXX bjwbell
+-  // ASSERT(layoutObject()->document().lifecycle().state() >= DocumentLifecycle::CompositingClean);
++    ASSERT(layoutObject()->document().lifecycle().state() >= DocumentLifecycle::CompositingClean);
+ 
+     if (!isSelfPaintingLayer() && !hasSelfPaintingLayerDescendant())
+         return nullptr;
+@@ -2296,8 +2294,6 @@ CompositingState PaintLayer::compositingState() const
+ 
+ bool PaintLayer::isAllowedToQueryCompositingState() const
+ {
+-  // XXX DMK
+-  return true;
+     if (gCompositingQueryMode == CompositingQueriesAreAllowed || RuntimeEnabledFeatures::slimmingPaintV2Enabled())
+         return true;
+     return layoutObject()->document().lifecycle().state() >= DocumentLifecycle::InCompositingUpdate;
