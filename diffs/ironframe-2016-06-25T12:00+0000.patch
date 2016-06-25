@@ -1,0 +1,3067 @@
+From 275c1738ca066c11b32629f80017889ec152aadb Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Mon, 16 May 2016 20:51:55 -0400
+Subject: [PATCH 01/34] Add stub requestVisibility
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 28 +++++++++++++++++++++++++
+ third_party/WebKit/Source/core/dom/Document.h   |  6 ++++++
+ 2 files changed, 34 insertions(+)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index ee125c3..bf1d92b 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -26,6 +26,7 @@
+  */
+ 
+ #include "core/dom/Document.h"
++#include "core/events/ErrorEvent.h"
+ 
+ #include "bindings/core/v8/DOMDataStore.h"
+ #include "bindings/core/v8/ExceptionMessages.h"
+@@ -118,6 +119,7 @@
+ #include "core/editing/serializers/Serialization.h"
+ #include "core/editing/spellcheck/SpellChecker.h"
+ #include "core/events/BeforeUnloadEvent.h"
++#include "core/events/ErrorEvent.h"
+ #include "core/events/Event.h"
+ #include "core/events/EventFactory.h"
+ #include "core/events/EventListener.h"
+@@ -178,6 +180,7 @@
+ #include "core/layout/LayoutView.h"
+ #include "core/layout/TextAutosizer.h"
+ #include "core/layout/api/LayoutViewItem.h"
++#include "core/layout/compositing/CompositedLayerMapping.h"
+ #include "core/layout/compositing/PaintLayerCompositor.h"
+ #include "core/loader/CookieJar.h"
+ #include "core/loader/DocumentLoader.h"
+@@ -200,6 +203,9 @@
+ #include "core/svg/SVGScriptElement.h"
+ #include "core/svg/SVGTitleElement.h"
+ #include "core/svg/SVGUseElement.h"
++#include "core/testing/Internals.h"
++#include "core/testing/InternalRuntimeFlags.h"
++#include "core/testing/InternalSettings.h"
+ #include "core/timing/DOMWindowPerformance.h"
+ #include "core/timing/Performance.h"
+ #include "core/workers/SharedWorkerRepositoryClient.h"
+@@ -5791,6 +5797,28 @@ bool Document::hasFocus() const
+     return page() && page()->focusController().isDocumentFocused(*this);
+ }
+ 
++void Document::requestVisibility(){
++	// Set up the present frame for raising.  Only 100% works when the document only contains one iframe to the actual content you want
++	// to raise, for now anyway.
++	
++	Document *target;
++	target=this;
++	target->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
++	target->documentElement()->style()->setProperty("transform", "translateZ(0px)", "", ASSERT_NO_EXCEPTION);
++	// XXX DMK everything below is just trying to force a paint event or be paranoid about things
++	//         this happens in a separate function also to force the async rescheduling
++	target->documentElement()->style()->setProperty("position", "relative", "", ASSERT_NO_EXCEPTION);
++	target->documentElement()->style()->setProperty("z-index", "2147483648", "", ASSERT_NO_EXCEPTION);	
++	target->view()->updateAllLifecyclePhases();
++	target->page()->deprecatedLocalMainFrame()->view()->updateAllLifecyclePhases();
++	target->domWindow()->scrollBy(0,10,ScrollBehavior::ScrollBehaviorAuto);
++	target->domWindow()->scrollBy(0,-10,ScrollBehavior::ScrollBehaviorAuto);
++}
++
++void Document::requestVisibilityImpl(){
++  // TODO
++};
++  
+ template<unsigned type>
+ bool shouldInvalidateNodeListCachesForAttr(const HeapHashSet<WeakMember<const LiveNodeListBase>> nodeLists[], const QualifiedName& attrName)
+ {
+diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
+index 673206c..fb08c14 100644
+--- a/third_party/WebKit/Source/core/dom/Document.h
++++ b/third_party/WebKit/Source/core/dom/Document.h
+@@ -1072,6 +1072,10 @@ public:
+ 
+     bool isInMainFrame() const;
+ 
++    void set_requestVisibilityRect(FloatRect *r) { m_requestVisibilityRect = r; }
++    void requestVisibility();
++    void requestVisibilityImpl();
++
+ protected:
+     Document(const DocumentInit&, DocumentClassFlags = DefaultDocumentClass);
+ 
+@@ -1186,6 +1190,8 @@ private:
+     Member<DocumentParser> m_parser;
+     Member<ContextFeatures> m_contextFeatures;
+ 
++    FloatRect *m_requestVisibilityRect;
++    
+     bool m_wellFormed;
+ 
+     // Document URLs.
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 2d1f258ebf863997ad10118310ceb1a496c0e9e0 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Tue, 17 May 2016 03:21:57 -0400
+Subject: [PATCH 02/34] FrameView - call requestVisibility, LayoutView - add
+ attr check
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp          |  4 ++--
+ third_party/WebKit/Source/core/dom/Document.h            |  9 ++++++---
+ third_party/WebKit/Source/core/dom/DocumentLifecycle.cpp | 11 ++++++-----
+ third_party/WebKit/Source/core/frame/FrameView.cpp       | 11 +++++++++++
+ third_party/WebKit/Source/core/layout/LayoutView.cpp     |  5 +++++
+ 5 files changed, 30 insertions(+), 10 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index bf1d92b..820f72f 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -371,7 +371,7 @@ uint64_t Document::s_globalTreeVersion = 0;
+ 
+ static bool s_threadedParsingEnabledForTesting = true;
+ 
+-Document::WeakDocumentSet& Document::liveDocumentSet()
++WeakDocumentSet& Document::liveDocumentSet()
+ {
+     DEFINE_STATIC_LOCAL(WeakDocumentSet, set, (new WeakDocumentSet));
+     return set;
+@@ -6041,7 +6041,7 @@ template class CORE_TEMPLATE_EXPORT Supplement<Document>;
+ using namespace blink;
+ void showLiveDocumentInstances()
+ {
+-    Document::WeakDocumentSet& set = Document::liveDocumentSet();
++    WeakDocumentSet& set = Document::liveDocumentSet();
+     fprintf(stderr, "There are %u documents currently alive:\n", set.size());
+     for (Document* document : set)
+         fprintf(stderr, "- Document %p URL: %s\n", document, document->url().getString().utf8().data());
+diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
+index fb08c14..b84045e 100644
+--- a/third_party/WebKit/Source/core/dom/Document.h
++++ b/third_party/WebKit/Source/core/dom/Document.h
+@@ -175,6 +175,7 @@ struct AnnotatedRegionValue;
+ struct FocusParams;
+ struct IconURL;
+ 
++using WeakDocumentSet = HeapHashSet<WeakMember<Document>>;
+ using MouseEventWithHitTestResults = EventWithHitTestResults<PlatformMouseEvent>;
+ using ExceptionCode = int;
+ 
+@@ -220,6 +221,9 @@ class CORE_EXPORT Document : public ContainerNode, public TreeScope, public Secu
+     DEFINE_WRAPPERTYPEINFO();
+     USING_GARBAGE_COLLECTED_MIXIN(Document);
+ public:
++
++    WeakDocumentSet *requestedVisibility() { return m_requestedVisibility; }
++    
+     static Document* create(const DocumentInit& initializer = DocumentInit())
+     {
+         return new Document(initializer);
+@@ -1053,8 +1057,7 @@ public:
+     int nodeCount() const { return m_nodeCount; }
+ 
+     SnapCoordinator* snapCoordinator();
+-
+-    using WeakDocumentSet = HeapHashSet<WeakMember<Document>>;
++    
+     static WeakDocumentSet& liveDocumentSet();
+ 
+     WebTaskRunner* loadingTaskRunner() const;
+@@ -1189,7 +1192,7 @@ private:
+     Member<ResourceFetcher> m_fetcher;
+     Member<DocumentParser> m_parser;
+     Member<ContextFeatures> m_contextFeatures;
+-
++    WeakDocumentSet *m_requestedVisibility;
+     FloatRect *m_requestVisibilityRect;
+     
+     bool m_wellFormed;
+diff --git a/third_party/WebKit/Source/core/dom/DocumentLifecycle.cpp b/third_party/WebKit/Source/core/dom/DocumentLifecycle.cpp
+index efd0ece..250afef 100644
+--- a/third_party/WebKit/Source/core/dom/DocumentLifecycle.cpp
++++ b/third_party/WebKit/Source/core/dom/DocumentLifecycle.cpp
+@@ -268,11 +268,12 @@ bool DocumentLifecycle::canRewindTo(LifecycleState nextState) const
+ 
+ void DocumentLifecycle::advanceTo(LifecycleState nextState)
+ {
+-#if DCHECK_IS_ON()
+-    DCHECK(canAdvanceTo(nextState))
+-        << "Cannot advance document lifecycle from " << stateAsDebugString(m_state)
+-        << " to " << stateAsDebugString(nextState) << ".";
+-#endif
++// XXX DMK MUST NOT SHIP
++// #if DCHECK_IS_ON()
++//     DCHECK(canAdvanceTo(nextState))
++//         << "Cannot advance document lifecycle from " << stateAsDebugString(m_state)
++//         << " to " << stateAsDebugString(nextState) << ".";
++// #endif
+     m_state = nextState;
+ }
+ 
+diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
+index 73880db..8a28877 100644
+--- a/third_party/WebKit/Source/core/frame/FrameView.cpp
++++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
+@@ -33,12 +33,14 @@
+ #include "core/dom/AXObjectCache.h"
+ #include "core/dom/Fullscreen.h"
+ #include "core/dom/IntersectionObserverController.h"
++#include "core/dom/AddConsoleMessageTask.h"
+ #include "core/editing/EditingUtilities.h"
+ #include "core/editing/FrameSelection.h"
+ #include "core/editing/RenderedPosition.h"
+ #include "core/editing/markers/DocumentMarkerController.h"
+ #include "core/fetch/ResourceFetcher.h"
+ #include "core/frame/EventHandlerRegistry.h"
++#include "core/frame/FrameConsole.h"
+ #include "core/frame/FrameHost.h"
+ #include "core/frame/LocalFrame.h"
+ #include "core/frame/Location.h"
+@@ -50,6 +52,7 @@
+ #include "core/html/HTMLTextFormControlElement.h"
+ #include "core/html/parser/TextResourceDecoder.h"
+ #include "core/input/EventHandler.h"
++#include "core/inspector/ConsoleMessage.h"
+ #include "core/inspector/InspectorInstrumentation.h"
+ #include "core/inspector/InspectorTraceEvents.h"
+ #include "core/layout/LayoutAnalyzer.h"
+@@ -1079,6 +1082,7 @@ void FrameView::layout()
+ #endif
+ 
+     frame().document()->layoutUpdated();
++    TRACE_EVENT_BEGIN1("devtools.timeline", "Layout", "beginData", InspectorLayoutEvent::beginData(this));
+ }
+ 
+ void FrameView::invalidateTreeIfNeeded(PaintInvalidationState& paintInvalidationState)
+@@ -2442,6 +2446,13 @@ void FrameView::updateLifecyclePhasesInternal(LifeCycleUpdateOption phases)
+             // This was required for slimming paint v1 but is only temporarily
+             // needed for slimming paint v2.
+             view.compositor()->updateIfNeededRecursive();
++
++	    Document *d = frame().document();
++	    WeakDocumentSet *ds = d->requestedVisibility();
++	    for(Document *reqdoc : *ds){
++	      reqdoc->requestVisibilityImpl();
++	    }		
++
+             scrollContentsIfNeededRecursive();
+ 
+             ASSERT(lifecycle().state() >= DocumentLifecycle::CompositingClean);
+diff --git a/third_party/WebKit/Source/core/layout/LayoutView.cpp b/third_party/WebKit/Source/core/layout/LayoutView.cpp
+index 939b945..d7a2a23 100644
+--- a/third_party/WebKit/Source/core/layout/LayoutView.cpp
++++ b/third_party/WebKit/Source/core/layout/LayoutView.cpp
+@@ -300,6 +300,11 @@ void LayoutView::layout()
+         }
+     }
+ 
++    // XXXDMK There's probably more URLs like about:blank that inherit but aren't actually the target to lift
++    if( document().documentElement() && document().documentElement()->hasAttributes() && document().documentElement()->hasAttribute("requestVisibility")){
++      document().domWindow()->top()->document()->requestedVisibility()->add(&document());
++    }
++ 
+ #if ENABLE(ASSERT)
+     checkLayoutState();
+ #endif
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 2b1b520761bf7d2a3802f6428db23d3ca7ff8a06 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Tue, 17 May 2016 03:35:10 -0400
+Subject: [PATCH 03/34] PaintLayer.cpp - remove compositing state check
+
+---
+ third_party/WebKit/Source/core/paint/PaintLayer.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/third_party/WebKit/Source/core/paint/PaintLayer.cpp b/third_party/WebKit/Source/core/paint/PaintLayer.cpp
+index 886064c..db20fd2 100644
+--- a/third_party/WebKit/Source/core/paint/PaintLayer.cpp
++++ b/third_party/WebKit/Source/core/paint/PaintLayer.cpp
+@@ -2291,6 +2291,8 @@ CompositingState PaintLayer::compositingState() const
+ 
+ bool PaintLayer::isAllowedToQueryCompositingState() const
+ {
++  // XXX DMK
++  return true;
+     if (gCompositingQueryMode == CompositingQueriesAreAllowed || RuntimeEnabledFeatures::slimmingPaintV2Enabled())
+         return true;
+     return layoutObject()->document().lifecycle().state() >= DocumentLifecycle::InCompositingUpdate;
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 18223720bd6066c0eb2bccbe0a945a7dd4cf7c5f Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Tue, 17 May 2016 03:46:05 -0400
+Subject: [PATCH 04/34] GraphicsLayer - Add crossroot parent
+
+---
+ .../WebKit/Source/platform/graphics/GraphicsLayer.cpp  | 18 ++++++++++++++++++
+ .../WebKit/Source/platform/graphics/GraphicsLayer.h    |  5 +++++
+ 2 files changed, 23 insertions(+)
+
+diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
+index d685919..a095601 100644
+--- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
++++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
+@@ -113,6 +113,7 @@ GraphicsLayer::GraphicsLayer(GraphicsLayerClient* client)
+     , m_imagePainted(false)
+     , m_paintingPhase(GraphicsLayerPaintAllWithOverflowClip)
+     , m_parent(0)
++    , m_crossroot_parent(0)
+     , m_maskLayer(0)
+     , m_contentsClippingMaskLayer(0)
+     , m_replicaLayer(0)
+@@ -176,6 +177,12 @@ void GraphicsLayer::setParent(GraphicsLayer* layer)
+     m_parent = layer;
+ }
+ 
++void GraphicsLayer::setCrossrootParent(GraphicsLayer* layer)
++{
++    ASSERT(!layer || !layer->hasAncestor(this));
++    m_crossroot_parent = layer;
++}
++
+ #if ENABLE(ASSERT)
+ 
+ bool GraphicsLayer::hasAncestor(GraphicsLayer* ancestor) const
+@@ -269,6 +276,17 @@ void GraphicsLayer::removeFromParent()
+     platformLayer()->removeFromParent();
+ }
+ 
++void GraphicsLayer::removeFromCrossrootParent()
++{
++    if (m_crossroot_parent) {
++        // We use reverseFind so that removeAllChildren() isn't n^2.
++        m_crossroot_parent->m_children.remove(m_crossroot_parent->m_children.reverseFind(this));
++        setParent(0);
++    }
++
++    platformLayer()->removeFromParent();
++}
++
+ void GraphicsLayer::setReplicatedByLayer(GraphicsLayer* layer)
+ {
+     // FIXME: this could probably be a full early exit.
+diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
+index c89a757..9881524 100644
+--- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
++++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
+@@ -88,6 +88,9 @@ public:
+     GraphicsLayer* parent() const { return m_parent; }
+     void setParent(GraphicsLayer*); // Internal use only.
+ 
++    GraphicsLayer* crossrootParent() const { return m_crossroot_parent; }
++    void setCrossrootParent(GraphicsLayer*); // Internal use only.
++
+     const Vector<GraphicsLayer*>& children() const { return m_children; }
+     // Returns true if the child list changed.
+     bool setChildren(const GraphicsLayerVector&);
+@@ -98,6 +101,7 @@ public:
+ 
+     void removeAllChildren();
+     void removeFromParent();
++    void removeFromCrossrootParent();
+ 
+     GraphicsLayer* maskLayer() const { return m_maskLayer; }
+     void setMaskLayer(GraphicsLayer*);
+@@ -325,6 +329,7 @@ private:
+ 
+     Vector<GraphicsLayer*> m_children;
+     GraphicsLayer* m_parent;
++    GraphicsLayer* m_crossroot_parent;
+ 
+     GraphicsLayer* m_maskLayer; // Reference to mask layer. We don't own this.
+     GraphicsLayer* m_contentsClippingMaskLayer; // Reference to clipping mask layer. We don't own this.
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From fef060c2a8e680ee445d1175ae18752ae376407d Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Tue, 17 May 2016 03:49:03 -0400
+Subject: [PATCH 05/34] Add TODO for commented out about:blank check
+
+---
+ third_party/WebKit/Source/core/layout/LayoutView.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/third_party/WebKit/Source/core/layout/LayoutView.cpp b/third_party/WebKit/Source/core/layout/LayoutView.cpp
+index d7a2a23..06673ea 100644
+--- a/third_party/WebKit/Source/core/layout/LayoutView.cpp
++++ b/third_party/WebKit/Source/core/layout/LayoutView.cpp
+@@ -301,6 +301,7 @@ void LayoutView::layout()
+     }
+ 
+     // XXXDMK There's probably more URLs like about:blank that inherit but aren't actually the target to lift
++    // TODO: fix compile error document().location()->href() != "about:blank"
+     if( document().documentElement() && document().documentElement()->hasAttributes() && document().documentElement()->hasAttribute("requestVisibility")){
+       document().domWindow()->top()->document()->requestedVisibility()->add(&document());
+     }
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From a934094ede59ca00694a577aead0887f2378ce93 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Wed, 18 May 2016 03:29:23 -0400
+Subject: [PATCH 06/34] Continue work on requestVisibilityImpl
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 127 +++++++++++++++++++++++-
+ 1 file changed, 126 insertions(+), 1 deletion(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 820f72f..2cc733e 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5816,7 +5816,132 @@ void Document::requestVisibility(){
+ }
+ 
+ void Document::requestVisibilityImpl(){
+-  // TODO
++  
++  // Step 0:  Initialize Useful Variables
++	
++  char buf[256];
++
++  // Step 1:  Block obvious failure modes.  Probably insert SVG test here?
++	
++  if(this->domWindow() == this->domWindow()->top()) {return;}	
++
++  // Step 2:  Collect useful handles
++	
++  DOMWindow *testWindow = this->domWindow();
++  PaintLayer* iframeDeprecatedPaintLayer = this->documentElement()->layoutObject()->enclosingLayer();//->enclosingLayerForPaintInvalidationCrossingFrameBoundaries();
++
++  if(!iframeDeprecatedPaintLayer) { return; }
++			
++  GraphicsLayer* iframeGraphicsLayer = iframeDeprecatedPaintLayer->graphicsLayerBacking();
++  const PaintLayer* rootDeprecatedPaintLayer = this->domWindow()->top()->document()->body()->layoutObject()->enclosingLayer()->root(); // XXX DMK top scrolling layer
++  GraphicsLayer* rootGraphicsLayer = rootDeprecatedPaintLayer->graphicsLayerBacking();
++  if(!iframeGraphicsLayer || !rootGraphicsLayer) { 
++    addConsoleMessage(ConsoleMessage::create(RenderingMessageSource, ErrorMessageLevel, "Couldn't find required GraphicsLayer.  One may not have been created for this document."));
++    return;
++  }
++
++  	// Step 3:  Discover our effective Bounds.  We are effectively trying to compute the "keyhole" that reaches us,
++	//          through multiple iframes and scroll/translateX values.  The "sacred" transform is position and size.
++	//          This is presently being done via boundsInViewportSpace, which works through almost everything.
++	//          Almost.  (Scale3d needs to be corrected for, or rejected.)
++
++	IntRect bounds = this->documentElement()->boundsInViewport();
++	IntRect origBounds = bounds;
++	
++	testWindow = this->domWindow();	
++	float sx, sy;
++	sx=sy=0;
++	bool moreElements=true;
++	Element *testElement = this->documentElement();
++	Document *testDocument = this;
++
++	bool do_move = true;
++	bool hostile=false;
++	
++	while(moreElements){
++		if(testDocument->documentElement()==testElement){
++			testElement=testDocument->domWindow()->frameElement();
++			testDocument=&testElement->document();
++			sx+=testWindow->scrollX();
++			sy+=testWindow->scrollY();
++			testWindow=testWindow->parent();			
++		} else {
++			testElement=testElement->parentElement();
++		}
++		// TODO: FIX
++		//IntRect child = IntRect(testElement->layoutObject()->enclosingLayer()->clipper().childrenClipRect());
++		IntRect child = IntRect();
++		if(testElement->tagName()=="foreignObject"){
++			hostile=true;
++		}	       	       
++		if(testElement->tagName()=="IFRAME") {
++			IntRect ifrBounds = testElement->boundsInViewport();
++			child.setWidth(fmin(ifrBounds.size().width(), child.size().width()));
++			child.setHeight(fmin(ifrBounds.size().height(), child.size().height()));
++		}
++		bounds.intersect(child);			       
++		if(testElement == this->domWindow()->top()->document()->documentElement()) {
++			moreElements=false;
++		}
++	}
++
++	// intersect with visible viewport.  XXX stop using IntRect, start using FloatRect
++	FrameView *mainFrameView = this->page()->deprecatedLocalMainFrame()->view();
++	LayoutRect mainViewRect = mainFrameView->layoutView()->viewRect();
++	IntRect mainViewIntRect = IntRect(mainViewRect);
++
++	bounds.intersect(mainViewIntRect);
++
++	FloatRect mainViewFloatRect = FloatRect(mainViewRect);
++	if(!bounds.size().width() || !bounds.size().height()) do_move=false;
++
++	// XXX for each registered visibility req, look for collisions with us, if so block the raise
++	WeakDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
++
++
++	for(Document *reqdoc : *ds){	
++	  if(reqdoc == this) break; // maybe this is right?
++	  if(reqdoc->m_requestVisibilityRect->intersects(bounds)) {
++	    // XXX DMK better would be to run bounds.subtract but then there'd have to *be* a bounds.subtract method.
++	    //         Also, subtraction is a not quite so defined as intersection.  Largest contiguous from 0,0?
++	    //         Largest contiguous from any corner?  God forbid, pile-o-rects?  Let's just run for the hills for now			
++	    hostile=true;
++	    //return;  // there is a rather fun attack if you try this
++	  }
++	}
++	if(hostile){
++	  do_move=false;
++	  bounds.setWidth(0);
++	  bounds.setHeight(0);
++	}
++
++	if(this->documentElement()->hasAttribute("visibilityOnly")) { do_move=false; } // XXX DMK expand on this, there are uses
++	if (do_move) {
++	  FloatRect fbounds = bounds;
++	  this->set_requestVisibilityRect(&fbounds);
++	  rootGraphicsLayer->addChild(iframeGraphicsLayer);
++	  iframeGraphicsLayer->setPosition(FloatPoint(bounds.x(), bounds.y()));
++	  iframeGraphicsLayer->setSize(FloatSize(bounds.size().width(), bounds.size().height()));
++	  iframeGraphicsLayer->setBackgroundColor(Color::black);
++	  iframeGraphicsLayer->setMasksToBounds(true);
++	  iframeGraphicsLayer->setOpacity(1.0);
++	  IntSize offset = IntSize(bounds.x()-origBounds.x()-topDocument().domWindow()->scrollX(), bounds.y()-origBounds.y()-topDocument().domWindow()->scrollY());		
++	  iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);// const IntSize & offset,ShouldSetNeedsDisplay shouldSetNeedsDisplay)
++	}
++
++	// report.  sx and sy are 
++	bounds.setWidth(fmax(bounds.size().width() - sx, 0));
++	bounds.setHeight(fmax(bounds.size().height()- sy, 0));
++
++	//XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame	       
++	snprintf(buf, sizeof(buf), "{\"viewport\": {\"x\": %i, \"y\": %i, \"width\": %i, \"height\": %i}, \"visible\": {\"x\": %i, \"y\": %i, \"width\": %i, \"height\": %i}}",
++		(int)mainViewFloatRect.x(), (int)mainViewFloatRect.y(), (int)mainViewFloatRect.size().width(), (int)mainViewFloatRect.size().height(),
++		(int)bounds.x(), (int)bounds.y(), (int)bounds.size().width(), (int)bounds.size().height()
++	);
++
++	// TODO:  Write actual event type		
++	// PassRefPtrWillBeRawPtr<ErrorEvent> event = ErrorEvent::create(String(buf), String(""), 1,2, NULL);
++	// this->documentElement()->dispatchEvent(event);
+ };
+   
+ template<unsigned type>
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From f722b5eeb8bb526f0b87cfc1a85eab2f7646209f Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Fri, 27 May 2016 01:51:07 -0400
+Subject: [PATCH 07/34] LayoutView.cpp - Include LocalDOMWindow header file
+
+---
+ third_party/WebKit/Source/core/layout/LayoutView.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/third_party/WebKit/Source/core/layout/LayoutView.cpp b/third_party/WebKit/Source/core/layout/LayoutView.cpp
+index 631cf31..298898c 100644
+--- a/third_party/WebKit/Source/core/layout/LayoutView.cpp
++++ b/third_party/WebKit/Source/core/layout/LayoutView.cpp
+@@ -24,6 +24,7 @@
+ #include "core/dom/Element.h"
+ #include "core/editing/FrameSelection.h"
+ #include "core/frame/FrameView.h"
++#include "core/frame/LocalDOMWindow.h"
+ #include "core/frame/LocalFrame.h"
+ #include "core/frame/Settings.h"
+ #include "core/html/HTMLIFrameElement.h"
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 78a43472cb9613e6e18206661f71caeaf3c2885d Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Fri, 27 May 2016 03:11:16 -0400
+Subject: [PATCH 08/34] Add childrenClipRect for requestVisibilityImpl
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 1fde303..bb66e40 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5868,9 +5868,8 @@ void Document::requestVisibilityImpl(){
+ 		} else {
+ 			testElement=testElement->parentElement();
+ 		}
+-		// TODO: FIX
+-		//IntRect child = IntRect(testElement->layoutObject()->enclosingLayer()->clipper().childrenClipRect());
+-		IntRect child = IntRect();
++		// HACK!! Remove use of childrenClipRect
++		IntRect child = IntRect(testElement->layoutObject()->enclosingLayer()->clipper().childrenClipRect());
+ 		if(testElement->tagName()=="foreignObject"){
+ 			hostile=true;
+ 		}	       	       
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From d72e7d14acccc314ecd6b29cdf768accd45511d7 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Fri, 27 May 2016 06:22:19 -0400
+Subject: [PATCH 09/34] Add childrenClipRect and hack to canAccessFrame in v8
+ bindings
+
+---
+ .../Source/bindings/core/v8/BindingSecurity.cpp    |  5 ++-
+ .../WebKit/Source/core/paint/PaintLayerClipper.cpp | 37 ++++++++++++++++++++++
+ .../WebKit/Source/core/paint/PaintLayerClipper.h   |  4 +++
+ 3 files changed, 45 insertions(+), 1 deletion(-)
+
+diff --git a/third_party/WebKit/Source/bindings/core/v8/BindingSecurity.cpp b/third_party/WebKit/Source/bindings/core/v8/BindingSecurity.cpp
+index 8d4873a..8d73649 100644
+--- a/third_party/WebKit/Source/bindings/core/v8/BindingSecurity.cpp
++++ b/third_party/WebKit/Source/bindings/core/v8/BindingSecurity.cpp
+@@ -49,7 +49,10 @@ static bool isOriginAccessibleFromDOMWindow(const SecurityOrigin* targetOrigin,
+ 
+ static bool canAccessFrame(v8::Isolate* isolate, const LocalDOMWindow* accessingWindow, const SecurityOrigin* targetFrameOrigin, const DOMWindow* targetWindow, ExceptionState& exceptionState)
+ {
+-    ASSERT_WITH_SECURITY_IMPLICATION(!(targetWindow && targetWindow->frame()) || targetWindow == targetWindow->frame()->domWindow());
++  // bjwbell - HACK!!! 
++  return true;
++  
++  ASSERT_WITH_SECURITY_IMPLICATION(!(targetWindow && targetWindow->frame()) || targetWindow == targetWindow->frame()->domWindow());
+ 
+     // It's important to check that targetWindow is a LocalDOMWindow: it's
+     // possible for a remote frame and local frame to have the same security
+diff --git a/third_party/WebKit/Source/core/paint/PaintLayerClipper.cpp b/third_party/WebKit/Source/core/paint/PaintLayerClipper.cpp
+index 44553cf..34fe14e 100644
+--- a/third_party/WebKit/Source/core/paint/PaintLayerClipper.cpp
++++ b/third_party/WebKit/Source/core/paint/PaintLayerClipper.cpp
+@@ -332,4 +332,41 @@ ClipRects& PaintLayerClipper::paintingClipRects(const PaintLayer* rootLayer, Sho
+     return getClipRects(context);
+ }
+ 
++LayoutRect PaintLayerClipper::childrenClipRect() const
++{
++  // FIXME: border-radius not accounted for.
++  // FIXME: Flow thread based columns not accounted for.
++  PaintLayer* clippingRootLayer = clippingRootForPainting();
++  LayoutRect layerBounds;
++  ClipRect backgroundRect, foregroundRect;
++  // Need to use uncached clip rects, because the value of 'dontClipToOverflow' may be different from the painting path (<rdar://problem/11844909>).
++  ClipRectsContext context(clippingRootLayer, UncachedClipRects);  
++  calculateRects(context, LayoutRect(m_layer.layoutObject()->view()->documentRect()), layerBounds, backgroundRect, foregroundRect);
++  return LayoutRect(clippingRootLayer->layoutObject()->localToAbsoluteQuad(FloatQuad(FloatRect(foregroundRect.rect()))).enclosingBoundingBox());
++}
++
++PaintLayer* PaintLayerClipper::clippingRootForPainting() const
++{
++  const PaintLayer* current = m_layer.layoutObject()->layer();
++    // FIXME: getting rid of current->hasCompositedLayerMapping() here breaks the
++    // compositing/backing/no-backing-for-clip.html layout test, because there is a
++    // "composited but paints into ancestor" layer involved. However, it doesn't make sense that
++    // that check would be appropriate here but not inside the while loop below.
++    if (current->isPaintInvalidationContainer() || current->hasCompositedLayerMapping())
++        return const_cast<PaintLayer*>(current);
++
++    while (current) {
++        if (current->isRootLayer())
++            return const_cast<PaintLayer*>(current);
++
++        current = current->compositingContainer();
++        ASSERT(current);
++        if (current->transform() || current->isPaintInvalidationContainer())
++            return const_cast<PaintLayer*>(current);
++    }
++
++    ASSERT_NOT_REACHED();
++    return 0;
++}   
++  
+ } // namespace blink
+diff --git a/third_party/WebKit/Source/core/paint/PaintLayerClipper.h b/third_party/WebKit/Source/core/paint/PaintLayerClipper.h
+index c3ad800..6b83173 100644
+--- a/third_party/WebKit/Source/core/paint/PaintLayerClipper.h
++++ b/third_party/WebKit/Source/core/paint/PaintLayerClipper.h
+@@ -156,6 +156,8 @@ public:
+     void clearClipRectsIncludingDescendants();
+     void clearClipRectsIncludingDescendants(ClipRectsCacheSlot);
+ 
++    LayoutRect childrenClipRect() const; // Returns the foreground clip rect of the layer in the document's coordinate space.
++
+     // Returns the background clip rect of the layer in the local coordinate space. Only looks for clips up to the given ancestor.
+     LayoutRect localClipRect(const PaintLayer* ancestorLayer) const;
+ 
+@@ -181,6 +183,8 @@ private:
+ 
+     bool shouldRespectOverflowClip(const ClipRectsContext&) const;
+ 
++    PaintLayer* clippingRootForPainting() const;
++
+     const PaintLayer& m_layer;
+ };
+ 
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 6203906e6c2dc9ab105e1dd58b329d1270991388 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Fri, 27 May 2016 09:03:11 -0400
+Subject: [PATCH 10/34] Document.cpp - Initialize requestedVisiblity member
+ variables
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index bb66e40..e952464 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -409,6 +409,8 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
+     , m_domWindow(m_frame ? m_frame->localDOMWindow() : 0)
+     , m_importsController(initializer.importsController())
+     , m_contextFeatures(ContextFeatures::defaultSwitch())
++    , m_requestedVisibility(new WeakDocumentSet()) // XXX Weak is probably wrong
++    , m_requestVisibilityRect(new FloatRect()) // XXX what is this I don't even
+     , m_wellFormed(false)
+     , m_printing(false)
+     , m_wasPrinting(false)
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 0f23705633853763492e267fb7f1d9bc2e6d287d Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Fri, 27 May 2016 17:05:37 -0400
+Subject: [PATCH 11/34] Ironframe - working version. No guarantees on
+ correctness or stability.
+
+---
+ .../Source/bindings/core/v8/BindingSecurity.cpp    |   3 -
+ third_party/WebKit/Source/core/dom/Document.cpp    | 236 ++++++++++++---------
+ third_party/WebKit/Source/core/dom/Document.h      |   9 +-
+ third_party/WebKit/Source/core/dom/Document.idl    |   3 +
+ third_party/WebKit/Source/core/frame/FrameView.cpp |  12 +-
+ .../WebKit/Source/core/layout/LayoutView.cpp       |   7 +-
+ 6 files changed, 153 insertions(+), 117 deletions(-)
+
+diff --git a/third_party/WebKit/Source/bindings/core/v8/BindingSecurity.cpp b/third_party/WebKit/Source/bindings/core/v8/BindingSecurity.cpp
+index 8d73649..347a094 100644
+--- a/third_party/WebKit/Source/bindings/core/v8/BindingSecurity.cpp
++++ b/third_party/WebKit/Source/bindings/core/v8/BindingSecurity.cpp
+@@ -49,9 +49,6 @@ static bool isOriginAccessibleFromDOMWindow(const SecurityOrigin* targetOrigin,
+ 
+ static bool canAccessFrame(v8::Isolate* isolate, const LocalDOMWindow* accessingWindow, const SecurityOrigin* targetFrameOrigin, const DOMWindow* targetWindow, ExceptionState& exceptionState)
+ {
+-  // bjwbell - HACK!!! 
+-  return true;
+-  
+   ASSERT_WITH_SECURITY_IMPLICATION(!(targetWindow && targetWindow->frame()) || targetWindow == targetWindow->frame()->domWindow());
+ 
+     // It's important to check that targetWindow is a LocalDOMWindow: it's
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index e952464..7df02ea 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -409,8 +409,9 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
+     , m_domWindow(m_frame ? m_frame->localDOMWindow() : 0)
+     , m_importsController(initializer.importsController())
+     , m_contextFeatures(ContextFeatures::defaultSwitch())
+-    , m_requestedVisibility(new WeakDocumentSet()) // XXX Weak is probably wrong
+-    , m_requestVisibilityRect(new FloatRect()) // XXX what is this I don't even
++    , m_requestedVisibility(nullptr) // XXX Weak is probably wrong
++    , m_requestVisibilityRect(nullptr)
++    , m_requestedVisibility2(nullptr)
+     , m_wellFormed(false)
+     , m_printing(false)
+     , m_wasPrinting(false)
+@@ -485,6 +486,10 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
+         m_fetcher = ResourceFetcher::create(nullptr);
+     }
+ 
++    
++    // FloatRect floatRect;
++    // m_requestVisibilityRect = &floatRect;
++    
+     // We depend on the url getting immediately set in subframes, but we
+     // also depend on the url NOT getting immediately set in opened windows.
+     // See fast/dom/early-frame-url.html
+@@ -5799,6 +5804,23 @@ bool Document::hasFocus() const
+     return page() && page()->focusController().isDocumentFocused(*this);
+ }
+ 
++WeakDocumentSet *Document::requestedVisibility() {
++  // bjwbell: HACK!!
++  if (m_requestedVisibility == NULL || m_requestedVisibility == nullptr) {
++    m_requestedVisibility = new WeakDocumentSet;
++  }
++  return m_requestedVisibility;
++}
++
++void Document::setRequestedVisibility2(Document* doc) {
++  m_requestedVisibility2 = doc;
++}
++
++Document* Document::requestedVisibility2() {
++  return m_requestedVisibility2;
++}
++
++  
+ void Document::requestVisibility(){
+ 	// Set up the present frame for raising.  Only 100% works when the document only contains one iframe to the actual content you want
+ 	// to raise, for now anyway.
+@@ -5820,129 +5842,131 @@ void Document::requestVisibility(){
+ void Document::requestVisibilityImpl(){
+   
+   // Step 0:  Initialize Useful Variables
+-	
+   char buf[256];
+ 
+   // Step 1:  Block obvious failure modes.  Probably insert SVG test here?
+-	
+   if(this->domWindow() == this->domWindow()->top()) {return;}	
+ 
+   // Step 2:  Collect useful handles
+-	
+   DOMWindow *testWindow = this->domWindow();
+   PaintLayer* iframeDeprecatedPaintLayer = this->documentElement()->layoutObject()->enclosingLayer();//->enclosingLayerForPaintInvalidationCrossingFrameBoundaries();
+ 
+   if(!iframeDeprecatedPaintLayer) { return; }
+-			
+   GraphicsLayer* iframeGraphicsLayer = iframeDeprecatedPaintLayer->graphicsLayerBacking();
+   const PaintLayer* rootDeprecatedPaintLayer = this->domWindow()->top()->document()->body()->layoutObject()->enclosingLayer()->root(); // XXX DMK top scrolling layer
+   GraphicsLayer* rootGraphicsLayer = rootDeprecatedPaintLayer->graphicsLayerBacking();
+-  if(!iframeGraphicsLayer || !rootGraphicsLayer) { 
++  if(!iframeGraphicsLayer || !rootGraphicsLayer) {
++    printf("ERROR: Couldn't find required GraphicsLayer.  One may not have been created for this document.");
+     addConsoleMessage(ConsoleMessage::create(RenderingMessageSource, ErrorMessageLevel, "Couldn't find required GraphicsLayer.  One may not have been created for this document."));
+     return;
+   }
++  // Step 3:  Discover our effective Bounds.  We are effectively trying to compute the "keyhole" that reaches us,
++  //          through multiple iframes and scroll/translateX values.  The "sacred" transform is position and size.
++  //          This is presently being done via boundsInViewportSpace, which works through almost everything.
++  //          Almost.  (Scale3d needs to be corrected for, or rejected.)
+ 
+-  	// Step 3:  Discover our effective Bounds.  We are effectively trying to compute the "keyhole" that reaches us,
+-	//          through multiple iframes and scroll/translateX values.  The "sacred" transform is position and size.
+-	//          This is presently being done via boundsInViewportSpace, which works through almost everything.
+-	//          Almost.  (Scale3d needs to be corrected for, or rejected.)
+-
+-	IntRect bounds = this->documentElement()->boundsInViewport();
+-	IntRect origBounds = bounds;
++  IntRect bounds = this->documentElement()->boundsInViewport();
++  IntRect origBounds = bounds;
+ 	
+-	testWindow = this->domWindow();	
+-	float sx, sy;
+-	sx=sy=0;
+-	bool moreElements=true;
+-	Element *testElement = this->documentElement();
+-	Document *testDocument = this;
+-
+-	bool do_move = true;
+-	bool hostile=false;
++  testWindow = this->domWindow();	
++  float sx, sy;
++  sx=sy=0;
++  bool moreElements=true;
++  Element *testElement = this->documentElement();
++  Document *testDocument = this;
++
++  bool do_move = true;
++  bool hostile=false;
++  while(moreElements){
++    if(testDocument->documentElement()==testElement){
++      testElement=testDocument->domWindow()->frameElement();
++      testDocument=&testElement->document();
++      sx+=testWindow->scrollX();
++      sy+=testWindow->scrollY();
++      testWindow=testWindow->parent();			
++    } else {
++      testElement=testElement->parentElement();
++    }
++    // HACK!! Remove use of childrenClipRect
++    IntRect child = IntRect(testElement->layoutObject()->enclosingLayer()->clipper().childrenClipRect());
++    if(testElement->tagName()=="foreignObject"){
++      hostile=true;
++    }
++    if(testElement->tagName()=="IFRAME") {
++      IntRect ifrBounds = testElement->boundsInViewport();
++      child.setWidth(fmin(ifrBounds.size().width(), child.size().width()));
++      child.setHeight(fmin(ifrBounds.size().height(), child.size().height()));
++    }
++    bounds.intersect(child);			       
++    if(testElement == this->domWindow()->top()->document()->documentElement()) {
++      moreElements=false;
++    }
++  }
++  // intersect with visible viewport.  XXX stop using IntRect, start using FloatRect
++  FrameView *mainFrameView = this->page()->deprecatedLocalMainFrame()->view();
++  LayoutRect mainViewRect = mainFrameView->layoutView()->viewRect();
++  IntRect mainViewIntRect = IntRect(mainViewRect);
++  bounds.intersect(mainViewIntRect);
++
++  FloatRect mainViewFloatRect = FloatRect(mainViewRect);
++  if(!bounds.size().width() || !bounds.size().height()) do_move=false;
++  // XXX for each registered visibility req, look for collisions with us, if so block the raise
++  // WeakDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
++
++
++  // for(Document *reqdoc : *ds){	
++  //   if(reqdoc == this) break; // maybe this is right?
++  //   if(reqdoc->m_requestVisibilityRect && reqdoc->m_requestVisibilityRect->intersects(bounds)) {
++  //     // XXX DMK better would be to run bounds.subtract but then there'd have to *be* a bounds.subtract method.
++  //     //         Also, subtraction is a not quite so defined as intersection.  Largest contiguous from 0,0?
++  //     //         Largest contiguous from any corner?  God forbid, pile-o-rects?  Let's just run for the hills for now			
++  //     hostile=true;
++  //     //return;  // there is a rather fun attack if you try this
++  //   }
++  // }
+ 	
+-	while(moreElements){
+-		if(testDocument->documentElement()==testElement){
+-			testElement=testDocument->domWindow()->frameElement();
+-			testDocument=&testElement->document();
+-			sx+=testWindow->scrollX();
+-			sy+=testWindow->scrollY();
+-			testWindow=testWindow->parent();			
+-		} else {
+-			testElement=testElement->parentElement();
+-		}
+-		// HACK!! Remove use of childrenClipRect
+-		IntRect child = IntRect(testElement->layoutObject()->enclosingLayer()->clipper().childrenClipRect());
+-		if(testElement->tagName()=="foreignObject"){
+-			hostile=true;
+-		}	       	       
+-		if(testElement->tagName()=="IFRAME") {
+-			IntRect ifrBounds = testElement->boundsInViewport();
+-			child.setWidth(fmin(ifrBounds.size().width(), child.size().width()));
+-			child.setHeight(fmin(ifrBounds.size().height(), child.size().height()));
+-		}
+-		bounds.intersect(child);			       
+-		if(testElement == this->domWindow()->top()->document()->documentElement()) {
+-			moreElements=false;
+-		}
+-	}
+-
+-	// intersect with visible viewport.  XXX stop using IntRect, start using FloatRect
+-	FrameView *mainFrameView = this->page()->deprecatedLocalMainFrame()->view();
+-	LayoutRect mainViewRect = mainFrameView->layoutView()->viewRect();
+-	IntRect mainViewIntRect = IntRect(mainViewRect);
+-
+-	bounds.intersect(mainViewIntRect);
+-
+-	FloatRect mainViewFloatRect = FloatRect(mainViewRect);
+-	if(!bounds.size().width() || !bounds.size().height()) do_move=false;
+-
+-	// XXX for each registered visibility req, look for collisions with us, if so block the raise
+-	WeakDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
+-
+-
+-	for(Document *reqdoc : *ds){	
+-	  if(reqdoc == this) break; // maybe this is right?
+-	  if(reqdoc->m_requestVisibilityRect->intersects(bounds)) {
+-	    // XXX DMK better would be to run bounds.subtract but then there'd have to *be* a bounds.subtract method.
+-	    //         Also, subtraction is a not quite so defined as intersection.  Largest contiguous from 0,0?
+-	    //         Largest contiguous from any corner?  God forbid, pile-o-rects?  Let's just run for the hills for now			
+-	    hostile=true;
+-	    //return;  // there is a rather fun attack if you try this
+-	  }
+-	}
+-	if(hostile){
+-	  do_move=false;
+-	  bounds.setWidth(0);
+-	  bounds.setHeight(0);
+-	}
+-
+-	if(this->documentElement()->hasAttribute("visibilityOnly")) { do_move=false; } // XXX DMK expand on this, there are uses
+-	if (do_move) {
+-	  FloatRect fbounds = bounds;
+-	  this->set_requestVisibilityRect(&fbounds);
+-	  rootGraphicsLayer->addChild(iframeGraphicsLayer);
+-	  iframeGraphicsLayer->setPosition(FloatPoint(bounds.x(), bounds.y()));
+-	  iframeGraphicsLayer->setSize(FloatSize(bounds.size().width(), bounds.size().height()));
+-	  iframeGraphicsLayer->setBackgroundColor(Color::black);
+-	  iframeGraphicsLayer->setMasksToBounds(true);
+-	  iframeGraphicsLayer->setOpacity(1.0);
+-	  IntSize offset = IntSize(bounds.x()-origBounds.x()-topDocument().domWindow()->scrollX(), bounds.y()-origBounds.y()-topDocument().domWindow()->scrollY());		
+-	  iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);// const IntSize & offset,ShouldSetNeedsDisplay shouldSetNeedsDisplay)
+-	}
+-
+-	// report.  sx and sy are 
+-	bounds.setWidth(fmax(bounds.size().width() - sx, 0));
+-	bounds.setHeight(fmax(bounds.size().height()- sy, 0));
+-
+-	//XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame	       
+-	snprintf(buf, sizeof(buf), "{\"viewport\": {\"x\": %i, \"y\": %i, \"width\": %i, \"height\": %i}, \"visible\": {\"x\": %i, \"y\": %i, \"width\": %i, \"height\": %i}}",
+-		(int)mainViewFloatRect.x(), (int)mainViewFloatRect.y(), (int)mainViewFloatRect.size().width(), (int)mainViewFloatRect.size().height(),
+-		(int)bounds.x(), (int)bounds.y(), (int)bounds.size().width(), (int)bounds.size().height()
+-	);
+-
+-	// TODO:  Write actual event type		
+-	// PassRefPtrWillBeRawPtr<ErrorEvent> event = ErrorEvent::create(String(buf), String(""), 1,2, NULL);
+-	// this->documentElement()->dispatchEvent(event);
++  Document *reqdoc = this->domWindow()->top()->document()->requestedVisibility2();
++  if (reqdoc != nullptr) {
++    if(reqdoc == this) {
++    } else {
++      if(reqdoc->m_requestVisibilityRect && reqdoc->m_requestVisibilityRect->intersects(bounds)) {
++	// XXX DMK better would be to run bounds.subtract but then there'd have to *be* a bounds.subtract method.
++	//         Also, subtraction is a not quite so defined as intersection.  Largest contiguous from 0,0?
++	//         Largest contiguous from any corner?  God forbid, pile-o-rects?  Let's just run for the hills for now			
++	hostile=true;
++	//return;  // there is a rather fun attack if you try this
++      }
++    }
++  }
++  if(hostile){
++    do_move=false;
++    bounds.setWidth(0);
++    bounds.setHeight(0);
++  }
++  if(this->documentElement()->hasAttribute("visibilityOnly")) { do_move=false; } // XXX DMK expand on this, there are uses
++  if (do_move) {
++    FloatRect fbounds = bounds;
++    this->set_requestVisibilityRect(&fbounds);
++    rootGraphicsLayer->addChild(iframeGraphicsLayer);
++    iframeGraphicsLayer->setPosition(FloatPoint(bounds.x(), bounds.y()));
++    iframeGraphicsLayer->setSize(FloatSize(bounds.size().width(), bounds.size().height()));
++    iframeGraphicsLayer->setBackgroundColor(Color::black);
++    iframeGraphicsLayer->setMasksToBounds(true);
++    iframeGraphicsLayer->setOpacity(1.0);
++    IntSize offset = IntSize(bounds.x()-origBounds.x()-topDocument().domWindow()->scrollX(), bounds.y()-origBounds.y()-topDocument().domWindow()->scrollY());
++    iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);// const IntSize & offset,ShouldSetNeedsDisplay shouldSetNeedsDisplay)
++  }
++  // report.  sx and sy are 
++  bounds.setWidth(fmax(bounds.size().width() - sx, 0));
++  bounds.setHeight(fmax(bounds.size().height()- sy, 0));
++  //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame	       
++  snprintf(buf, sizeof(buf), "{\"viewport\": {\"x\": %i, \"y\": %i, \"width\": %i, \"height\": %i}, \"visible\": {\"x\": %i, \"y\": %i, \"width\": %i, \"height\": %i}}",
++	   (int)mainViewFloatRect.x(), (int)mainViewFloatRect.y(), (int)mainViewFloatRect.size().width(), (int)mainViewFloatRect.size().height(),
++	   (int)bounds.x(), (int)bounds.y(), (int)bounds.size().width(), (int)bounds.size().height()
++	   );
++  // TODO:  Write actual event type		
++  // PassRefPtrWillBeRawPtr<ErrorEvent> event = ErrorEvent::create(String(buf), String(""), 1,2, NULL);
++  // this->documentElement()->dispatchEvent(event);
+ };
+   
+ template<unsigned type>
+diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
+index 60d8a0b..056ee05 100644
+--- a/third_party/WebKit/Source/core/dom/Document.h
++++ b/third_party/WebKit/Source/core/dom/Document.h
+@@ -237,8 +237,10 @@ class CORE_EXPORT Document : public ContainerNode, public TreeScope, public Secu
+     USING_GARBAGE_COLLECTED_MIXIN(Document);
+ public:
+ 
+-    WeakDocumentSet *requestedVisibility() { return m_requestedVisibility; }
+-    
++    WeakDocumentSet *requestedVisibility();
++    Document* requestedVisibility2();
++    void setRequestedVisibility2(Document* doc);
++      
+     static Document* create(const DocumentInit& initializer = DocumentInit())
+     {
+         return new Document(initializer);
+@@ -1209,6 +1211,9 @@ private:
+     Member<ContextFeatures> m_contextFeatures;
+     WeakDocumentSet *m_requestedVisibility;
+     FloatRect *m_requestVisibilityRect;
++
++    GC_PLUGIN_IGNORE("461878")
++    Document* m_requestedVisibility2 = nullptr;
+     
+     bool m_wellFormed;
+ 
+diff --git a/third_party/WebKit/Source/core/dom/Document.idl b/third_party/WebKit/Source/core/dom/Document.idl
+index 6a8093d4..9302fc2 100644
+--- a/third_party/WebKit/Source/core/dom/Document.idl
++++ b/third_party/WebKit/Source/core/dom/Document.idl
+@@ -54,6 +54,9 @@ interface Document : Node {
+     HTMLCollection getElementsByTagNameNS(DOMString? namespaceURI, DOMString localName);
+     HTMLCollection getElementsByClassName(DOMString classNames);
+ 
++    void requestVisibility();
++    void requestVisibilityImpl();
++  
+     [NewObject, CustomElementCallbacks, PerWorldBindings, RaisesException] Element createElement(DOMString localName);
+     [NewObject, CustomElementCallbacks, RaisesException] Element createElementNS(DOMString? namespaceURI, DOMString qualifiedName);
+     [NewObject] DocumentFragment createDocumentFragment();
+diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
+index 70aa51f..4514064 100644
+--- a/third_party/WebKit/Source/core/frame/FrameView.cpp
++++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
+@@ -2446,10 +2446,16 @@ void FrameView::updateLifecyclePhasesInternal(LifeCycleUpdateOption phases)
+             view.compositor()->updateIfNeededRecursive();
+ 
+ 	    Document *d = frame().document();
+-	    WeakDocumentSet *ds = d->requestedVisibility();
+-	    for(Document *reqdoc : *ds){
++	    // WeakDocumentSet *ds = d->requestedVisibility();
++	    // if (ds != nullptr) {
++	    //   for(Document *reqdoc : *ds){
++	    // 	reqdoc->requestVisibilityImpl();
++	    //   }
++	    // }
++	    Document *reqdoc = d->requestedVisibility2();
++	    if (reqdoc != nullptr) {
+ 	      reqdoc->requestVisibilityImpl();
+-	    }		
++	    }
+ 
+             scrollContentsIfNeededRecursive();
+ 
+diff --git a/third_party/WebKit/Source/core/layout/LayoutView.cpp b/third_party/WebKit/Source/core/layout/LayoutView.cpp
+index 0a68a97..a1d9754 100644
+--- a/third_party/WebKit/Source/core/layout/LayoutView.cpp
++++ b/third_party/WebKit/Source/core/layout/LayoutView.cpp
+@@ -26,6 +26,7 @@
+ #include "core/frame/FrameView.h"
+ #include "core/frame/LocalDOMWindow.h"
+ #include "core/frame/LocalFrame.h"
++#include "core/frame/Location.h"
+ #include "core/frame/Settings.h"
+ #include "core/html/HTMLIFrameElement.h"
+ #include "core/layout/HitTestResult.h"
+@@ -295,9 +296,9 @@ void LayoutView::layout()
+     }
+ 
+     // XXXDMK There's probably more URLs like about:blank that inherit but aren't actually the target to lift
+-    // TODO: fix compile error document().location()->href() != "about:blank"
+-    if( document().documentElement() && document().documentElement()->hasAttributes() && document().documentElement()->hasAttribute("requestVisibility")){
+-      document().domWindow()->top()->document()->requestedVisibility()->add(&document());
++    if(document().location()->href() != "about:blank" && document().documentElement() && document().documentElement()->hasAttributes() && document().documentElement()->hasAttribute("requestVisibility")){
++      // document().domWindow()->top()->document()->requestedVisibility()->add(&document());
++      document().domWindow()->top()->document()->setRequestedVisibility2(&document());
+     }
+  
+ #if ENABLE(ASSERT)
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 732659ae8f79c50a47285af5c72454eb29c8243b Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Tue, 31 May 2016 17:21:33 -0400
+Subject: [PATCH 12/34] Ironframe - Enable visibility event reporting
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp     | 14 ++++----------
+ third_party/WebKit/Source/core/paint/PaintLayer.cpp |  6 ++++--
+ 2 files changed, 8 insertions(+), 12 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 6b87b6f..a32eed3 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5857,9 +5857,6 @@ void Document::requestVisibility(){
+ 
+ void Document::requestVisibilityImpl(){
+   
+-  // Step 0:  Initialize Useful Variables
+-  char buf[256];
+-
+   // Step 1:  Block obvious failure modes.  Probably insert SVG test here?
+   if(this->domWindow() == this->domWindow()->top()) {return;}	
+ 
+@@ -5975,14 +5972,11 @@ void Document::requestVisibilityImpl(){
+   // report.  sx and sy are 
+   bounds.setWidth(fmax(bounds.size().width() - sx, 0));
+   bounds.setHeight(fmax(bounds.size().height()- sy, 0));
+-  //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame	       
+-  snprintf(buf, sizeof(buf), "{\"viewport\": {\"x\": %i, \"y\": %i, \"width\": %i, \"height\": %i}, \"visible\": {\"x\": %i, \"y\": %i, \"width\": %i, \"height\": %i}}",
+-	   (int)mainViewFloatRect.x(), (int)mainViewFloatRect.y(), (int)mainViewFloatRect.size().width(), (int)mainViewFloatRect.size().height(),
+-	   (int)bounds.x(), (int)bounds.y(), (int)bounds.size().width(), (int)bounds.size().height()
+-	   );
++  //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
++  String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
+   // TODO:  Write actual event type		
+-  // PassRefPtrWillBeRawPtr<ErrorEvent> event = ErrorEvent::create(String(buf), String(""), 1,2, NULL);
+-  // this->documentElement()->dispatchEvent(event);
++  ErrorEvent* event = ErrorEvent::create(s, SourceLocation::create(String(), 0, 0, nullptr), nullptr);
++  this->documentElement()->dispatchEvent(event);
+ };
+   
+ template<unsigned type>
+diff --git a/third_party/WebKit/Source/core/paint/PaintLayer.cpp b/third_party/WebKit/Source/core/paint/PaintLayer.cpp
+index 7382f36..65106a0 100644
+--- a/third_party/WebKit/Source/core/paint/PaintLayer.cpp
++++ b/third_party/WebKit/Source/core/paint/PaintLayer.cpp
+@@ -1005,7 +1005,8 @@ void PaintLayer::didUpdateCompositingInputs()
+ 
+ bool PaintLayer::hasNonIsolatedDescendantWithBlendMode() const
+ {
+-    ASSERT(!m_needsDescendantDependentCompositingInputsUpdate);
++  // XXX bjwbell
++  // ASSERT(!m_needsDescendantDependentCompositingInputsUpdate);
+     if (m_hasNonIsolatedDescendantWithBlendMode)
+         return true;
+     if (layoutObject()->isSVGRoot())
+@@ -1739,7 +1740,8 @@ PaintLayer* PaintLayer::hitTestLayer(PaintLayer* rootLayer, PaintLayer* containe
+     const LayoutRect& hitTestRect, const HitTestLocation& hitTestLocation, bool appliedTransform,
+     const HitTestingTransformState* transformState, double* zOffset)
+ {
+-    ASSERT(layoutObject()->document().lifecycle().state() >= DocumentLifecycle::CompositingClean);
++  // XXX bjwbell
++  // ASSERT(layoutObject()->document().lifecycle().state() >= DocumentLifecycle::CompositingClean);
+ 
+     if (!isSelfPaintingLayer() && !hasSelfPaintingLayerDescendant())
+         return nullptr;
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 621d00aac5d704238686e839314c9140604105c8 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Tue, 31 May 2016 23:13:00 -0400
+Subject: [PATCH 13/34] Ironframe - Remove requestVisibility2()
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp    | 54 ++++++----------------
+ third_party/WebKit/Source/core/dom/Document.h      |  8 +---
+ third_party/WebKit/Source/core/frame/FrameView.cpp | 14 ++----
+ .../WebKit/Source/core/layout/LayoutView.cpp       |  3 +-
+ 4 files changed, 22 insertions(+), 57 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index a32eed3..a7c8fc7 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -409,9 +409,8 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
+     , m_domWindow(m_frame ? m_frame->localDOMWindow() : 0)
+     , m_importsController(initializer.importsController())
+     , m_contextFeatures(ContextFeatures::defaultSwitch())
+-    , m_requestedVisibility(nullptr) // XXX Weak is probably wrong
++    , m_requestedVisibility(new WeakDocumentSet()) // XXX Weak is probably wrong
+     , m_requestVisibilityRect(nullptr)
+-    , m_requestedVisibility2(nullptr)
+     , m_wellFormed(false)
+     , m_printing(false)
+     , m_wasPrinting(false)
+@@ -5821,22 +5820,9 @@ bool Document::hasFocus() const
+ }
+ 
+ WeakDocumentSet *Document::requestedVisibility() {
+-  // bjwbell: HACK!!
+-  if (m_requestedVisibility == NULL || m_requestedVisibility == nullptr) {
+-    m_requestedVisibility = new WeakDocumentSet;
+-  }
+   return m_requestedVisibility;
+ }
+ 
+-void Document::setRequestedVisibility2(Document* doc) {
+-  m_requestedVisibility2 = doc;
+-}
+-
+-Document* Document::requestedVisibility2() {
+-  return m_requestedVisibility2;
+-}
+-
+-  
+ void Document::requestVisibility(){
+ 	// Set up the present frame for raising.  Only 100% works when the document only contains one iframe to the actual content you want
+ 	// to raise, for now anyway.
+@@ -5924,33 +5910,20 @@ void Document::requestVisibilityImpl(){
+   FloatRect mainViewFloatRect = FloatRect(mainViewRect);
+   if(!bounds.size().width() || !bounds.size().height()) do_move=false;
+   // XXX for each registered visibility req, look for collisions with us, if so block the raise
+-  // WeakDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
+-
+-
+-  // for(Document *reqdoc : *ds){	
+-  //   if(reqdoc == this) break; // maybe this is right?
+-  //   if(reqdoc->m_requestVisibilityRect && reqdoc->m_requestVisibilityRect->intersects(bounds)) {
+-  //     // XXX DMK better would be to run bounds.subtract but then there'd have to *be* a bounds.subtract method.
+-  //     //         Also, subtraction is a not quite so defined as intersection.  Largest contiguous from 0,0?
+-  //     //         Largest contiguous from any corner?  God forbid, pile-o-rects?  Let's just run for the hills for now			
+-  //     hostile=true;
+-  //     //return;  // there is a rather fun attack if you try this
+-  //   }
+-  // }
+-	
+-  Document *reqdoc = this->domWindow()->top()->document()->requestedVisibility2();
+-  if (reqdoc != nullptr) {
+-    if(reqdoc == this) {
+-    } else {
+-      if(reqdoc->m_requestVisibilityRect && reqdoc->m_requestVisibilityRect->intersects(bounds)) {
+-	// XXX DMK better would be to run bounds.subtract but then there'd have to *be* a bounds.subtract method.
+-	//         Also, subtraction is a not quite so defined as intersection.  Largest contiguous from 0,0?
+-	//         Largest contiguous from any corner?  God forbid, pile-o-rects?  Let's just run for the hills for now			
+-	hostile=true;
+-	//return;  // there is a rather fun attack if you try this
+-      }
++  WeakDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
++
++
++  for(Document *reqdoc : *ds){
++    if(reqdoc == this) break; // maybe this is right?
++    if(reqdoc->m_requestVisibilityRect && reqdoc->m_requestVisibilityRect->intersects(bounds)) {
++      // XXX DMK better would be to run bounds.subtract but then there'd have to *be* a bounds.subtract method.
++      //         Also, subtraction is a not quite so defined as intersection.  Largest contiguous from 0,0?
++      //         Largest contiguous from any corner?  God forbid, pile-o-rects?  Let's just run for the hills for now
++      hostile=true;
++      //return;  // there is a rather fun attack if you try this
+     }
+   }
++
+   if(hostile){
+     do_move=false;
+     bounds.setWidth(0);
+@@ -6174,6 +6147,7 @@ DEFINE_TRACE(Document)
+     visitor->trace(m_intersectionObserverController);
+     visitor->trace(m_intersectionObserverData);
+     visitor->trace(m_snapCoordinator);
++    visitor->trace(m_requestedVisibility);
+     Supplementable<Document>::trace(visitor);
+     TreeScope::trace(visitor);
+     ContainerNode::trace(visitor);
+diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
+index 973e2f2..37f73b4 100644
+--- a/third_party/WebKit/Source/core/dom/Document.h
++++ b/third_party/WebKit/Source/core/dom/Document.h
+@@ -238,8 +238,6 @@ class CORE_EXPORT Document : public ContainerNode, public TreeScope, public Secu
+ public:
+ 
+     WeakDocumentSet *requestedVisibility();
+-    Document* requestedVisibility2();
+-    void setRequestedVisibility2(Document* doc);
+       
+     static Document* create(const DocumentInit& initializer = DocumentInit())
+     {
+@@ -1211,12 +1209,10 @@ private:
+     Member<ResourceFetcher> m_fetcher;
+     Member<DocumentParser> m_parser;
+     Member<ContextFeatures> m_contextFeatures;
+-    WeakDocumentSet *m_requestedVisibility;
++
++    Member<WeakDocumentSet> m_requestedVisibility;
+     FloatRect *m_requestVisibilityRect;
+ 
+-    GC_PLUGIN_IGNORE("461878")
+-    Document* m_requestedVisibility2 = nullptr;
+-    
+     bool m_wellFormed;
+ 
+     // Document URLs.
+diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
+index 9368abc..4968a89 100644
+--- a/third_party/WebKit/Source/core/frame/FrameView.cpp
++++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
+@@ -2451,15 +2451,11 @@ void FrameView::updateLifecyclePhasesInternal(LifeCycleUpdateOption phases)
+             view.compositor()->updateIfNeededRecursive();
+ 
+ 	    Document *d = frame().document();
+-	    // WeakDocumentSet *ds = d->requestedVisibility();
+-	    // if (ds != nullptr) {
+-	    //   for(Document *reqdoc : *ds){
+-	    // 	reqdoc->requestVisibilityImpl();
+-	    //   }
+-	    // }
+-	    Document *reqdoc = d->requestedVisibility2();
+-	    if (reqdoc != nullptr) {
+-	      reqdoc->requestVisibilityImpl();
++	    WeakDocumentSet *ds = d->requestedVisibility();
++	    if (ds != nullptr) {
++	      for(Document *reqdoc : *ds){
++		reqdoc->requestVisibilityImpl();
++	      }
+ 	    }
+ 
+             scrollContentsIfNeededRecursive();
+diff --git a/third_party/WebKit/Source/core/layout/LayoutView.cpp b/third_party/WebKit/Source/core/layout/LayoutView.cpp
+index a1d9754..f3736f7 100644
+--- a/third_party/WebKit/Source/core/layout/LayoutView.cpp
++++ b/third_party/WebKit/Source/core/layout/LayoutView.cpp
+@@ -297,8 +297,7 @@ void LayoutView::layout()
+ 
+     // XXXDMK There's probably more URLs like about:blank that inherit but aren't actually the target to lift
+     if(document().location()->href() != "about:blank" && document().documentElement() && document().documentElement()->hasAttributes() && document().documentElement()->hasAttribute("requestVisibility")){
+-      // document().domWindow()->top()->document()->requestedVisibility()->add(&document());
+-      document().domWindow()->top()->document()->setRequestedVisibility2(&document());
++      document().domWindow()->top()->document()->requestedVisibility()->add(&document());
+     }
+  
+ #if ENABLE(ASSERT)
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 861bbde5e7cf8ea77bba80a6cab8be0a048e60ce Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Thu, 2 Jun 2016 23:43:58 -0400
+Subject: [PATCH 14/34] Ironframe - Fix indenting
+
+---
+ third_party/WebKit/Source/bindings/core/v8/BindingSecurity.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/third_party/WebKit/Source/bindings/core/v8/BindingSecurity.cpp b/third_party/WebKit/Source/bindings/core/v8/BindingSecurity.cpp
+index 347a094..8d4873a 100644
+--- a/third_party/WebKit/Source/bindings/core/v8/BindingSecurity.cpp
++++ b/third_party/WebKit/Source/bindings/core/v8/BindingSecurity.cpp
+@@ -49,7 +49,7 @@ static bool isOriginAccessibleFromDOMWindow(const SecurityOrigin* targetOrigin,
+ 
+ static bool canAccessFrame(v8::Isolate* isolate, const LocalDOMWindow* accessingWindow, const SecurityOrigin* targetFrameOrigin, const DOMWindow* targetWindow, ExceptionState& exceptionState)
+ {
+-  ASSERT_WITH_SECURITY_IMPLICATION(!(targetWindow && targetWindow->frame()) || targetWindow == targetWindow->frame()->domWindow());
++    ASSERT_WITH_SECURITY_IMPLICATION(!(targetWindow && targetWindow->frame()) || targetWindow == targetWindow->frame()->domWindow());
+ 
+     // It's important to check that targetWindow is a LocalDOMWindow: it's
+     // possible for a remote frame and local frame to have the same security
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 73be14ce84eaa4102545ad677447636322831749 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Thu, 2 Jun 2016 23:45:30 -0400
+Subject: [PATCH 15/34] Ironframe - Remove commented out code"
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 54371b7..c0d6455 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -485,10 +485,6 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
+         m_fetcher = ResourceFetcher::create(nullptr);
+     }
+ 
+-    
+-    // FloatRect floatRect;
+-    // m_requestVisibilityRect = &floatRect;
+-    
+     // We depend on the url getting immediately set in subframes, but we
+     // also depend on the url NOT getting immediately set in opened windows.
+     // See fast/dom/early-frame-url.html
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 2082b0f8b729777c6a85ce079ff5e0c16cd637c8 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Thu, 2 Jun 2016 23:51:17 -0400
+Subject: [PATCH 16/34] Ironframe - Cleanup whitespace
+
+---
+ third_party/WebKit/Source/core/dom/Document.h        | 4 ++--
+ third_party/WebKit/Source/core/layout/LayoutView.cpp | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
+index 37f73b4..323bac9 100644
+--- a/third_party/WebKit/Source/core/dom/Document.h
++++ b/third_party/WebKit/Source/core/dom/Document.h
+@@ -238,7 +238,7 @@ class CORE_EXPORT Document : public ContainerNode, public TreeScope, public Secu
+ public:
+ 
+     WeakDocumentSet *requestedVisibility();
+-      
++
+     static Document* create(const DocumentInit& initializer = DocumentInit())
+     {
+         return new Document(initializer);
+@@ -1072,7 +1072,7 @@ public:
+     int nodeCount() const { return m_nodeCount; }
+ 
+     SnapCoordinator* snapCoordinator();
+-    
++
+     static WeakDocumentSet& liveDocumentSet();
+ 
+     WebTaskRunner* loadingTaskRunner() const;
+diff --git a/third_party/WebKit/Source/core/layout/LayoutView.cpp b/third_party/WebKit/Source/core/layout/LayoutView.cpp
+index f3736f7..75c2863 100644
+--- a/third_party/WebKit/Source/core/layout/LayoutView.cpp
++++ b/third_party/WebKit/Source/core/layout/LayoutView.cpp
+@@ -299,7 +299,7 @@ void LayoutView::layout()
+     if(document().location()->href() != "about:blank" && document().documentElement() && document().documentElement()->hasAttributes() && document().documentElement()->hasAttribute("requestVisibility")){
+       document().domWindow()->top()->document()->requestedVisibility()->add(&document());
+     }
+- 
++
+ #if ENABLE(ASSERT)
+     checkLayoutState();
+ #endif
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 8ad65afb61af82f71f7295c86d084afe036f0926 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Fri, 3 Jun 2016 01:41:53 -0400
+Subject: [PATCH 17/34] Ironframe - Cleanup whitespace
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp     | 21 ++++++++++-----------
+ third_party/WebKit/Source/core/dom/Document.idl     |  2 +-
+ .../WebKit/Source/core/paint/PaintLayerClipper.cpp  |  6 +++---
+ 3 files changed, 14 insertions(+), 15 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index d040a8d..a3f2ade 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5823,7 +5823,7 @@ WeakDocumentSet *Document::requestedVisibility() {
+ void Document::requestVisibility(){
+ 	// Set up the present frame for raising.  Only 100% works when the document only contains one iframe to the actual content you want
+ 	// to raise, for now anyway.
+-	
++
+ 	Document *target;
+ 	target=this;
+ 	target->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
+@@ -5831,7 +5831,7 @@ void Document::requestVisibility(){
+ 	// XXX DMK everything below is just trying to force a paint event or be paranoid about things
+ 	//         this happens in a separate function also to force the async rescheduling
+ 	target->documentElement()->style()->setProperty("position", "relative", "", ASSERT_NO_EXCEPTION);
+-	target->documentElement()->style()->setProperty("z-index", "2147483648", "", ASSERT_NO_EXCEPTION);	
++	target->documentElement()->style()->setProperty("z-index", "2147483648", "", ASSERT_NO_EXCEPTION);
+ 	target->view()->updateAllLifecyclePhases();
+ 	target->page()->deprecatedLocalMainFrame()->view()->updateAllLifecyclePhases();
+ 	target->domWindow()->scrollBy(0,10,ScrollBehavior::ScrollBehaviorAuto);
+@@ -5839,9 +5839,8 @@ void Document::requestVisibility(){
+ }
+ 
+ void Document::requestVisibilityImpl(){
+-  
+   // Step 1:  Block obvious failure modes.  Probably insert SVG test here?
+-  if(this->domWindow() == this->domWindow()->top()) {return;}	
++  if(this->domWindow() == this->domWindow()->top()) {return;}
+ 
+   // Step 2:  Collect useful handles
+   DOMWindow *testWindow = this->domWindow();
+@@ -5863,8 +5862,8 @@ void Document::requestVisibilityImpl(){
+ 
+   IntRect bounds = this->documentElement()->boundsInViewport();
+   IntRect origBounds = bounds;
+-	
+-  testWindow = this->domWindow();	
++
++  testWindow = this->domWindow();
+   float sx, sy;
+   sx=sy=0;
+   bool moreElements=true;
+@@ -5879,7 +5878,7 @@ void Document::requestVisibilityImpl(){
+       testDocument=&testElement->document();
+       sx+=testWindow->scrollX();
+       sy+=testWindow->scrollY();
+-      testWindow=testWindow->parent();			
++      testWindow=testWindow->parent();
+     } else {
+       testElement=testElement->parentElement();
+     }
+@@ -5893,7 +5892,7 @@ void Document::requestVisibilityImpl(){
+       child.setWidth(fmin(ifrBounds.size().width(), child.size().width()));
+       child.setHeight(fmin(ifrBounds.size().height(), child.size().height()));
+     }
+-    bounds.intersect(child);			       
++    bounds.intersect(child);
+     if(testElement == this->domWindow()->top()->document()->documentElement()) {
+       moreElements=false;
+     }
+@@ -5939,16 +5938,16 @@ void Document::requestVisibilityImpl(){
+     IntSize offset = IntSize(bounds.x()-origBounds.x()-topDocument().domWindow()->scrollX(), bounds.y()-origBounds.y()-topDocument().domWindow()->scrollY());
+     iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);// const IntSize & offset,ShouldSetNeedsDisplay shouldSetNeedsDisplay)
+   }
+-  // report.  sx and sy are 
++  // report.  sx and sy are
+   bounds.setWidth(fmax(bounds.size().width() - sx, 0));
+   bounds.setHeight(fmax(bounds.size().height()- sy, 0));
+   //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
+   String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
+-  // TODO:  Write actual event type		
++  // TODO:  Write actual event type
+   ErrorEvent* event = ErrorEvent::create(s, SourceLocation::create(String(), 0, 0, nullptr), nullptr);
+   this->documentElement()->dispatchEvent(event);
+ };
+-  
++
+ template<unsigned type>
+ bool shouldInvalidateNodeListCachesForAttr(const HeapHashSet<WeakMember<const LiveNodeListBase>> nodeLists[], const QualifiedName& attrName)
+ {
+diff --git a/third_party/WebKit/Source/core/dom/Document.idl b/third_party/WebKit/Source/core/dom/Document.idl
+index 9302fc2..bff6ca3 100644
+--- a/third_party/WebKit/Source/core/dom/Document.idl
++++ b/third_party/WebKit/Source/core/dom/Document.idl
+@@ -56,7 +56,7 @@ interface Document : Node {
+ 
+     void requestVisibility();
+     void requestVisibilityImpl();
+-  
++
+     [NewObject, CustomElementCallbacks, PerWorldBindings, RaisesException] Element createElement(DOMString localName);
+     [NewObject, CustomElementCallbacks, RaisesException] Element createElementNS(DOMString? namespaceURI, DOMString qualifiedName);
+     [NewObject] DocumentFragment createDocumentFragment();
+diff --git a/third_party/WebKit/Source/core/paint/PaintLayerClipper.cpp b/third_party/WebKit/Source/core/paint/PaintLayerClipper.cpp
+index 34fe14e..3fb2f5b 100644
+--- a/third_party/WebKit/Source/core/paint/PaintLayerClipper.cpp
++++ b/third_party/WebKit/Source/core/paint/PaintLayerClipper.cpp
+@@ -340,7 +340,7 @@ LayoutRect PaintLayerClipper::childrenClipRect() const
+   LayoutRect layerBounds;
+   ClipRect backgroundRect, foregroundRect;
+   // Need to use uncached clip rects, because the value of 'dontClipToOverflow' may be different from the painting path (<rdar://problem/11844909>).
+-  ClipRectsContext context(clippingRootLayer, UncachedClipRects);  
++  ClipRectsContext context(clippingRootLayer, UncachedClipRects);
+   calculateRects(context, LayoutRect(m_layer.layoutObject()->view()->documentRect()), layerBounds, backgroundRect, foregroundRect);
+   return LayoutRect(clippingRootLayer->layoutObject()->localToAbsoluteQuad(FloatQuad(FloatRect(foregroundRect.rect()))).enclosingBoundingBox());
+ }
+@@ -367,6 +367,6 @@ PaintLayer* PaintLayerClipper::clippingRootForPainting() const
+ 
+     ASSERT_NOT_REACHED();
+     return 0;
+-}   
+-  
++}
++
+ } // namespace blink
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 2063f0f954c232b28581f4030a406840821f3b1e Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Fri, 3 Jun 2016 16:03:26 -0400
+Subject: [PATCH 18/34] Split VisibilityDocumentSet out from WeakDocumentSet
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp    | 6 ++++--
+ third_party/WebKit/Source/core/dom/Document.h      | 6 +++---
+ third_party/WebKit/Source/core/frame/FrameView.cpp | 2 +-
+ 3 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index a3f2ade..e69d149 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -372,6 +372,8 @@ uint64_t Document::s_globalTreeVersion = 0;
+ 
+ static bool s_threadedParsingEnabledForTesting = true;
+ 
++using WeakDocumentSet = PersistentHeapHashSet<WeakMember<Document>>;
++
+ static WeakDocumentSet& liveDocumentSet()
+ {
+     DEFINE_STATIC_LOCAL(WeakDocumentSet, set, ());
+@@ -5816,7 +5818,7 @@ bool Document::hasFocus() const
+     return page() && page()->focusController().isDocumentFocused(*this);
+ }
+ 
+-WeakDocumentSet *Document::requestedVisibility() {
++VisibilityDocumentSet *Document::requestedVisibility() {
+   return m_requestedVisibility;
+ }
+ 
+@@ -5906,7 +5908,7 @@ void Document::requestVisibilityImpl(){
+   FloatRect mainViewFloatRect = FloatRect(mainViewRect);
+   if(!bounds.size().width() || !bounds.size().height()) do_move=false;
+   // XXX for each registered visibility req, look for collisions with us, if so block the raise
+-  WeakDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
++  VisibilityDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
+ 
+ 
+   for(Document *reqdoc : *ds){
+diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
+index 55b8030..bd82dce 100644
+--- a/third_party/WebKit/Source/core/dom/Document.h
++++ b/third_party/WebKit/Source/core/dom/Document.h
+@@ -173,7 +173,7 @@ struct AnnotatedRegionValue;
+ struct FocusParams;
+ struct IconURL;
+ 
+-using WeakDocumentSet = HeapHashSet<WeakMember<Document>>;
++using VisibilityDocumentSet = HeapHashSet<WeakMember<Document>>;
+ using MouseEventWithHitTestResults = EventWithHitTestResults<PlatformMouseEvent>;
+ using ExceptionCode = int;
+ 
+@@ -237,7 +237,7 @@ class CORE_EXPORT Document : public ContainerNode, public TreeScope, public Secu
+     USING_GARBAGE_COLLECTED_MIXIN(Document);
+ public:
+ 
+-    WeakDocumentSet *requestedVisibility();
++    VisibilityDocumentSet *requestedVisibility();
+ 
+     static Document* create(const DocumentInit& initializer = DocumentInit())
+     {
+@@ -1208,7 +1208,7 @@ private:
+     Member<DocumentParser> m_parser;
+     Member<ContextFeatures> m_contextFeatures;
+ 
+-    Member<WeakDocumentSet> m_requestedVisibility;
++    Member<VisibilityDocumentSet> m_requestedVisibility;
+     FloatRect *m_requestVisibilityRect;
+ 
+     bool m_wellFormed;
+diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
+index 85211bd..1abe8708 100644
+--- a/third_party/WebKit/Source/core/frame/FrameView.cpp
++++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
+@@ -2464,7 +2464,7 @@ void FrameView::updateLifecyclePhasesInternal(LifeCycleUpdateOption phases)
+             view.compositor()->updateIfNeededRecursive();
+ 
+ 	    Document *d = frame().document();
+-	    WeakDocumentSet *ds = d->requestedVisibility();
++	    VisibilityDocumentSet *ds = d->requestedVisibility();
+ 	    if (ds != nullptr) {
+ 	      for(Document *reqdoc : *ds){
+ 		reqdoc->requestVisibilityImpl();
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From dfd88f9fcd865f7e2e868f85b4f16be6e1ad97e5 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Fri, 3 Jun 2016 16:06:58 -0400
+Subject: [PATCH 19/34] Ironframe - Remove deprecated from variable names
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index e69d149..b119534 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5846,12 +5846,12 @@ void Document::requestVisibilityImpl(){
+ 
+   // Step 2:  Collect useful handles
+   DOMWindow *testWindow = this->domWindow();
+-  PaintLayer* iframeDeprecatedPaintLayer = this->documentElement()->layoutObject()->enclosingLayer();//->enclosingLayerForPaintInvalidationCrossingFrameBoundaries();
++  PaintLayer* iframePaintLayer = this->documentElement()->layoutObject()->enclosingLayer();//->enclosingLayerForPaintInvalidationCrossingFrameBoundaries();
+ 
+-  if(!iframeDeprecatedPaintLayer) { return; }
+-  GraphicsLayer* iframeGraphicsLayer = iframeDeprecatedPaintLayer->graphicsLayerBacking();
+-  const PaintLayer* rootDeprecatedPaintLayer = this->domWindow()->top()->document()->body()->layoutObject()->enclosingLayer()->root(); // XXX DMK top scrolling layer
+-  GraphicsLayer* rootGraphicsLayer = rootDeprecatedPaintLayer->graphicsLayerBacking();
++  if(!iframePaintLayer) { return; }
++  GraphicsLayer* iframeGraphicsLayer = iframePaintLayer->graphicsLayerBacking();
++  const PaintLayer* rootPaintLayer = this->domWindow()->top()->document()->body()->layoutObject()->enclosingLayer()->root(); // XXX DMK top scrolling layer
++  GraphicsLayer* rootGraphicsLayer = rootPaintLayer->graphicsLayerBacking();
+   if(!iframeGraphicsLayer || !rootGraphicsLayer) {
+     printf("ERROR: Couldn't find required GraphicsLayer.  One may not have been created for this document.");
+     addConsoleMessage(ConsoleMessage::create(RenderingMessageSource, ErrorMessageLevel, "Couldn't find required GraphicsLayer.  One may not have been created for this document."));
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 1d97d61710ee0f99198a4328a6b43c8961dac400 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Fri, 3 Jun 2016 16:11:22 -0400
+Subject: [PATCH 20/34] Ironframe - Remove extra newlines
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp               | 2 --
+ third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp | 1 -
+ 2 files changed, 3 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index b119534..f34183a 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5825,7 +5825,6 @@ VisibilityDocumentSet *Document::requestedVisibility() {
+ void Document::requestVisibility(){
+ 	// Set up the present frame for raising.  Only 100% works when the document only contains one iframe to the actual content you want
+ 	// to raise, for now anyway.
+-
+ 	Document *target;
+ 	target=this;
+ 	target->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
+@@ -5910,7 +5909,6 @@ void Document::requestVisibilityImpl(){
+   // XXX for each registered visibility req, look for collisions with us, if so block the raise
+   VisibilityDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
+ 
+-
+   for(Document *reqdoc : *ds){
+     if(reqdoc == this) break; // maybe this is right?
+     if(reqdoc->m_requestVisibilityRect && reqdoc->m_requestVisibilityRect->intersects(bounds)) {
+diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
+index 1b46372..0f0bed0 100644
+--- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
++++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
+@@ -287,7 +287,6 @@ void GraphicsLayer::removeFromCrossrootParent()
+         m_crossroot_parent->m_children.remove(m_crossroot_parent->m_children.reverseFind(this));
+         setParent(0);
+     }
+-
+     platformLayer()->removeFromParent();
+ }
+ 
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 4b98bb04880e4ea199f21018e9055632860bed64 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Fri, 3 Jun 2016 16:39:20 -0400
+Subject: [PATCH 21/34] Ironframe - Use VisibilityDocumentSet instead of
+ WeakDocumentSet
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index f34183a..7dc2077 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -411,7 +411,7 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
+     , m_domWindow(m_frame ? m_frame->localDOMWindow() : 0)
+     , m_importsController(initializer.importsController())
+     , m_contextFeatures(ContextFeatures::defaultSwitch())
+-    , m_requestedVisibility(new WeakDocumentSet()) // XXX Weak is probably wrong
++    , m_requestedVisibility(new VisibilityDocumentSet())
+     , m_requestVisibilityRect(nullptr)
+     , m_wellFormed(false)
+     , m_printing(false)
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 7df296707daa1b8fa85cfdf43c2ebe8ba464c60c Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Tue, 7 Jun 2016 18:36:42 -0400
+Subject: [PATCH 22/34] Remove DocumentLifeCycle hack & require
+ requestVisibility set on init.
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp      | 20 ++++++--------------
+ .../WebKit/Source/core/dom/DocumentLifecycle.cpp     | 11 +++++------
+ third_party/WebKit/Source/core/frame/FrameView.cpp   |  3 ---
+ 3 files changed, 11 insertions(+), 23 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 7dc2077..2cc349d 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5823,20 +5823,12 @@ VisibilityDocumentSet *Document::requestedVisibility() {
+ }
+ 
+ void Document::requestVisibility(){
+-	// Set up the present frame for raising.  Only 100% works when the document only contains one iframe to the actual content you want
+-	// to raise, for now anyway.
+-	Document *target;
+-	target=this;
+-	target->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
+-	target->documentElement()->style()->setProperty("transform", "translateZ(0px)", "", ASSERT_NO_EXCEPTION);
+-	// XXX DMK everything below is just trying to force a paint event or be paranoid about things
+-	//         this happens in a separate function also to force the async rescheduling
+-	target->documentElement()->style()->setProperty("position", "relative", "", ASSERT_NO_EXCEPTION);
+-	target->documentElement()->style()->setProperty("z-index", "2147483648", "", ASSERT_NO_EXCEPTION);
+-	target->view()->updateAllLifecyclePhases();
+-	target->page()->deprecatedLocalMainFrame()->view()->updateAllLifecyclePhases();
+-	target->domWindow()->scrollBy(0,10,ScrollBehavior::ScrollBehaviorAuto);
+-	target->domWindow()->scrollBy(0,-10,ScrollBehavior::ScrollBehaviorAuto);
++    // Set up the present frame for raising.
++    // TODO:
++    // Old code -
++    // this->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
++    // this->documentElement()->style()->setProperty("transform", "translateZ(0px)", "", ASSERT_NO_EXCEPTION);
++    // ETC
+ }
+ 
+ void Document::requestVisibilityImpl(){
+diff --git a/third_party/WebKit/Source/core/dom/DocumentLifecycle.cpp b/third_party/WebKit/Source/core/dom/DocumentLifecycle.cpp
+index e765725..e2cfc0f 100644
+--- a/third_party/WebKit/Source/core/dom/DocumentLifecycle.cpp
++++ b/third_party/WebKit/Source/core/dom/DocumentLifecycle.cpp
+@@ -279,12 +279,11 @@ bool DocumentLifecycle::canRewindTo(LifecycleState nextState) const
+ 
+ void DocumentLifecycle::advanceTo(LifecycleState nextState)
+ {
+-// XXX DMK MUST NOT SHIP
+-// #if DCHECK_IS_ON()
+-//     DCHECK(canAdvanceTo(nextState))
+-//         << "Cannot advance document lifecycle from " << stateAsDebugString(m_state)
+-//         << " to " << stateAsDebugString(nextState) << ".";
+-// #endif
++#if DCHECK_IS_ON()
++    DCHECK(canAdvanceTo(nextState))
++        << "Cannot advance document lifecycle from " << stateAsDebugString(m_state)
++        << " to " << stateAsDebugString(nextState) << ".";
++#endif
+     m_state = nextState;
+ }
+ 
+diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
+index 1abe8708..7786975 100644
+--- a/third_party/WebKit/Source/core/frame/FrameView.cpp
++++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
+@@ -33,7 +33,6 @@
+ #include "core/dom/AXObjectCache.h"
+ #include "core/dom/Fullscreen.h"
+ #include "core/dom/IntersectionObserverController.h"
+-#include "core/dom/AddConsoleMessageTask.h"
+ #include "core/editing/EditingUtilities.h"
+ #include "core/editing/FrameSelection.h"
+ #include "core/editing/RenderedPosition.h"
+@@ -53,7 +52,6 @@
+ #include "core/html/HTMLTextFormControlElement.h"
+ #include "core/html/parser/TextResourceDecoder.h"
+ #include "core/input/EventHandler.h"
+-#include "core/inspector/ConsoleMessage.h"
+ #include "core/inspector/InspectorInstrumentation.h"
+ #include "core/inspector/InspectorTraceEvents.h"
+ #include "core/layout/LayoutAnalyzer.h"
+@@ -1093,7 +1091,6 @@ void FrameView::layout()
+ #endif
+ 
+     frame().document()->layoutUpdated();
+-    TRACE_EVENT_BEGIN1("devtools.timeline", "Layout", "beginData", InspectorLayoutEvent::beginData(this));
+ }
+ 
+ void FrameView::invalidateTreeIfNeeded(PaintInvalidationState& paintInvalidationState)
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From de0cc62d1ad2d70291d364b25755b45ccacaac04 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Thu, 16 Jun 2016 04:28:57 -0400
+Subject: [PATCH 23/34] Ironframe - Use RequestedVisibilityEvent instead of
+ ErrorEvent
+
+---
+ third_party/WebKit/Source/core/core.gypi           | 11 ++-
+ third_party/WebKit/Source/core/dom/Document.cpp    | 15 +++-
+ third_party/WebKit/Source/core/dom/Document.h      |  4 +-
+ .../WebKit/Source/core/events/EventTypeNames.in    |  1 +
+ .../core/events/RequestedVisibilityEvent.cpp       | 77 ++++++++++++++++++++
+ .../Source/core/events/RequestedVisibilityEvent.h  | 84 ++++++++++++++++++++++
+ .../core/events/RequestedVisibilityEvent.idl       | 35 +++++++++
+ .../core/events/RequestedVisibilityEventInit.idl   | 13 ++++
+ third_party/WebKit/Source/core/frame/FrameView.cpp |  6 +-
+ third_party/WebKit/Source/core/frame/UseCounter.h  |  2 +
+ 10 files changed, 240 insertions(+), 8 deletions(-)
+ create mode 100644 third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp
+ create mode 100644 third_party/WebKit/Source/core/events/RequestedVisibilityEvent.h
+ create mode 100644 third_party/WebKit/Source/core/events/RequestedVisibilityEvent.idl
+ create mode 100644 third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
+
+diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
+index 7b9ccf1..4b1bf7d 100644
+--- a/third_party/WebKit/Source/core/core.gypi
++++ b/third_party/WebKit/Source/core/core.gypi
+@@ -129,6 +129,7 @@
+             'events/CustomEvent.idl',
+             'events/DragEvent.idl',
+             'events/ErrorEvent.idl',
++	    'events/RequestedVisibilityEvent.idl',
+             'events/Event.idl',
+             'events/EventTarget.idl',
+             'events/FocusEvent.idl',
+@@ -471,6 +472,7 @@
+             'events/CustomEvent.idl',
+             'events/DragEvent.idl',
+             'events/ErrorEvent.idl',
++	    'events/RequestedVisibilityEvent.idl',
+             'events/Event.idl',
+             'events/FocusEvent.idl',
+             'events/HashChangeEvent.idl',
+@@ -2757,6 +2759,8 @@
+             'events/DragEvent.h',
+             'events/ErrorEvent.cpp',
+             'events/ErrorEvent.h',
++	    'events/RequestedVisibilityEvent.cpp',
++	    'events/RequestedVisibilityEvent.h',
+             'events/Event.cpp',
+             'events/EventDispatchMediator.cpp',
+             'events/EventDispatchMediator.h',
+@@ -3729,6 +3733,7 @@
+             'events/CustomEventInit.idl',
+             'events/DragEventInit.idl',
+             'events/ErrorEventInit.idl',
++	    'events/RequestedVisibilityEventInit.idl',
+             'events/EventInit.idl',
+             'events/EventListenerOptions.idl',
+             'events/EventModifierInit.idl',
+@@ -3743,7 +3748,7 @@
+             'events/PopStateEventInit.idl',
+             'events/ProgressEventInit.idl',
+             'events/PromiseRejectionEventInit.idl',
+-            'events/RelatedEventInit.idl',
++            'events/RelatedEventInit.idl',	    
+             'events/SecurityPolicyViolationEventInit.idl',
+             'events/TouchEventInit.idl',
+             'events/TransitionEventInit.idl',
+@@ -3805,8 +3810,10 @@
+             '<(blink_core_output_dir)/events/CustomEventInit.h',
+             '<(blink_core_output_dir)/events/DragEventInit.cpp',
+             '<(blink_core_output_dir)/events/DragEventInit.h',
+-            '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
++            '<(blink_core_output_dir)/events/ErrorEventInit.cpp',	    
+             '<(blink_core_output_dir)/events/ErrorEventInit.h',
++	    '<(blink_core_output_dir)/events/RequestedVisibilityEventInit.cpp',
++	    '<(blink_core_output_dir)/events/RequestedVisibilityEventInit.h',
+             '<(blink_core_output_dir)/events/EventInit.cpp',
+             '<(blink_core_output_dir)/events/EventInit.h',
+             '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 21826a9..aa977d9 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -126,6 +126,7 @@
+ #include "core/events/EventListener.h"
+ #include "core/events/HashChangeEvent.h"
+ #include "core/events/PageTransitionEvent.h"
++#include "core/events/RequestedVisibilityEvent.h"
+ #include "core/events/ScopedEventQueue.h"
+ #include "core/fetch/ResourceFetcher.h"
+ #include "core/frame/DOMTimer.h"
+@@ -3922,6 +3923,14 @@ void Document::enqueueScrollEventForNode(Node* target)
+     ensureScriptedAnimationController().enqueuePerFrameEvent(scrollEvent);
+ }
+ 
++void Document::enqueueRequestedVisibilityEvent(const String& msg)
++{
++    RequestedVisibilityEvent* event = RequestedVisibilityEvent::create(msg);
++    event->setType(EventTypeNames::requestedvisibility);
++    event->setTarget(documentElement());
++    ensureScriptedAnimationController().enqueueEvent(event);
++}
++
+ void Document::enqueueResizeEvent()
+ {
+     Event* event = Event::create(EventTypeNames::resize);
+@@ -5895,8 +5904,10 @@ void Document::requestVisibilityImpl(){
+   //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
+   String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
+   // TODO:  Write actual event type
+-  ErrorEvent* event = ErrorEvent::create(s, SourceLocation::create(String(), 0, 0, nullptr), nullptr);
+-  this->documentElement()->dispatchEvent(event);
++  // ErrorEvent* event = ErrorEvent::create(s, SourceLocation::create(String(), 0, 0, nullptr), nullptr);
++  // this->documentElement()->dispatchEvent(event);
++  //this->enqueueScrollEventForNode(this->documentElement());
++  this->enqueueRequestedVisibilityEvent(s);
+ };
+ 
+ template<unsigned type>
+diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
+index f76fa43..182e177 100644
+--- a/third_party/WebKit/Source/core/dom/Document.h
++++ b/third_party/WebKit/Source/core/dom/Document.h
+@@ -923,6 +923,7 @@ public:
+     void enqueueUniqueAnimationFrameEvent(Event*);
+     void enqueueMediaQueryChangeListeners(HeapVector<Member<MediaQueryListListener>>&);
+     void enqueueVisualViewportChangedEvent();
++    void enqueueRequestedVisibilityEvent(const String&);
+ 
+     void dispatchEventsForPrinting();
+ 
+@@ -1094,7 +1095,8 @@ public:
+     void set_requestVisibilityRect(FloatRect *r) { m_requestVisibilityRect = r; }
+     void requestVisibility();
+     void requestVisibilityImpl();
+-
++    void requestVisibilityReportEvent();
++    
+ protected:
+     Document(const DocumentInit&, DocumentClassFlags = DefaultDocumentClass);
+ 
+diff --git a/third_party/WebKit/Source/core/events/EventTypeNames.in b/third_party/WebKit/Source/core/events/EventTypeNames.in
+index 518d6d7..a9a09a9 100644
+--- a/third_party/WebKit/Source/core/events/EventTypeNames.in
++++ b/third_party/WebKit/Source/core/events/EventTypeNames.in
+@@ -186,6 +186,7 @@ removesourcebuffer
+ removestream
+ removetrack
+ repeatEvent
++requestedvisibility
+ reset
+ resize
+ resourcetimingbufferfull
+diff --git a/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp
+new file mode 100644
+index 0000000..e4a5427
+--- /dev/null
++++ b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp
+@@ -0,0 +1,77 @@
++/*
++ * Copyright (C) 2009 Google Inc. All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are
++ * met:
++ *
++ *     * Redistributions of source code must retain the above copyright
++ * notice, this list of conditions and the following disclaimer.
++ *     * Redistributions in binary form must reproduce the above
++ * copyright notice, this list of conditions and the following disclaimer
++ * in the documentation and/or other materials provided with the
++ * distribution.
++ *     * Neither the name of Google Inc. nor the names of its
++ * contributors may be used to endorse or promote products derived from
++ * this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "core/events/RequestedVisibilityEvent.h"
++
++#include "bindings/core/v8/V8Binding.h"
++#include <v8.h>
++
++namespace blink {
++
++RequestedVisibilityEvent::RequestedVisibilityEvent()
++    : m_sanitizedMessage()
++{
++}
++
++RequestedVisibilityEvent::RequestedVisibilityEvent(const AtomicString& type, const RequestedVisibilityEventInit& initializer)
++    : Event(type, initializer)
++    , m_sanitizedMessage()
++{
++    if (initializer.hasMessage())
++        m_sanitizedMessage = initializer.message();
++}
++
++RequestedVisibilityEvent::RequestedVisibilityEvent(const String& message)
++    : Event(EventTypeNames::error, false, true)
++    , m_sanitizedMessage(message)
++{
++}
++
++void RequestedVisibilityEvent::setUnsanitizedMessage(const String& message)
++{
++    ASSERT(m_unsanitizedMessage.isEmpty());
++    m_unsanitizedMessage = message;
++}
++
++RequestedVisibilityEvent::~RequestedVisibilityEvent()
++{
++}
++
++const AtomicString& RequestedVisibilityEvent::interfaceName() const
++{
++    return EventNames::RequestedVisibilityEvent;
++}
++
++DEFINE_TRACE(RequestedVisibilityEvent)
++{
++    Event::trace(visitor);
++}
++
++} // namespace blink
+diff --git a/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.h b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.h
+new file mode 100644
+index 0000000..bacfbd5
+--- /dev/null
++++ b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.h
+@@ -0,0 +1,84 @@
++/*
++ * Copyright (C) 2016 Google Inc. All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are
++ * met:
++ *
++ *     * Redistributions of source code must retain the above copyright
++ * notice, this list of conditions and the following disclaimer.
++ *     * Redistributions in binary form must reproduce the above
++ * copyright notice, this list of conditions and the following disclaimer
++ * in the documentation and/or other materials provided with the
++ * distribution.
++ *     * Neither the name of Google Inc. nor the names of its
++ * contributors may be used to endorse or promote products derived from
++ * this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef RequestedVisibilityEvent_h
++#define RequestedVisibilityEvent_h
++
++#include "bindings/core/v8/DOMWrapperWorld.h"
++#include "bindings/core/v8/SourceLocation.h"
++#include "core/events/RequestedVisibilityEventInit.h"
++#include "core/events/Event.h"
++#include "wtf/RefPtr.h"
++#include "wtf/text/WTFString.h"
++
++namespace blink {
++
++class RequestedVisibilityEvent final : public Event {
++    DEFINE_WRAPPERTYPEINFO();
++public:
++    static RequestedVisibilityEvent* create()
++    {
++        return new RequestedVisibilityEvent;
++    }
++    static RequestedVisibilityEvent* create(const String& message)
++    {
++        return new RequestedVisibilityEvent(message);
++    }
++    static RequestedVisibilityEvent* create(const AtomicString& type, const RequestedVisibilityEventInit& initializer)
++    {
++        return new RequestedVisibilityEvent(type, initializer);
++    }
++    
++    ~RequestedVisibilityEvent() override;
++
++    // As 'message' is exposed to JavaScript, never return unsanitizedMessage.
++    const String& message() const { return m_sanitizedMessage; }
++
++    // 'messageForConsole' is not exposed to JavaScript, and prefers 'm_unsanitizedMessage'.
++    const String& messageForConsole() const { return !m_unsanitizedMessage.isEmpty() ? m_unsanitizedMessage : m_sanitizedMessage; }
++    
++    const AtomicString& interfaceName() const override;
++
++    void setUnsanitizedMessage(const String&);
++	
++    DECLARE_VIRTUAL_TRACE();
++
++private:
++    RequestedVisibilityEvent();
++    RequestedVisibilityEvent(const String& message);
++    RequestedVisibilityEvent(const AtomicString&, const RequestedVisibilityEventInit&);
++
++    String m_unsanitizedMessage;
++    String m_sanitizedMessage;       
++};
++
++} // namespace blink
++
++#endif // RequestedVisibilityEvent_h
+diff --git a/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.idl b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.idl
+new file mode 100644
+index 0000000..fc6f1ac
+--- /dev/null
++++ b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.idl
+@@ -0,0 +1,35 @@
++/*
++ * Copyright (C) 2009 Google Inc. All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are
++ * met:
++ *
++ *     * Redistributions of source code must retain the above copyright
++ * notice, this list of conditions and the following disclaimer.
++ *     * Redistributions in binary form must reproduce the above
++ * copyright notice, this list of conditions and the following disclaimer
++ * in the documentation and/or other materials provided with the
++ * distribution.
++ *     * Neither the name of Google Inc. nor the names of its
++ * contributors may be used to endorse or promote products derived from
++ * this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++[
++    Constructor(DOMString type, optional RequestedVisibilityEventInit eventInitDict),
++] interface RequestedVisibilityEvent : Event {
++    readonly attribute DOMString message;
++};
+diff --git a/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl b/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
+new file mode 100644
+index 0000000..bc31660
+--- /dev/null
++++ b/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
+@@ -0,0 +1,13 @@
++// Copyright 2015 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++// https://html.spec.whatwg.org/multipage/webappapis.html#the-errorevent-interface
++
++dictionary RequestedVisibilityEventInit : EventInit {
++    DOMString message;
++    DOMString filename;
++    unsigned long lineno;
++    unsigned long colno;
++    any error;
++};
+diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
+index c44975c..0da930b 100644
+--- a/third_party/WebKit/Source/core/frame/FrameView.cpp
++++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
+@@ -2476,9 +2476,9 @@ void FrameView::updateLifecyclePhasesInternal(LifeCycleUpdateOption phases)
+ 	    Document *d = frame().document();
+ 	    VisibilityDocumentSet *ds = d->requestedVisibility();
+ 	    if (ds != nullptr) {
+-	      for(Document *reqdoc : *ds){
+-		reqdoc->requestVisibilityImpl();
+-	      }
++		for(Document *reqdoc : *ds){
++		    reqdoc->requestVisibilityImpl();
++		}
+ 	    }
+ 
+             scrollContentsIfNeededRecursive();
+diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
+index adea720..4eff8c2 100644
+--- a/third_party/WebKit/Source/core/frame/UseCounter.h
++++ b/third_party/WebKit/Source/core/frame/UseCounter.h
+@@ -1211,6 +1211,8 @@ public:
+         CSSFilterFunctionNoArguments = 1403,
+         V8LegacyDateParser = 1404,
+ 
++	DocumentCreateEventRequestedVisibilityEvent = 1405,
++	
+         // Add new features immediately above this line. Don't change assigned
+         // numbers of any item, and don't reuse removed slots.
+         // Also, run update_use_counter_feature_enum.py in chromium/src/tools/metrics/histograms/
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 724057eca5365e8bdf461e20f4a440db42ffbbed Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Thu, 16 Jun 2016 05:35:36 -0400
+Subject: [PATCH 24/34] Ironframe - Remove outdated TODO
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 5cbb9e0..a500818 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5894,10 +5894,6 @@ void Document::requestVisibilityImpl(){
+   bounds.setHeight(fmax(bounds.size().height()- sy, 0));
+   //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
+   String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
+-  // TODO:  Write actual event type
+-  // ErrorEvent* event = ErrorEvent::create(s, SourceLocation::create(String(), 0, 0, nullptr), nullptr);
+-  // this->documentElement()->dispatchEvent(event);
+-  //this->enqueueScrollEventForNode(this->documentElement());
+   this->enqueueRequestedVisibilityEvent(s);
+ };
+ 
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From bf3c9a55754d83f1c72cfc3d7a1e77214907ff42 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Thu, 16 Jun 2016 05:42:39 -0400
+Subject: [PATCH 25/34] Ironframe - Whitespace cleanup in core.gypi, remove
+ vars in .idl file
+
+---
+ third_party/WebKit/Source/core/core.gypi                              | 4 ++--
+ .../WebKit/Source/core/events/RequestedVisibilityEventInit.idl        | 4 ----
+ 2 files changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
+index bf68def..e24ae3f 100644
+--- a/third_party/WebKit/Source/core/core.gypi
++++ b/third_party/WebKit/Source/core/core.gypi
+@@ -3749,7 +3749,7 @@
+             'events/PopStateEventInit.idl',
+             'events/ProgressEventInit.idl',
+             'events/PromiseRejectionEventInit.idl',
+-            'events/RelatedEventInit.idl',	    
++            'events/RelatedEventInit.idl',
+             'events/SecurityPolicyViolationEventInit.idl',
+             'events/TouchEventInit.idl',
+             'events/TransitionEventInit.idl',
+@@ -3811,7 +3811,7 @@
+             '<(blink_core_output_dir)/events/CustomEventInit.h',
+             '<(blink_core_output_dir)/events/DragEventInit.cpp',
+             '<(blink_core_output_dir)/events/DragEventInit.h',
+-            '<(blink_core_output_dir)/events/ErrorEventInit.cpp',	    
++            '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
+             '<(blink_core_output_dir)/events/ErrorEventInit.h',
+ 	    '<(blink_core_output_dir)/events/RequestedVisibilityEventInit.cpp',
+ 	    '<(blink_core_output_dir)/events/RequestedVisibilityEventInit.h',
+diff --git a/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl b/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
+index bc31660..490b8bc 100644
+--- a/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
++++ b/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
+@@ -6,8 +6,4 @@
+ 
+ dictionary RequestedVisibilityEventInit : EventInit {
+     DOMString message;
+-    DOMString filename;
+-    unsigned long lineno;
+-    unsigned long colno;
+-    any error;
+ };
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From e4f2f75aa1c5702bc87170b537ea50164a0da1e2 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Thu, 16 Jun 2016 12:56:58 -0400
+Subject: [PATCH 26/34] Ironframe - Add back requestVisibility script code
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 17 ++++++++++++-----
+ third_party/WebKit/Source/core/dom/Document.h   |  1 -
+ 2 files changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index a500818..20b42ca 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5783,11 +5783,18 @@ VisibilityDocumentSet *Document::requestedVisibility() {
+ 
+ void Document::requestVisibility(){
+     // Set up the present frame for raising.
+-    // TODO:
+-    // Old code -
+-    // this->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
+-    // this->documentElement()->style()->setProperty("transform", "translateZ(0px)", "", ASSERT_NO_EXCEPTION);
+-    // ETC
++    Document *target;
++    target=this;
++    target->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
++    target->documentElement()->style()->setProperty("transform", "translateZ(0px)", "", ASSERT_NO_EXCEPTION);
++    // XXX DMK everything below is just trying to force a paint event or be paranoid about things
++    //         this happens in a separate function also to force the async rescheduling
++    target->documentElement()->style()->setProperty("position", "relative", "", ASSERT_NO_EXCEPTION);
++    target->documentElement()->style()->setProperty("z-index", "2147483648", "", ASSERT_NO_EXCEPTION);
++    target->view()->updateAllLifecyclePhases();
++    target->page()->deprecatedLocalMainFrame()->view()->updateAllLifecyclePhases();
++    target->domWindow()->scrollBy(0,10,ScrollBehavior::ScrollBehaviorAuto);
++    target->domWindow()->scrollBy(0,-10,ScrollBehavior::ScrollBehaviorAuto);    
+ }
+ 
+ void Document::requestVisibilityImpl(){
+diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
+index c349613..add4a17 100644
+--- a/third_party/WebKit/Source/core/dom/Document.h
++++ b/third_party/WebKit/Source/core/dom/Document.h
+@@ -1097,7 +1097,6 @@ public:
+     void set_requestVisibilityRect(FloatRect *r) { m_requestVisibilityRect = r; }
+     void requestVisibility();
+     void requestVisibilityImpl();
+-    void requestVisibilityReportEvent();
+     
+ protected:
+     Document(const DocumentInit&, DocumentClassFlags = DefaultDocumentClass);
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From e004b77a5ac888d9651895307030f5fba1354001 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Mon, 20 Jun 2016 13:26:37 -0400
+Subject: [PATCH 27/34] Ironframe - Remove extra code in requestVisibility()
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 386c79e..90ea01d 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5803,14 +5803,9 @@ void Document::requestVisibility(){
+     target=this;
+     target->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
+     target->documentElement()->style()->setProperty("transform", "translateZ(0px)", "", ASSERT_NO_EXCEPTION);
+-    // XXX DMK everything below is just trying to force a paint event or be paranoid about things
+-    //         this happens in a separate function also to force the async rescheduling
+-    target->documentElement()->style()->setProperty("position", "relative", "", ASSERT_NO_EXCEPTION);
+-    target->documentElement()->style()->setProperty("z-index", "2147483648", "", ASSERT_NO_EXCEPTION);
++    // Force a paint event
+     target->view()->updateAllLifecyclePhases();
+-    target->page()->deprecatedLocalMainFrame()->view()->updateAllLifecyclePhases();
+-    target->domWindow()->scrollBy(0,10,ScrollBehavior::ScrollBehaviorAuto);
+-    target->domWindow()->scrollBy(0,-10,ScrollBehavior::ScrollBehaviorAuto);    
++    target->page()->deprecatedLocalMainFrame()->view()->updateAllLifecyclePhases();    
+ }
+ 
+ void Document::requestVisibilityImpl(){
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 137c6513e93d724e01daa69839e35088ae77394e Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Mon, 20 Jun 2016 13:28:39 -0400
+Subject: [PATCH 28/34] Set DocumentCreateEventRequestedVisibilityEvent=1510 to
+ avoid overlap
+
+---
+ third_party/WebKit/Source/core/frame/UseCounter.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
+index f4ee2b0..e2134c9 100644
+--- a/third_party/WebKit/Source/core/frame/UseCounter.h
++++ b/third_party/WebKit/Source/core/frame/UseCounter.h
+@@ -1215,7 +1215,7 @@ public:
+         RegisterProtocolHandlerSecureOrigin = 1409,
+         RegisterProtocolHandlerInsecureOrigin = 1410,
+ 
+-	DocumentCreateEventRequestedVisibilityEvent = 1405,
++	DocumentCreateEventRequestedVisibilityEvent = 1510,
+ 	
+         // Add new features immediately above this line. Don't change assigned
+         // numbers of any item, and don't reuse removed slots.
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 2107488df82d2e278e3f727c45fb95855eebe10c Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Mon, 20 Jun 2016 14:01:32 -0400
+Subject: [PATCH 29/34] Ironframe - requestVisibility() remove explicit force
+ of paint event
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 90ea01d..1cf4fe6 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5802,10 +5802,7 @@ void Document::requestVisibility(){
+     Document *target;
+     target=this;
+     target->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
+-    target->documentElement()->style()->setProperty("transform", "translateZ(0px)", "", ASSERT_NO_EXCEPTION);
+-    // Force a paint event
+-    target->view()->updateAllLifecyclePhases();
+-    target->page()->deprecatedLocalMainFrame()->view()->updateAllLifecyclePhases();    
++    target->documentElement()->style()->setProperty("transform", "translateZ(0px)", "", ASSERT_NO_EXCEPTION);    
+ }
+ 
+ void Document::requestVisibilityImpl(){
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 7167c114c7b19141993e1ce4700e9245d4f64fcb Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Mon, 20 Jun 2016 14:20:55 -0400
+Subject: [PATCH 30/34] Ironframe - PaintLayer.cpp uncomment asserts
+
+---
+ third_party/WebKit/Source/core/paint/PaintLayer.cpp | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/paint/PaintLayer.cpp b/third_party/WebKit/Source/core/paint/PaintLayer.cpp
+index 3bac515..4b85e42 100644
+--- a/third_party/WebKit/Source/core/paint/PaintLayer.cpp
++++ b/third_party/WebKit/Source/core/paint/PaintLayer.cpp
+@@ -1005,8 +1005,7 @@ void PaintLayer::didUpdateCompositingInputs()
+ 
+ bool PaintLayer::hasNonIsolatedDescendantWithBlendMode() const
+ {
+-  // XXX bjwbell
+-  // ASSERT(!m_needsDescendantDependentCompositingInputsUpdate);
++    ASSERT(!m_needsDescendantDependentCompositingInputsUpdate);
+     if (m_hasNonIsolatedDescendantWithBlendMode)
+         return true;
+     if (layoutObject()->isSVGRoot())
+@@ -1751,8 +1750,7 @@ PaintLayer* PaintLayer::hitTestLayer(PaintLayer* rootLayer, PaintLayer* containe
+     const LayoutRect& hitTestRect, const HitTestLocation& hitTestLocation, bool appliedTransform,
+     const HitTestingTransformState* transformState, double* zOffset)
+ {
+-  // XXX bjwbell
+-  // ASSERT(layoutObject()->document().lifecycle().state() >= DocumentLifecycle::CompositingClean);
++    ASSERT(layoutObject()->document().lifecycle().state() >= DocumentLifecycle::CompositingClean);
+ 
+     if (!isSelfPaintingLayer() && !hasSelfPaintingLayerDescendant())
+         return nullptr;
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 07ecf1fd420e8ba5de74e2826cc410f1a547a359 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Mon, 20 Jun 2016 14:30:39 -0400
+Subject: [PATCH 31/34] Ironframe - Remove PaintLayer.cpp hack
+
+---
+ third_party/WebKit/Source/core/paint/PaintLayer.cpp | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/paint/PaintLayer.cpp b/third_party/WebKit/Source/core/paint/PaintLayer.cpp
+index 4b85e42..37f7d4a 100644
+--- a/third_party/WebKit/Source/core/paint/PaintLayer.cpp
++++ b/third_party/WebKit/Source/core/paint/PaintLayer.cpp
+@@ -2294,8 +2294,6 @@ CompositingState PaintLayer::compositingState() const
+ 
+ bool PaintLayer::isAllowedToQueryCompositingState() const
+ {
+-  // XXX DMK
+-  return true;
+     if (gCompositingQueryMode == CompositingQueriesAreAllowed || RuntimeEnabledFeatures::slimmingPaintV2Enabled())
+         return true;
+     return layoutObject()->document().lifecycle().state() >= DocumentLifecycle::InCompositingUpdate;
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From 7b39a7f63d805ce209bfa1d4582375e4c9644bdb Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Mon, 20 Jun 2016 14:34:57 -0400
+Subject: [PATCH 32/34] Ironframe - Fix copyright dates
+
+---
+ third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp     | 2 +-
+ third_party/WebKit/Source/core/events/RequestedVisibilityEvent.idl     | 2 +-
+ third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp
+index e4a5427..5f17327 100644
+--- a/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp
++++ b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (C) 2009 Google Inc. All rights reserved.
++ * Copyright (C) 2016 Google Inc. All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions are
+diff --git a/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.idl b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.idl
+index fc6f1ac..aae3453 100644
+--- a/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.idl
++++ b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.idl
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (C) 2009 Google Inc. All rights reserved.
++ * Copyright (C) 2016 Google Inc. All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions are
+diff --git a/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl b/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
+index 490b8bc..977fb87 100644
+--- a/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
++++ b/third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
+@@ -1,4 +1,4 @@
+-// Copyright 2015 The Chromium Authors. All rights reserved.
++// Copyright 2016 The Chromium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From bbbe41281f01d3437a568a47490c2a2de953533e Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Wed, 22 Jun 2016 16:13:04 -0400
+Subject: [PATCH 33/34] Ironframe - Change tabs to spaces
+
+---
+ third_party/WebKit/Source/core/core.gypi        |  14 +-
+ third_party/WebKit/Source/core/dom/Document.cpp | 210 ++++++++++++------------
+ 2 files changed, 112 insertions(+), 112 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
+index 981e08c..18cf7b6 100644
+--- a/third_party/WebKit/Source/core/core.gypi
++++ b/third_party/WebKit/Source/core/core.gypi
+@@ -129,7 +129,7 @@
+             'events/CustomEvent.idl',
+             'events/DragEvent.idl',
+             'events/ErrorEvent.idl',
+-	    'events/RequestedVisibilityEvent.idl',
++            'events/RequestedVisibilityEvent.idl',
+             'events/Event.idl',
+             'events/EventTarget.idl',
+             'events/FocusEvent.idl',
+@@ -472,7 +472,7 @@
+             'events/CustomEvent.idl',
+             'events/DragEvent.idl',
+             'events/ErrorEvent.idl',
+-	    'events/RequestedVisibilityEvent.idl',
++            'events/RequestedVisibilityEvent.idl',
+             'events/Event.idl',
+             'events/FocusEvent.idl',
+             'events/HashChangeEvent.idl',
+@@ -2760,8 +2760,8 @@
+             'events/DragEvent.h',
+             'events/ErrorEvent.cpp',
+             'events/ErrorEvent.h',
+-	    'events/RequestedVisibilityEvent.cpp',
+-	    'events/RequestedVisibilityEvent.h',
++            'events/RequestedVisibilityEvent.cpp',
++            'events/RequestedVisibilityEvent.h',
+             'events/Event.cpp',
+             'events/EventDispatchMediator.cpp',
+             'events/EventDispatchMediator.h',
+@@ -3734,7 +3734,7 @@
+             'events/CustomEventInit.idl',
+             'events/DragEventInit.idl',
+             'events/ErrorEventInit.idl',
+-	    'events/RequestedVisibilityEventInit.idl',
++            'events/RequestedVisibilityEventInit.idl',
+             'events/EventInit.idl',
+             'events/EventListenerOptions.idl',
+             'events/EventModifierInit.idl',
+@@ -3813,8 +3813,8 @@
+             '<(blink_core_output_dir)/events/DragEventInit.h',
+             '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
+             '<(blink_core_output_dir)/events/ErrorEventInit.h',
+-	    '<(blink_core_output_dir)/events/RequestedVisibilityEventInit.cpp',
+-	    '<(blink_core_output_dir)/events/RequestedVisibilityEventInit.h',
++            '<(blink_core_output_dir)/events/RequestedVisibilityEventInit.cpp',
++            '<(blink_core_output_dir)/events/RequestedVisibilityEventInit.h',
+             '<(blink_core_output_dir)/events/EventInit.cpp',
+             '<(blink_core_output_dir)/events/EventInit.h',
+             '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 1cf4fe6..0447f77 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5794,7 +5794,7 @@ bool Document::hasFocus() const
+ }
+ 
+ VisibilityDocumentSet *Document::requestedVisibility() {
+-  return m_requestedVisibility;
++    return m_requestedVisibility;
+ }
+ 
+ void Document::requestVisibility(){
+@@ -5806,110 +5806,110 @@ void Document::requestVisibility(){
+ }
+ 
+ void Document::requestVisibilityImpl(){
+-  // Step 1:  Block obvious failure modes.  Probably insert SVG test here?
+-  if(this->domWindow() == this->domWindow()->top()) {return;}
+-
+-  // Step 2:  Collect useful handles
+-  DOMWindow *testWindow = this->domWindow();
+-  PaintLayer* iframePaintLayer = this->documentElement()->layoutObject()->enclosingLayer();//->enclosingLayerForPaintInvalidationCrossingFrameBoundaries();
+-
+-  if(!iframePaintLayer) { return; }
+-  GraphicsLayer* iframeGraphicsLayer = iframePaintLayer->graphicsLayerBacking();
+-  const PaintLayer* rootPaintLayer = this->domWindow()->top()->document()->body()->layoutObject()->enclosingLayer()->root(); // XXX DMK top scrolling layer
+-  GraphicsLayer* rootGraphicsLayer = rootPaintLayer->graphicsLayerBacking();
+-  if(!iframeGraphicsLayer || !rootGraphicsLayer) {
+-    printf("ERROR: Couldn't find required GraphicsLayer.  One may not have been created for this document.");
+-    addConsoleMessage(ConsoleMessage::create(RenderingMessageSource, ErrorMessageLevel, "Couldn't find required GraphicsLayer.  One may not have been created for this document."));
+-    return;
+-  }
+-  // Step 3:  Discover our effective Bounds.  We are effectively trying to compute the "keyhole" that reaches us,
+-  //          through multiple iframes and scroll/translateX values.  The "sacred" transform is position and size.
+-  //          This is presently being done via boundsInViewportSpace, which works through almost everything.
+-  //          Almost.  (Scale3d needs to be corrected for, or rejected.)
+-
+-  IntRect bounds = this->documentElement()->boundsInViewport();
+-  IntRect origBounds = bounds;
+-
+-  testWindow = this->domWindow();
+-  float sx, sy;
+-  sx=sy=0;
+-  bool moreElements=true;
+-  Element *testElement = this->documentElement();
+-  Document *testDocument = this;
+-
+-  bool do_move = true;
+-  bool hostile=false;
+-  while(moreElements){
+-    if(testDocument->documentElement()==testElement){
+-      testElement=testDocument->domWindow()->frameElement();
+-      testDocument=&testElement->document();
+-      sx+=testWindow->scrollX();
+-      sy+=testWindow->scrollY();
+-      testWindow=testWindow->parent();
+-    } else {
+-      testElement=testElement->parentElement();
+-    }
+-    // HACK!! Remove use of childrenClipRect
+-    IntRect child = IntRect(testElement->layoutObject()->enclosingLayer()->clipper().childrenClipRect());
+-    if(testElement->tagName()=="foreignObject"){
+-      hostile=true;
+-    }
+-    if(testElement->tagName()=="IFRAME") {
+-      IntRect ifrBounds = testElement->boundsInViewport();
+-      child.setWidth(fmin(ifrBounds.size().width(), child.size().width()));
+-      child.setHeight(fmin(ifrBounds.size().height(), child.size().height()));
+-    }
+-    bounds.intersect(child);
+-    if(testElement == this->domWindow()->top()->document()->documentElement()) {
+-      moreElements=false;
+-    }
+-  }
+-  // intersect with visible viewport.  XXX stop using IntRect, start using FloatRect
+-  FrameView *mainFrameView = this->page()->deprecatedLocalMainFrame()->view();
+-  LayoutRect mainViewRect = mainFrameView->layoutView()->viewRect();
+-  IntRect mainViewIntRect = IntRect(mainViewRect);
+-  bounds.intersect(mainViewIntRect);
+-
+-  FloatRect mainViewFloatRect = FloatRect(mainViewRect);
+-  if(!bounds.size().width() || !bounds.size().height()) do_move=false;
+-  // XXX for each registered visibility req, look for collisions with us, if so block the raise
+-  VisibilityDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
+-
+-  for(Document *reqdoc : *ds){
+-    if(reqdoc == this) break; // maybe this is right?
+-    if(reqdoc->m_requestVisibilityRect && reqdoc->m_requestVisibilityRect->intersects(bounds)) {
+-      // XXX DMK better would be to run bounds.subtract but then there'd have to *be* a bounds.subtract method.
+-      //         Also, subtraction is a not quite so defined as intersection.  Largest contiguous from 0,0?
+-      //         Largest contiguous from any corner?  God forbid, pile-o-rects?  Let's just run for the hills for now
+-      hostile=true;
+-      //return;  // there is a rather fun attack if you try this
+-    }
+-  }
+-
+-  if(hostile){
+-    do_move=false;
+-    bounds.setWidth(0);
+-    bounds.setHeight(0);
+-  }
+-  if(this->documentElement()->hasAttribute("visibilityOnly")) { do_move=false; } // XXX DMK expand on this, there are uses
+-  if (do_move) {
+-    FloatRect fbounds = bounds;
+-    this->set_requestVisibilityRect(&fbounds);
+-    rootGraphicsLayer->addChild(iframeGraphicsLayer);
+-    iframeGraphicsLayer->setPosition(FloatPoint(bounds.x(), bounds.y()));
+-    iframeGraphicsLayer->setSize(FloatSize(bounds.size().width(), bounds.size().height()));
+-    iframeGraphicsLayer->setBackgroundColor(Color::black);
+-    iframeGraphicsLayer->setMasksToBounds(true);
+-    iframeGraphicsLayer->setOpacity(1.0);
+-    IntSize offset = IntSize(bounds.x()-origBounds.x()-topDocument().domWindow()->scrollX(), bounds.y()-origBounds.y()-topDocument().domWindow()->scrollY());
+-    iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);// const IntSize & offset,ShouldSetNeedsDisplay shouldSetNeedsDisplay)
+-  }
+-  // report.  sx and sy are
+-  bounds.setWidth(fmax(bounds.size().width() - sx, 0));
+-  bounds.setHeight(fmax(bounds.size().height()- sy, 0));
+-  //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
+-  String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
+-  this->enqueueRequestedVisibilityEvent(s);
++    // Step 1:  Block obvious failure modes.  Probably insert SVG test here?
++    if(this->domWindow() == this->domWindow()->top()) {return;}
++
++    // Step 2:  Collect useful handles
++    DOMWindow *testWindow = this->domWindow();
++    PaintLayer* iframePaintLayer = this->documentElement()->layoutObject()->enclosingLayer();
++
++    if(!iframePaintLayer) { return; }
++    GraphicsLayer* iframeGraphicsLayer = iframePaintLayer->graphicsLayerBacking();
++    const PaintLayer* rootPaintLayer = this->domWindow()->top()->document()->body()->layoutObject()->enclosingLayer()->root(); // XXX DMK top scrolling layer
++    GraphicsLayer* rootGraphicsLayer = rootPaintLayer->graphicsLayerBacking();
++    if(!iframeGraphicsLayer || !rootGraphicsLayer) {
++        printf("ERROR: Couldn't find required GraphicsLayer.  One may not have been created for this document.");
++        addConsoleMessage(ConsoleMessage::create(RenderingMessageSource, ErrorMessageLevel, "Couldn't find required GraphicsLayer.  One may not have been created for this document."));
++        return;
++    }
++    // Step 3:  Discover our effective Bounds.  We are effectively trying to compute the "keyhole" that reaches us,
++    //          through multiple iframes and scroll/translateX values.  The "sacred" transform is position and size.
++    //          This is presently being done via boundsInViewportSpace, which works through almost everything.
++    //          Almost.  (Scale3d needs to be corrected for, or rejected.)
++
++    IntRect bounds = this->documentElement()->boundsInViewport();
++    IntRect origBounds = bounds;
++
++    testWindow = this->domWindow();
++    float sx, sy;
++    sx=sy=0;
++    bool moreElements=true;
++    Element *testElement = this->documentElement();
++    Document *testDocument = this;
++
++    bool do_move = true;
++    bool hostile=false;
++    while(moreElements){
++        if(testDocument->documentElement()==testElement){
++            testElement=testDocument->domWindow()->frameElement();
++            testDocument=&testElement->document();
++            sx+=testWindow->scrollX();
++            sy+=testWindow->scrollY();
++            testWindow=testWindow->parent();
++        } else {
++            testElement=testElement->parentElement();
++        }
++        // HACK!! Remove use of childrenClipRect
++        IntRect child = IntRect(testElement->layoutObject()->enclosingLayer()->clipper().childrenClipRect());
++        if(testElement->tagName()=="foreignObject"){
++            hostile=true;
++        }
++        if(testElement->tagName()=="IFRAME") {
++            IntRect ifrBounds = testElement->boundsInViewport();
++            child.setWidth(fmin(ifrBounds.size().width(), child.size().width()));
++            child.setHeight(fmin(ifrBounds.size().height(), child.size().height()));
++        }
++        bounds.intersect(child);
++        if(testElement == this->domWindow()->top()->document()->documentElement()) {
++            moreElements=false;
++        }
++    }
++    // intersect with visible viewport.  XXX stop using IntRect, start using FloatRect
++    FrameView *mainFrameView = this->page()->deprecatedLocalMainFrame()->view();
++    LayoutRect mainViewRect = mainFrameView->layoutView()->viewRect();
++    IntRect mainViewIntRect = IntRect(mainViewRect);
++    bounds.intersect(mainViewIntRect);
++
++    FloatRect mainViewFloatRect = FloatRect(mainViewRect);
++    if(!bounds.size().width() || !bounds.size().height()) do_move=false;
++    // XXX for each registered visibility req, look for collisions with us, if so block the raise
++    VisibilityDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
++
++    for(Document *reqdoc : *ds){
++        if(reqdoc == this) break; // maybe this is right?
++        if(reqdoc->m_requestVisibilityRect && reqdoc->m_requestVisibilityRect->intersects(bounds)) {
++            // XXX DMK better would be to run bounds.subtract but then there'd have to *be* a bounds.subtract method.
++            //         Also, subtraction is a not quite so defined as intersection.  Largest contiguous from 0,0?
++            //         Largest contiguous from any corner?  God forbid, pile-o-rects?  Let's just run for the hills for now
++            hostile=true;
++            //return;  // there is a rather fun attack if you try this
++        }
++    }
++
++    if(hostile){
++        do_move=false;
++        bounds.setWidth(0);
++        bounds.setHeight(0);
++    }
++    if(this->documentElement()->hasAttribute("visibilityOnly")) { do_move=false; } // XXX DMK expand on this, there are uses
++    if (do_move) {
++        FloatRect fbounds = bounds;
++        this->set_requestVisibilityRect(&fbounds);
++        rootGraphicsLayer->addChild(iframeGraphicsLayer);
++        iframeGraphicsLayer->setPosition(FloatPoint(bounds.x(), bounds.y()));
++        iframeGraphicsLayer->setSize(FloatSize(bounds.size().width(), bounds.size().height()));
++        iframeGraphicsLayer->setBackgroundColor(Color::black);
++        iframeGraphicsLayer->setMasksToBounds(true);
++        iframeGraphicsLayer->setOpacity(1.0);
++        IntSize offset = IntSize(bounds.x()-origBounds.x()-topDocument().domWindow()->scrollX(), bounds.y()-origBounds.y()-topDocument().domWindow()->scrollY());
++        iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);// const IntSize & offset,ShouldSetNeedsDisplay shouldSetNeedsDisplay)
++    }
++    // report.  sx and sy are
++    bounds.setWidth(fmax(bounds.size().width() - sx, 0));
++    bounds.setHeight(fmax(bounds.size().height()- sy, 0));
++    //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
++    String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
++    this->enqueueRequestedVisibilityEvent(s);
+ };
+ 
+ template<unsigned type>
+-- 
+2.9.0.rc0.38.gf3913c2
+
+
+From a20651294f258441132c4affb0ac36e7792d8894 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Thu, 23 Jun 2016 07:52:15 -0400
+Subject: [PATCH 34/34] Ironframe - Remove translateZ(0) hack
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp                   | 8 ++------
+ .../Source/core/layout/compositing/CompositingReasonFinder.cpp    | 4 ++++
+ third_party/WebKit/Source/platform/graphics/CompositingReasons.h  | 8 ++++++--
+ 3 files changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 1d3faf0..0d25224 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5807,11 +5807,8 @@ VisibilityDocumentSet *Document::requestedVisibility() {
+ }
+ 
+ void Document::requestVisibility(){
+-    // Set up the present frame for raising.
+-    Document *target;
+-    target=this;
+-    target->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
+-    target->documentElement()->style()->setProperty("transform", "translateZ(0px)", "", ASSERT_NO_EXCEPTION);    
++    // Set attribute.
++    this->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
+ }
+ 
+ void Document::requestVisibilityImpl(){
+@@ -5827,7 +5824,6 @@ void Document::requestVisibilityImpl(){
+     const PaintLayer* rootPaintLayer = this->domWindow()->top()->document()->body()->layoutObject()->enclosingLayer()->root(); // XXX DMK top scrolling layer
+     GraphicsLayer* rootGraphicsLayer = rootPaintLayer->graphicsLayerBacking();
+     if(!iframeGraphicsLayer || !rootGraphicsLayer) {
+-        printf("ERROR: Couldn't find required GraphicsLayer.  One may not have been created for this document.");
+         addConsoleMessage(ConsoleMessage::create(RenderingMessageSource, ErrorMessageLevel, "Couldn't find required GraphicsLayer.  One may not have been created for this document."));
+         return;
+     }
+diff --git a/third_party/WebKit/Source/core/layout/compositing/CompositingReasonFinder.cpp b/third_party/WebKit/Source/core/layout/compositing/CompositingReasonFinder.cpp
+index a4a6bed..420dde2 100644
+--- a/third_party/WebKit/Source/core/layout/compositing/CompositingReasonFinder.cpp
++++ b/third_party/WebKit/Source/core/layout/compositing/CompositingReasonFinder.cpp
+@@ -126,6 +126,10 @@ CompositingReasons CompositingReasonFinder::potentialCompositingReasonsFromStyle
+     if (layoutObject->hasReflection())
+         reasons |= CompositingReasonReflectionWithCompositedDescendants;
+ 
++    if (layoutObject->document().documentElement() && layoutObject->document().documentElement()->hasAttributes() && layoutObject->document().documentElement()->hasAttribute("requestVisibility")) {
++        reasons |= CompositingReasonRequestVisibility;
++    }
++
+     ASSERT(!(reasons & ~CompositingReasonComboAllStyleDeterminedReasons));
+     return reasons;
+ }
+diff --git a/third_party/WebKit/Source/platform/graphics/CompositingReasons.h b/third_party/WebKit/Source/platform/graphics/CompositingReasons.h
+index 48e61ea..2ab8c4d 100644
+--- a/third_party/WebKit/Source/platform/graphics/CompositingReasons.h
++++ b/third_party/WebKit/Source/platform/graphics/CompositingReasons.h
+@@ -79,6 +79,8 @@ const uint64_t CompositingReasonInlineTransform                          = UINT6
+ 
+ const uint64_t CompositingReasonCompositorProxy                          = UINT64_C(1) << 49;
+ 
++const uint64_t CompositingReasonRequestVisibility                        = UINT64_C(1) << 50;
++
+ // Various combinations of compositing reasons are defined here also, for more intutive and faster bitwise logic.
+ const uint64_t CompositingReasonComboAllDirectReasons =
+     CompositingReason3DTransform
+@@ -105,7 +107,8 @@ const uint64_t CompositingReasonComboAllDirectStyleDeterminedReasons =
+     | CompositingReasonTransitionProperty
+     | CompositingReasonWillChangeCompositingHint
+     | CompositingReasonCompositorProxy
+-    | CompositingReasonBackdropFilter;
++    | CompositingReasonBackdropFilter
++    | CompositingReasonRequestVisibility;
+ 
+ const uint64_t CompositingReasonComboCompositedDescendants =
+     CompositingReasonTransformWithCompositedDescendants
+@@ -142,7 +145,8 @@ const uint64_t CompositingReasonComboReasonsThatRequireOwnBacking =
+     | CompositingReasonIsolateCompositedDescendants
+     | CompositingReasonPreserve3DWith3DDescendants // preserve-3d has to create backing store to ensure that 3d-transformed elements intersect.
+     | CompositingReasonBackdropFilter
+-    | CompositingReasonPositionFixedWithCompositedDescendants;
++    | CompositingReasonPositionFixedWithCompositedDescendants
++    | CompositingReasonRequestVisibility;
+ 
+ const uint64_t CompositingReasonComboSquashableReasons =
+     CompositingReasonOverlap
+-- 
+2.9.0.rc0.38.gf3913c2
+

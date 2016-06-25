@@ -1,12 +1,9 @@
-<html>
-<!-- could also be 
-<html requestVisibility=1>
-!-->
+<html requestVisibility=1 style="transform:translateZ(0)">
   <body>
     <script>
       var enabled=false;
       if(parent.frameElement.id!="unprotfr"){
-        document.requestVisibility();
+        //document.requestVisibility();
         enabled=true;
       }
     </script>
