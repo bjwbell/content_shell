@@ -3,7 +3,7 @@ node {
    sh "rm -rf src/"
    sh "rm -rf _bad_scm/"
    sh "rm -f .gclient .gclient_entries"
-   sh "fetch --nohooks chromium"
+   sh "fetch chromium"
    sh "cd src/; git remote add codecommit ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome"
    sh "cd src/; git pull codecommit master"
    sh "cd src/; git fetch codecommit ironframe"
