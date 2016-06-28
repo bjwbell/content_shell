@@ -20,7 +20,7 @@ node {
    sh "cd src/; ninja -C out/Default content_shell"
    stage 'Push'
    sh "cd src/; git push --force-with-lease codecommit ironframe"
-   sh "cd src/; git push codecommit master"
+   sh "cd src/; git push -f codecommit master"
    stage 'Cleanup'
    sh "rm -rf src/"
    sh "rm -f .gclient .gclient_entries"
