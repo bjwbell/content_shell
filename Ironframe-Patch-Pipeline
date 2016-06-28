@@ -1,11 +1,15 @@
 node {
    stage 'Checkout'
-   sh "rm -rf chrome/"
-   sh "git clone --no-single-branch ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome"
-   sh "cd chrome/; git fetch origin master"
-   sh "cd chrome/; git checkout ironframe"
+   sh "rm -rf src/"
+   sh "rm -rf _bad_scm/"
+   sh "rm -f .gclient .gclient_entries"
+   sh "fetch --nohooks chromium"
+   sh "cd src/; git remote add codecommit ssh://APKAJHXR727PTXMIECSQ@git-codecommit.us-east-1.amazonaws.com/v1/repos/chrome"
+   sh "cd src/; git pull codecommit master"
+   sh "cd src/; git fetch codecommit ironframe"
+   sh "cd src/; git checkout ironframe"
    stage 'Diff'
-   sh "cd chrome/; git format-patch master --stdout > ../../../ironframe/diffs/ironframe-`date -Iminutes`.patch"
+   sh "cd src/; git format-patch master --stdout > ../../../ironframe/diffs/ironframe-`date -Iminutes`.patch"
    stage 'Push'
    sh "cd ../../ironframe; git pull origin master"
    sh "cd ../../ironframe; git add diffs/*.patch"
