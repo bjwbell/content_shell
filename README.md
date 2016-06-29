@@ -1,6 +1,24 @@
 # content_shell
 Execute `cp-content-shell.sh` to copy content_shell from chromium build.
 
+
+# Executing chrome tests
+Xvfb on an 8 core digtal ocean droplet is used for running tests
+## digital ocean
+Server side, `dosf`
+```
+export DISPLAY=:1
+Xvfb :1 -screen 0 1024x768x16 &
+fluxbox &
+x11vnc -display :1 -bg -nopw -listen localhost -xkb
+```
+
+Client side (laptop)
+```
+ssh -N -T -L 5900:localhost:5900 user@remotehost &
+vncviewer -encodings 'copyrect tight zrle hextile' localhost:5900
+```
+
 # amazon aws
 
 ## aws cli
