@@ -10,7 +10,7 @@ sudo apt-get install python-pip
 sudo -H pip install awscli
 ```
 
-## amazon aws codedeploy
+## amazon aws codecommit
 
 ### ssh config
 File `~/.ssh/config`:
