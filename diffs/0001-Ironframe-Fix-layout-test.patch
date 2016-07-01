@@ -1,0 +1,80 @@
+From 606ad6b496da6b4f9ea73415411f9a60d31abb77 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Fri, 1 Jul 2016 04:12:21 -0400
+Subject: [PATCH] Ironframe - Fix layout test
+
+---
+ .../http/tests/ironframe/ironframe-expected.txt          |  2 +-
+ .../LayoutTests/http/tests/ironframe/ironframe.html      |  5 ++---
+ .../http/tests/ironframe/resources/protected3.html       | 16 ++++++++++++++--
+ 3 files changed, 17 insertions(+), 6 deletions(-)
+
+diff --git a/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe-expected.txt b/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe-expected.txt
+index 0707383..5eccbc0 100644
+--- a/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe-expected.txt
++++ b/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe-expected.txt
+@@ -1,5 +1,5 @@
+ ALERT: visible: 300x150
+-ALERT: visible: 0x0
++ALERT: visible: 300x58
+ 
+ AAAAA 
+ 
+diff --git a/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html b/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
+index 69b3d6d..9f2d9c1 100644
+--- a/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
++++ b/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
+@@ -9,12 +9,11 @@
+     <script>      
+       function doTest()
+       {
+-          window.scrollTo(0, 1024);
+           if (window.testRunner) {
+-      
+               testRunner.dumpAsText();
+               testRunner.waitUntilDone();
+-              setTimeout(function(){ document.getElementById("result").innerText = "PASS";testRunner.notifyDone();}, 1000);        
++              setTimeout(function(){window.scrollTo(0, 100);}, 1000);
++              setTimeout(function(){document.getElementById("result").innerText = "PASS";testRunner.notifyDone(); }, 2000);
+           }
+       }
+       window.addEventListener("load", doTest, false);
+diff --git a/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html b/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
+index b79dcbd..53ad2ec 100644
+--- a/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
++++ b/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
+@@ -3,6 +3,10 @@
+     <script>
+       var enabled=true;
+       var numAlerts = 0;
++      var width0 = -1;
++      var height0 = -1;
++      var width1 = -1;
++      var height1 = -1;
+       //top.document.getElementById("result").innerText = "PASS";      
+     </script>
+     <img src="paypal.png" style="position:absolute;top:0;left:0">
+@@ -20,10 +24,18 @@
+           } else {
+                visible=true;
+           }
+-          if (numAlerts < 2) {
++          if (width0 == - 1) {
+               alert("visible: " + v.visible.width + "x" + v.visible.height);
+-              numAlerts++;
++              width0 = v.visible.width;
++              height0 = v.visible.height;
++          } else if (width0 != v.visible.width || height0 != v.visible.height) {
++              if (width1 == -1) {
++                  alert("visible: " + v.visible.width + "x" + v.visible.height);
++                  width1 = v.visible.width;
++                  height1 = v.visible.height;
++              }
+           }
++
+           if (window.testRunner) {
+               testRunner.dumpAsText();
+               if (window.internals) {
+-- 
+1.9.1
+
