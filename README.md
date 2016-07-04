@@ -70,3 +70,7 @@ For the pipeline file, use [Ironframe-Merge-Upstream-Pipeline](Ironframe-Merge-U
 2. Clone depot_tools to /var/lib/jenkins - `git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git`.
 3. Modify PATH for jenkins job - `PATH=/var/lib/jenkins/depot_tools:$PATH`.
    Section `Prepare an environment for the run` and subsection - `Properties Content`.
+
+# buildbot
+Execute `buildbot-master-slave.sh` to setup up a buildbot master and slave in the current directory.
+
