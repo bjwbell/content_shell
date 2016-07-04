@@ -2,9 +2,12 @@
 virtualenv --no-site-packages bb-master
 
 cd bb-master
+
 ./bin/pip install buildbot[bundle]
 ./bin/buildbot create-master master
-mv master/master.cfg.sample master/master.cfg
+git clone https://github.com/bjwbell/ironframe
+mv ironframe/buildbot/master/master.cfg master/master.cfg
+rm -rf ironframe
 
 # Start the master
 ./bin/buildbot start master

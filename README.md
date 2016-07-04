@@ -72,5 +72,5 @@ For the pipeline file, use [Ironframe-Merge-Upstream-Pipeline](Ironframe-Merge-U
    Section `Prepare an environment for the run` and subsection - `Properties Content`.
 
 # buildbot
-Execute `buildbot-master-slave.sh` to setup up a buildbot master and slave in the current directory.
+Execute `buildbot/buildbot-master-slave.sh` to setup up a buildbot master and slave in the current directory.
 
