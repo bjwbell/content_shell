@@ -20,14 +20,6 @@ vncviewer -encodings 'copyrect tight zrle hextile' localhost:5900
 ```
 
 # amazon aws
-
-## aws cli
-To install on ubuntu execute:
-```
-sudo apt-get install python-pip
-sudo -H pip install awscli
-```
-
 ## amazon aws codecommit
 
 ### ssh config
