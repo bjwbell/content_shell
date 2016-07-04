@@ -19,6 +19,14 @@ ssh -N -T -L 5900:localhost:5900 user@remotehost &
 vncviewer -encodings 'copyrect tight zrle hextile' localhost:5900
 ```
 
+## IronFrame Layout Tests
+The IronFrame layout tests are under `third_party/WebKit/LayoutTests/http/tests/ironframe`.
+
+To run them execute:
+```
+python testing/xvfb.py out/Default/ python third_party/WebKit/Tools/Scripts/run-webkit-tests -t Default http/tests/ironframe
+```
+
 # amazon aws
 ## amazon aws codecommit
 
