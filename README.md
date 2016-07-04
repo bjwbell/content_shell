@@ -2,23 +2,6 @@
 Execute `cp-content-shell.sh` to copy content_shell from chromium build.
 
 
-# Executing chrome tests
-Xvfb on an 8 core digtal ocean droplet is used for running tests
-## digital ocean
-Server side, `dosf`
-```
-export DISPLAY=:1
-Xvfb :1 -screen 0 1024x768x16 &
-fluxbox &
-x11vnc -display :1 -bg -nopw -listen localhost -xkb
-```
-
-Client side (laptop)
-```
-ssh -N -T -L 5900:localhost:5900 user@remotehost &
-vncviewer -encodings 'copyrect tight zrle hextile' localhost:5900
-```
-
 ## IronFrame Layout Tests
 The IronFrame layout tests are under `third_party/WebKit/LayoutTests/http/tests/ironframe`.
 
@@ -81,4 +64,20 @@ For the pipeline file, use [Ironframe-Merge-Upstream-Pipeline](Ironframe-Merge-U
 
 # buildbot
 Execute `buildbot/buildbot-master-slave.sh` to setup up a buildbot master and slave in the current directory.
+
+# Xvfb
+Setup for running chrome via Xvfb
+## Server side
+```
+export DISPLAY=:1
+Xvfb :1 -screen 0 1024x768x16 &
+fluxbox &
+x11vnc -display :1 -bg -nopw -listen localhost -xkb
+```
+
+## Client side e.g. laptop
+```
+ssh -N -T -L 5900:localhost:5900 user@remotehost &
+vncviewer -encodings 'copyrect tight zrle hextile' localhost:5900
+```
 
