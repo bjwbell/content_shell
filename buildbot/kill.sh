@@ -1,3 +1,5 @@
+#!/bin/sh
+
 cd bb-worker
 ./bin/buildbot-worker stop worker
 cd ..
