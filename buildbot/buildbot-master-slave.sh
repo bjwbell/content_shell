@@ -17,7 +17,7 @@ cd ../
 virtualenv --no-site-packages bb-worker
 cd bb-worker
 ./bin/pip install --pre buildbot-worker
-./bin/buildbot-worker create-worker worker localhost example-slave pass
+./bin/buildbot-worker create-worker worker localhost slave0 pass
 
 # Start the worker
 ./bin/buildbot-worker start worker
