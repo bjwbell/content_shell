@@ -11,6 +11,9 @@ import (
     "github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
+var key = "secretKey"
+var bucket = "theBucket"
+
 func main() {
     file, err := os.Open("upload_file.tar")
     if err != nil {
@@ -31,8 +34,8 @@ func main() {
     uploader := s3manager.NewUploader(session.New(&aws.Config{Region: aws.String("us-west-1")}))
     result, err := uploader.Upload(&s3manager.UploadInput{
         Body:   reader,
-        Bucket: aws.String("myBucket"),
-        Key:    aws.String("myKey"),
+        Bucket: aws.String(bucket),
+        Key:    aws.String(key),
     })
     if err != nil {
         log.Fatalln("Failed to upload", err)
