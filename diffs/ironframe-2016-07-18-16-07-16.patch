@@ -1,7 +1,7 @@
-From bdfbe4fe7a38300cdd23991bc75d7354835e25cd Mon Sep 17 00:00:00 2001
+From 653d83dfb014282bc3be224fb2e883696fb48581 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 27 Jun 2016 21:20:47 -0400
-Subject: [PATCH 1/8] Ironframe - Add RequestVisibility
+Subject: [PATCH 1/9] Ironframe - Add RequestVisibility
 
 ---
  third_party/WebKit/Source/core/core.gypi           |   7 ++
@@ -29,7 +29,7 @@ Subject: [PATCH 1/8] Ironframe - Add RequestVisibility
  create mode 100644 third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
 
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index 85522faf..6b3ba27 100644
+index 4a7693e..4995d82 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -130,6 +130,7 @@
@@ -40,7 +40,7 @@ index 85522faf..6b3ba27 100644
              'events/Event.idl',
              'events/EventTarget.idl',
              'events/FocusEvent.idl',
-@@ -471,6 +472,7 @@
+@@ -470,6 +471,7 @@
              'events/CustomEvent.idl',
              'events/DragEvent.idl',
              'events/ErrorEvent.idl',
@@ -48,7 +48,7 @@ index 85522faf..6b3ba27 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2757,6 +2759,8 @@
+@@ -2762,6 +2764,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -57,7 +57,7 @@ index 85522faf..6b3ba27 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3733,6 +3737,7 @@
+@@ -3738,6 +3742,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -65,7 +65,7 @@ index 85522faf..6b3ba27 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3811,6 +3816,8 @@
+@@ -3816,6 +3821,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -75,7 +75,7 @@ index 85522faf..6b3ba27 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index d269191..030353c 100644
+index aba34c0..01fb565 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -264,7 +264,7 @@ index d269191..030353c 100644
  template<unsigned type>
  bool shouldInvalidateNodeListCachesForAttr(const HeapHashSet<WeakMember<const LiveNodeListBase>> nodeLists[], const QualifiedName& attrName)
  {
-@@ -5981,6 +6113,7 @@ DEFINE_TRACE(Document)
+@@ -6001,6 +6133,7 @@ DEFINE_TRACE(Document)
      visitor->trace(m_intersectionObserverController);
      visitor->trace(m_intersectionObserverData);
      visitor->trace(m_snapCoordinator);
@@ -273,7 +273,7 @@ index d269191..030353c 100644
      TreeScope::trace(visitor);
      ContainerNode::trace(visitor);
 diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
-index d2edfcd..b9a4c40 100644
+index 21464a1..728ce17 100644
 --- a/third_party/WebKit/Source/core/dom/Document.h
 +++ b/third_party/WebKit/Source/core/dom/Document.h
 @@ -176,6 +176,7 @@ struct AnnotatedRegionValue;
@@ -576,7 +576,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index 9e64a98..59a86c4 100644
+index dd43de2..319d061 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -40,6 +40,7 @@
@@ -587,7 +587,7 @@ index 9e64a98..59a86c4 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2548,6 +2549,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+@@ -2549,6 +2550,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
              // This was required for slimming paint v1 but is only temporarily
              // needed for slimming paint v2.
              view.compositor()->updateIfNeededRecursive();
@@ -604,12 +604,12 @@ index 9e64a98..59a86c4 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index b24a3e2..6e43028 100644
+index c8417f0..f757981 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1244,6 +1244,8 @@ public:
-         BeforeInstallPromptEventPrompt = 1439,
-         ExecCommandAltersHTMLStructure = 1440,
+@@ -1247,6 +1247,8 @@ public:
+         SecureContextCheckForSandboxedOriginPassed = 1443,
+         SecureContextCheckForSandboxedOriginFailed = 1444,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1500,
 +
@@ -759,7 +759,7 @@ index 48e61ea..abe5f50 100644
  const uint64_t CompositingReasonCombo3DDescendants =
      CompositingReasonPreserve3DWith3DDescendants
 diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
-index 45e1736..0cd432c 100644
+index 598edd9..3c36383 100644
 --- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
 +++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
 @@ -135,6 +135,7 @@ GraphicsLayer::GraphicsLayer(GraphicsLayerClient* client)
@@ -801,7 +801,7 @@ index 45e1736..0cd432c 100644
  {
      // FIXME: this could probably be a full early exit.
 diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
-index 805cad9..92d0805 100644
+index 4053249..0aa86b9 100644
 --- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
 +++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
 @@ -87,6 +87,9 @@ public:
@@ -834,10 +834,10 @@ index 805cad9..92d0805 100644
 1.9.1
 
 
-From 674cde812b69a2a9258a19296eb908a7718d794a Mon Sep 17 00:00:00 2001
+From 30b0f03e7cf1108fa9cd868f4638c90a0532ef88 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 03:58:00 -0400
-Subject: [PATCH 2/8] Ironframe - Add Layout test
+Subject: [PATCH 2/9] Ironframe - Add Layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt    |  35 +++++
@@ -7275,10 +7275,10 @@ HcmV?d00001
 1.9.1
 
 
-From 61b1913bff55ae28014700e60a138c4d9184440d Mon Sep 17 00:00:00 2001
+From 04f046fe83089a79f1eafffcfee349d84e8d4d58 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 04:12:21 -0400
-Subject: [PATCH 3/8] Ironframe - Fix layout test
+Subject: [PATCH 3/9] Ironframe - Fix layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt          |  2 +-
@@ -7356,10 +7356,10 @@ index b79dcbd..53ad2ec 100644
 1.9.1
 
 
-From 0282905b854f218b15c57e7d157feb77d5f5ead4 Mon Sep 17 00:00:00 2001
+From ec5876edf96ba2de3a2ea2be389a65f3ac8af707 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 06:53:57 -0400
-Subject: [PATCH 4/8] IronFrame - Fix nits in layout test
+Subject: [PATCH 4/9] IronFrame - Fix nits in layout test
 
 ---
  .../http/tests/ironframe/ironframe.html            | 49 +++++++++++-----------
@@ -7476,10 +7476,10 @@ index cb9bcb0..5d2f5b0f 100644
 1.9.1
 
 
-From f25b7119b3b8a1df73cc65f4a2da0ba1e4524d10 Mon Sep 17 00:00:00 2001
+From 7275467dc3b26620e07f9392f29ccdec4af3632c Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:04:37 -0400
-Subject: [PATCH 5/8] IronFrame - Remove unused files from layout test
+Subject: [PATCH 5/9] IronFrame - Remove unused files from layout test
 
 ---
  .../ironframe/resources/ironframe-expected.txt     |   1 -
@@ -7664,10 +7664,10 @@ index 9e4f0f1..0000000
 1.9.1
 
 
-From f8f96c8f3fc8862667a2f38a4140836badeafb73 Mon Sep 17 00:00:00 2001
+From 4c4277d8688e2326bdfcd0c47844f0084f5034e0 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:14:24 -0400
-Subject: [PATCH 6/8] IronFrame - Fix nits in layout test
+Subject: [PATCH 6/9] IronFrame - Fix nits in layout test
 
 ---
  .../http/tests/ironframe/ironframe.html            | 104 ++++++++--------
@@ -7934,10 +7934,10 @@ index cb09a11..41b1a6f 100644
 1.9.1
 
 
-From fa59fc8c4508dc950d394d38dee97ddabed85932 Mon Sep 17 00:00:00 2001
+From bee8eb87a555435b7f464d8691dbe9a8b034b95f Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 09:21:04 -0400
-Subject: [PATCH 7/8] IronFrame - Use testharness.js in layout test
+Subject: [PATCH 7/9] IronFrame - Use testharness.js in layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt    |  35 --------
@@ -8175,10 +8175,10 @@ index 41b1a6f..6445755 100644
 1.9.1
 
 
-From f5cf12eaa73062ff5ba6f7c2ec2f0e17748713c2 Mon Sep 17 00:00:00 2001
+From f0ae288ea312b31c53478b905fa6fbd153e9c55d Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 8 Jul 2016 20:05:03 -0400
-Subject: [PATCH 8/8] IronFrame - Fix regression with RequestVisibility
+Subject: [PATCH 8/9] IronFrame - Fix regression with RequestVisibility
  compositing reason
 
 ---
@@ -8230,6 +8230,45 @@ index abe5f50..c176a29 100644
  
  const uint64_t CompositingReasonComboSquashableReasons =
      CompositingReasonOverlap
+-- 
+1.9.1
+
+
+From 0760a2364f0f28fa211a6d11e69dbb2d8376b918 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Tue, 19 Jul 2016 23:23:39 -0400
+Subject: [PATCH 9/9] Ironframe - Set EventTypeName in constructor
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp                    | 1 -
+ third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp | 2 +-
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 01fb565..5f840a0 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -3909,7 +3909,6 @@ void Document::enqueueAnimationFrameEvent(Event* event)
+ void Document::enqueueRequestedVisibilityEvent(const String& msg)
+ {
+     RequestedVisibilityEvent* event = RequestedVisibilityEvent::create(msg);
+-    event->setType(EventTypeNames::requestedvisibility);
+     event->setTarget(documentElement());
+     ensureScriptedAnimationController().enqueueEvent(event);
+ }
+diff --git a/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp
+index 5f17327..c32b661 100644
+--- a/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp
++++ b/third_party/WebKit/Source/core/events/RequestedVisibilityEvent.cpp
+@@ -49,7 +49,7 @@ RequestedVisibilityEvent::RequestedVisibilityEvent(const AtomicString& type, con
+ }
+ 
+ RequestedVisibilityEvent::RequestedVisibilityEvent(const String& message)
+-    : Event(EventTypeNames::error, false, true)
++    : Event(EventTypeNames::requestedvisibility, false, true)
+     , m_sanitizedMessage(message)
+ {
+ }
 -- 
 1.9.1
 
