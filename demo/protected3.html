@@ -1,51 +1,53 @@
 <html requestVisibility=1>
-  <body>
-    <script>
-      var enabled=false;
-      if(parent.frameElement.id!="unprotfr"){
-        //document.requestVisibility();
-        enabled=true;
-      }
-    </script>
-    <img src="paypal.png" style="position:absolute;top:0;left:0">
-    <script>
-      var prev;
-      var prevMsg="";
-      var v={};
-      var visible=false;
-      var viz = top.document.getElementById("viz").contentWindow.document.getElementById("render");
-      var update = function(){
-      if(v.visible.width < 333 || v.visible.height< 270 ) {
-		    visible=false;
-	     } else {
-		 visible=true;
-	     }
-	     if(!visible) {
-		 viz.style.backgroundColor="red";
-	     } else {
-		 if(visible && Date.now()-prev < 2000) {
-		     viz.style.backgroundColor="yellow";
-		     setTimeout(update, 2250);
-		 } else {
-		     viz.style.backgroundColor="white";
-		 }
-	     }
-	 }
-	 function go() {
-	 document.documentElement.addEventListener('requestedvisibility', function(e) {
-	     if(e.message!=prevMsg){
-		 prev=e.timeStamp;
-		 prevMsg=e.message;
-	     }
-	     v = JSON.parse(e.message);
-	     v.innerHeight = innerHeight;
-	     v.innerWidth  = innerWidth;
-	     v.ancestorOrigins = document.location.ancestorOrigins;
-	     viz.innerText = JSON.stringify(v);
-	     var x = viz.innerText;
-	     update();
-	     //console.log(viz.innerText);
-	   });
-	 }
-	 if(enabled) { window.onload=go; }
-	</script>
+    <body>
+        <script>
+         var enabled=false;
+         if(parent.frameElement.id!="unprotfr"){
+             //document.requestVisibility();
+             enabled=true;
+         }
+        </script>
+        <img src="paypal.png" style="position:absolute;top:0;left:0">
+        <script>
+         var prev;
+         var prevMsg="";
+         var v={};
+         var visible=false;
+         var viz = top.document.getElementById("viz").contentWindow.document.getElementById("render");
+         var update = function(){
+             if(v.visible.width < 333 || v.visible.height< 270 ) {
+                 visible=false;
+             } else {
+                 visible=true;
+             }
+             if(!visible) {
+                 viz.style.backgroundColor="red";
+             } else {
+                 if(visible && Date.now()-prev < 2000) {
+                     viz.style.backgroundColor="yellow";
+                     setTimeout(update, 2250);
+                 } else {
+                     viz.style.backgroundColor="white";
+                 }
+             }
+         }
+         function go() {
+             document.documentElement.addEventListener('requestedvisibility', function(e) {
+                 if(e.message!=prevMsg){
+                     prev=e.timeStamp;
+                     prevMsg=e.message;
+                 }
+                 v = JSON.parse(e.message);
+                 v.innerHeight = innerHeight;
+                 v.innerWidth  = innerWidth;
+                 v.ancestorOrigins = document.location.ancestorOrigins;
+                 viz.innerText = JSON.stringify(v);
+                 var x = viz.innerText;
+                 update();
+                 //console.log(viz.innerText);
+             });
+         }
+         if(enabled) { window.onload=go; }
+        </script>
+    </body>
+</html>
