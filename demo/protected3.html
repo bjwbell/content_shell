@@ -41,6 +41,7 @@
                  v.innerHeight = innerHeight;
                  v.innerWidth  = innerWidth;
                  v.ancestorOrigins = document.location.ancestorOrigins;
+                 v.timestamp = e.timeStamp;
                  viz.innerText = JSON.stringify(v);
                  var x = viz.innerText;
                  update();
