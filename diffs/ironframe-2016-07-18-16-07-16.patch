@@ -1,4 +1,4 @@
-From 653d83dfb014282bc3be224fb2e883696fb48581 Mon Sep 17 00:00:00 2001
+From 19eb3d3867500b76bb30d255f5a16102f8b3d4d8 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 27 Jun 2016 21:20:47 -0400
 Subject: [PATCH 1/9] Ironframe - Add RequestVisibility
@@ -29,7 +29,7 @@ Subject: [PATCH 1/9] Ironframe - Add RequestVisibility
  create mode 100644 third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
 
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index 4a7693e..4995d82 100644
+index 0542318..fcef0af 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -130,6 +130,7 @@
@@ -40,7 +40,7 @@ index 4a7693e..4995d82 100644
              'events/Event.idl',
              'events/EventTarget.idl',
              'events/FocusEvent.idl',
-@@ -470,6 +471,7 @@
+@@ -473,6 +474,7 @@
              'events/CustomEvent.idl',
              'events/DragEvent.idl',
              'events/ErrorEvent.idl',
@@ -48,7 +48,7 @@ index 4a7693e..4995d82 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2762,6 +2764,8 @@
+@@ -2765,6 +2767,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -57,7 +57,7 @@ index 4a7693e..4995d82 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3738,6 +3742,7 @@
+@@ -3746,6 +3750,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -65,7 +65,7 @@ index 4a7693e..4995d82 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3816,6 +3821,8 @@
+@@ -3824,6 +3829,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -75,7 +75,7 @@ index 4a7693e..4995d82 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index aba34c0..01fb565 100644
+index 93c32e8..7612146 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -576,7 +576,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index dd43de2..319d061 100644
+index be13a4d..cea9dca 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -40,6 +40,7 @@
@@ -587,7 +587,7 @@ index dd43de2..319d061 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2549,6 +2550,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+@@ -2548,6 +2549,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
              // This was required for slimming paint v1 but is only temporarily
              // needed for slimming paint v2.
              view.compositor()->updateIfNeededRecursive();
@@ -604,12 +604,12 @@ index dd43de2..319d061 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index c8417f0..f757981 100644
+index 2146368..57de251 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1247,6 +1247,8 @@ public:
-         SecureContextCheckForSandboxedOriginPassed = 1443,
-         SecureContextCheckForSandboxedOriginFailed = 1444,
+@@ -1258,6 +1258,8 @@ public:
+         PointerDownFiredForTouch = 1453,
+         PointerEventDispatchPointerDown = 1454,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1500,
 +
@@ -834,7 +834,7 @@ index 4053249..0aa86b9 100644
 1.9.1
 
 
-From 30b0f03e7cf1108fa9cd868f4638c90a0532ef88 Mon Sep 17 00:00:00 2001
+From 35909f35eaa96171fef14edd2cbdde579e80e6a7 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 03:58:00 -0400
 Subject: [PATCH 2/9] Ironframe - Add Layout test
@@ -7275,7 +7275,7 @@ HcmV?d00001
 1.9.1
 
 
-From 04f046fe83089a79f1eafffcfee349d84e8d4d58 Mon Sep 17 00:00:00 2001
+From 39926d96e91bf343286386ed30c1d90ccb863c41 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 04:12:21 -0400
 Subject: [PATCH 3/9] Ironframe - Fix layout test
@@ -7356,7 +7356,7 @@ index b79dcbd..53ad2ec 100644
 1.9.1
 
 
-From ec5876edf96ba2de3a2ea2be389a65f3ac8af707 Mon Sep 17 00:00:00 2001
+From f5e98becff50289a29e4c21db965d4fa17389079 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 06:53:57 -0400
 Subject: [PATCH 4/9] IronFrame - Fix nits in layout test
@@ -7476,7 +7476,7 @@ index cb9bcb0..5d2f5b0f 100644
 1.9.1
 
 
-From 7275467dc3b26620e07f9392f29ccdec4af3632c Mon Sep 17 00:00:00 2001
+From 9f096451738779cb0e7769d1c4fcdfa625a2305d Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:04:37 -0400
 Subject: [PATCH 5/9] IronFrame - Remove unused files from layout test
@@ -7664,7 +7664,7 @@ index 9e4f0f1..0000000
 1.9.1
 
 
-From 4c4277d8688e2326bdfcd0c47844f0084f5034e0 Mon Sep 17 00:00:00 2001
+From e5db7e617d82995029e18da0a1a93e03e644e70d Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:14:24 -0400
 Subject: [PATCH 6/9] IronFrame - Fix nits in layout test
@@ -7934,7 +7934,7 @@ index cb09a11..41b1a6f 100644
 1.9.1
 
 
-From bee8eb87a555435b7f464d8691dbe9a8b034b95f Mon Sep 17 00:00:00 2001
+From 0600641574205b346fd170d58d8803a2341b3d7c Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 09:21:04 -0400
 Subject: [PATCH 7/9] IronFrame - Use testharness.js in layout test
@@ -8175,7 +8175,7 @@ index 41b1a6f..6445755 100644
 1.9.1
 
 
-From f0ae288ea312b31c53478b905fa6fbd153e9c55d Mon Sep 17 00:00:00 2001
+From efb5462cefa7e4c7a1f875848cc64cfd2077bddc Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 8 Jul 2016 20:05:03 -0400
 Subject: [PATCH 8/9] IronFrame - Fix regression with RequestVisibility
@@ -8234,7 +8234,7 @@ index abe5f50..c176a29 100644
 1.9.1
 
 
-From 0760a2364f0f28fa211a6d11e69dbb2d8376b918 Mon Sep 17 00:00:00 2001
+From 82d54bced01f04a73a5222586dafaa90776d5356 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 19 Jul 2016 23:23:39 -0400
 Subject: [PATCH 9/9] Ironframe - Set EventTypeName in constructor
@@ -8245,7 +8245,7 @@ Subject: [PATCH 9/9] Ironframe - Set EventTypeName in constructor
  2 files changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 01fb565..5f840a0 100644
+index 7612146..8510d4f 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -3909,7 +3909,6 @@ void Document::enqueueAnimationFrameEvent(Event* event)
