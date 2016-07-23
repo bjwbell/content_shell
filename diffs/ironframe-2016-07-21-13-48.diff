@@ -301,7 +301,7 @@ new file mode 100644
 index 0000000..6c950c8
 Binary files /dev/null and b/third_party/WebKit/LayoutTests/http/tests/ironframe/tile.gif differ
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index 232e9e0..5979aed 100644
+index 51a45f3..5bd8ce5 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -131,6 +131,7 @@
@@ -320,7 +320,7 @@ index 232e9e0..5979aed 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2768,6 +2770,8 @@
+@@ -2769,6 +2771,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -329,7 +329,7 @@ index 232e9e0..5979aed 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3749,6 +3753,7 @@
+@@ -3754,6 +3758,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -337,7 +337,7 @@ index 232e9e0..5979aed 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3827,6 +3832,8 @@
+@@ -3832,6 +3837,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -347,7 +347,7 @@ index 232e9e0..5979aed 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 93c32e8..8510d4f 100644
+index 01d8cf8..b3ea012 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -380,7 +380,7 @@ index 93c32e8..8510d4f 100644
  #include "core/layout/compositing/PaintLayerCompositor.h"
  #include "core/loader/CookieJar.h"
  #include "core/loader/DocumentLoader.h"
-@@ -207,6 +211,9 @@
+@@ -208,6 +212,9 @@
  #include "core/svg/SVGScriptElement.h"
  #include "core/svg/SVGTitleElement.h"
  #include "core/svg/SVGUseElement.h"
@@ -390,7 +390,7 @@ index 93c32e8..8510d4f 100644
  #include "core/timing/DOMWindowPerformance.h"
  #include "core/timing/Performance.h"
  #include "core/workers/SharedWorkerRepositoryClient.h"
-@@ -389,6 +396,8 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
+@@ -390,6 +397,8 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
      , m_domWindow(m_frame ? m_frame->localDOMWindow() : 0)
      , m_importsController(initializer.importsController())
      , m_contextFeatures(ContextFeatures::defaultSwitch())
@@ -399,7 +399,7 @@ index 93c32e8..8510d4f 100644
      , m_wellFormed(false)
      , m_printing(false)
      , m_wasPrinting(false)
-@@ -3897,6 +3906,13 @@ void Document::enqueueAnimationFrameEvent(Event* event)
+@@ -3898,6 +3907,13 @@ void Document::enqueueAnimationFrameEvent(Event* event)
      ensureScriptedAnimationController().enqueueEvent(event);
  }
  
@@ -413,7 +413,7 @@ index 93c32e8..8510d4f 100644
  void Document::enqueueUniqueAnimationFrameEvent(Event* event)
  {
      ensureScriptedAnimationController().enqueuePerFrameEvent(event);
-@@ -5799,6 +5815,121 @@ bool Document::hasFocus() const
+@@ -5804,6 +5820,121 @@ bool Document::hasFocus() const
      return page() && page()->focusController().isDocumentFocused(*this);
  }
  
@@ -535,19 +535,19 @@ index 93c32e8..8510d4f 100644
  template<unsigned type>
  bool shouldInvalidateNodeListCachesForAttr(const HeapHashSet<WeakMember<const LiveNodeListBase>> nodeLists[], const QualifiedName& attrName)
  {
-@@ -6001,6 +6132,7 @@ DEFINE_TRACE(Document)
-     visitor->trace(m_intersectionObserverController);
+@@ -6007,6 +6138,7 @@ DEFINE_TRACE(Document)
      visitor->trace(m_intersectionObserverData);
      visitor->trace(m_snapCoordinator);
+     visitor->trace(m_resizeObserverController);
 +    visitor->trace(m_requestedVisibility);
      Supplementable<Document>::trace(visitor);
      TreeScope::trace(visitor);
      ContainerNode::trace(visitor);
 diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
-index 21464a1..728ce17 100644
+index 6966b1f..cd383e5 100644
 --- a/third_party/WebKit/Source/core/dom/Document.h
 +++ b/third_party/WebKit/Source/core/dom/Document.h
-@@ -176,6 +176,7 @@ struct AnnotatedRegionValue;
+@@ -177,6 +177,7 @@ struct AnnotatedRegionValue;
  struct FocusParams;
  struct IconURL;
  
@@ -555,16 +555,16 @@ index 21464a1..728ce17 100644
  using MouseEventWithHitTestResults = EventWithHitTestResults<PlatformMouseEvent>;
  using ExceptionCode = int;
  
-@@ -707,6 +708,8 @@ public:
-     IntersectionObserverController& ensureIntersectionObserverController();
-     NodeIntersectionObserverData& ensureIntersectionObserverData();
+@@ -711,6 +712,8 @@ public:
+     ResizeObserverController* resizeObserverController() const { return m_resizeObserverController; }
+     ResizeObserverController& ensureResizeObserverController();
  
 +    VisibilityDocumentSet *requestedVisibility();
 +
      void updateViewportDescription();
  
      // Returns the owning element in the parent document. Returns nullptr if
-@@ -922,6 +925,7 @@ public:
+@@ -926,6 +929,7 @@ public:
      void enqueueMediaQueryChangeListeners(HeapVector<Member<MediaQueryListListener>>&);
      void enqueueVisualViewportScrollEvent();
      void enqueueVisualViewportResizeEvent();
@@ -572,7 +572,7 @@ index 21464a1..728ce17 100644
  
      void dispatchEventsForPrinting();
  
-@@ -1092,6 +1096,10 @@ public:
+@@ -1096,6 +1100,10 @@ public:
  
      bool isInMainFrame() const;
  
@@ -583,7 +583,7 @@ index 21464a1..728ce17 100644
  protected:
      Document(const DocumentInit&, DocumentClassFlags = DefaultDocumentClass);
  
-@@ -1204,6 +1212,9 @@ private:
+@@ -1208,6 +1216,9 @@ private:
      Member<DocumentParser> m_parser;
      Member<ContextFeatures> m_contextFeatures;
  
@@ -847,7 +847,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index 687b58d..65bd576 100644
+index 47b0b70..d44e382 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -40,6 +40,7 @@
@@ -858,7 +858,7 @@ index 687b58d..65bd576 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2549,6 +2550,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+@@ -2558,6 +2559,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
              // This was required for slimming paint v1 but is only temporarily
              // needed for slimming paint v2.
              view.compositor()->updateIfNeededRecursive();
@@ -875,10 +875,10 @@ index 687b58d..65bd576 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index 8a16dce..ea3bb52 100644
+index fef16f2..bb38e23 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1261,6 +1261,8 @@ public:
+@@ -1259,6 +1259,8 @@ public:
          SVGSMILBeginOrEndSyncbaseValue = 1456,
          SVGSMILElementInsertedAfterLoad = 1457,
  
@@ -1060,10 +1060,10 @@ index 48e61ea..c176a29 100644
  const uint64_t CompositingReasonComboSquashableReasons =
      CompositingReasonOverlap
 diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
-index 598edd9..3c36383 100644
+index 1675ae9..6b2e4e6 100644
 --- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
 +++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
-@@ -135,6 +135,7 @@ GraphicsLayer::GraphicsLayer(GraphicsLayerClient* client)
+@@ -133,6 +133,7 @@ GraphicsLayer::GraphicsLayer(GraphicsLayerClient* client)
      , m_isTrackingPaintInvalidations(client && client->isTrackingPaintInvalidations())
      , m_paintingPhase(GraphicsLayerPaintAllWithOverflowClip)
      , m_parent(0)
@@ -1071,7 +1071,7 @@ index 598edd9..3c36383 100644
      , m_maskLayer(0)
      , m_contentsClippingMaskLayer(0)
      , m_replicaLayer(0)
-@@ -203,6 +204,12 @@ void GraphicsLayer::setParent(GraphicsLayer* layer)
+@@ -196,6 +197,12 @@ void GraphicsLayer::setParent(GraphicsLayer* layer)
      m_parent = layer;
  }
  
@@ -1084,7 +1084,7 @@ index 598edd9..3c36383 100644
  #if ENABLE(ASSERT)
  
  bool GraphicsLayer::hasAncestor(GraphicsLayer* ancestor) const
-@@ -296,6 +303,16 @@ void GraphicsLayer::removeFromParent()
+@@ -289,6 +296,16 @@ void GraphicsLayer::removeFromParent()
      platformLayer()->removeFromParent();
  }
  
@@ -1102,7 +1102,7 @@ index 598edd9..3c36383 100644
  {
      // FIXME: this could probably be a full early exit.
 diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
-index 4053249..0aa86b9 100644
+index dcb5611..b220db8 100644
 --- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
 +++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
 @@ -87,6 +87,9 @@ public:
@@ -1123,7 +1123,7 @@ index 4053249..0aa86b9 100644
  
      GraphicsLayer* maskLayer() const { return m_maskLayer; }
      void setMaskLayer(GraphicsLayer*);
-@@ -343,6 +347,7 @@ private:
+@@ -342,6 +346,7 @@ private:
  
      Vector<GraphicsLayer*> m_children;
      GraphicsLayer* m_parent;
