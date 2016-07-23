@@ -1,4 +1,4 @@
-From e2d16ddb6bfc27fd3e413ad33c8c5ae123b3086c Mon Sep 17 00:00:00 2001
+From f7dba3e4e8a00b7fb80ae18ed55e5f4bd7522748 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 27 Jun 2016 21:20:47 -0400
 Subject: [PATCH 1/9] Ironframe - Add RequestVisibility
@@ -29,7 +29,7 @@ Subject: [PATCH 1/9] Ironframe - Add RequestVisibility
  create mode 100644 third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
 
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index 232e9e0..5979aed2 100644
+index 51a45f3..5bd8ce5 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -131,6 +131,7 @@
@@ -48,7 +48,7 @@ index 232e9e0..5979aed2 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2768,6 +2770,8 @@
+@@ -2769,6 +2771,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -57,7 +57,7 @@ index 232e9e0..5979aed2 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3749,6 +3753,7 @@
+@@ -3754,6 +3758,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -65,7 +65,7 @@ index 232e9e0..5979aed2 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3827,6 +3832,8 @@
+@@ -3832,6 +3837,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -75,7 +75,7 @@ index 232e9e0..5979aed2 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 93c32e8..7612146 100644
+index 01d8cf8..440faa0 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -108,7 +108,7 @@ index 93c32e8..7612146 100644
  #include "core/layout/compositing/PaintLayerCompositor.h"
  #include "core/loader/CookieJar.h"
  #include "core/loader/DocumentLoader.h"
-@@ -207,6 +211,9 @@
+@@ -208,6 +212,9 @@
  #include "core/svg/SVGScriptElement.h"
  #include "core/svg/SVGTitleElement.h"
  #include "core/svg/SVGUseElement.h"
@@ -118,7 +118,7 @@ index 93c32e8..7612146 100644
  #include "core/timing/DOMWindowPerformance.h"
  #include "core/timing/Performance.h"
  #include "core/workers/SharedWorkerRepositoryClient.h"
-@@ -389,6 +396,8 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
+@@ -390,6 +397,8 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
      , m_domWindow(m_frame ? m_frame->localDOMWindow() : 0)
      , m_importsController(initializer.importsController())
      , m_contextFeatures(ContextFeatures::defaultSwitch())
@@ -127,7 +127,7 @@ index 93c32e8..7612146 100644
      , m_wellFormed(false)
      , m_printing(false)
      , m_wasPrinting(false)
-@@ -3897,6 +3906,14 @@ void Document::enqueueAnimationFrameEvent(Event* event)
+@@ -3898,6 +3907,14 @@ void Document::enqueueAnimationFrameEvent(Event* event)
      ensureScriptedAnimationController().enqueueEvent(event);
  }
  
@@ -142,7 +142,7 @@ index 93c32e8..7612146 100644
  void Document::enqueueUniqueAnimationFrameEvent(Event* event)
  {
      ensureScriptedAnimationController().enqueuePerFrameEvent(event);
-@@ -5799,6 +5816,121 @@ bool Document::hasFocus() const
+@@ -5804,6 +5821,121 @@ bool Document::hasFocus() const
      return page() && page()->focusController().isDocumentFocused(*this);
  }
  
@@ -264,19 +264,19 @@ index 93c32e8..7612146 100644
  template<unsigned type>
  bool shouldInvalidateNodeListCachesForAttr(const HeapHashSet<WeakMember<const LiveNodeListBase>> nodeLists[], const QualifiedName& attrName)
  {
-@@ -6001,6 +6133,7 @@ DEFINE_TRACE(Document)
-     visitor->trace(m_intersectionObserverController);
+@@ -6007,6 +6139,7 @@ DEFINE_TRACE(Document)
      visitor->trace(m_intersectionObserverData);
      visitor->trace(m_snapCoordinator);
+     visitor->trace(m_resizeObserverController);
 +    visitor->trace(m_requestedVisibility);
      Supplementable<Document>::trace(visitor);
      TreeScope::trace(visitor);
      ContainerNode::trace(visitor);
 diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
-index 21464a1..728ce17 100644
+index 6966b1f..cd383e5 100644
 --- a/third_party/WebKit/Source/core/dom/Document.h
 +++ b/third_party/WebKit/Source/core/dom/Document.h
-@@ -176,6 +176,7 @@ struct AnnotatedRegionValue;
+@@ -177,6 +177,7 @@ struct AnnotatedRegionValue;
  struct FocusParams;
  struct IconURL;
  
@@ -284,16 +284,16 @@ index 21464a1..728ce17 100644
  using MouseEventWithHitTestResults = EventWithHitTestResults<PlatformMouseEvent>;
  using ExceptionCode = int;
  
-@@ -707,6 +708,8 @@ public:
-     IntersectionObserverController& ensureIntersectionObserverController();
-     NodeIntersectionObserverData& ensureIntersectionObserverData();
+@@ -711,6 +712,8 @@ public:
+     ResizeObserverController* resizeObserverController() const { return m_resizeObserverController; }
+     ResizeObserverController& ensureResizeObserverController();
  
 +    VisibilityDocumentSet *requestedVisibility();
 +
      void updateViewportDescription();
  
      // Returns the owning element in the parent document. Returns nullptr if
-@@ -922,6 +925,7 @@ public:
+@@ -926,6 +929,7 @@ public:
      void enqueueMediaQueryChangeListeners(HeapVector<Member<MediaQueryListListener>>&);
      void enqueueVisualViewportScrollEvent();
      void enqueueVisualViewportResizeEvent();
@@ -301,7 +301,7 @@ index 21464a1..728ce17 100644
  
      void dispatchEventsForPrinting();
  
-@@ -1092,6 +1096,10 @@ public:
+@@ -1096,6 +1100,10 @@ public:
  
      bool isInMainFrame() const;
  
@@ -312,7 +312,7 @@ index 21464a1..728ce17 100644
  protected:
      Document(const DocumentInit&, DocumentClassFlags = DefaultDocumentClass);
  
-@@ -1204,6 +1212,9 @@ private:
+@@ -1208,6 +1216,9 @@ private:
      Member<DocumentParser> m_parser;
      Member<ContextFeatures> m_contextFeatures;
  
@@ -576,7 +576,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index 687b58d..65bd576 100644
+index 47b0b70..d44e382 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -40,6 +40,7 @@
@@ -587,7 +587,7 @@ index 687b58d..65bd576 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2549,6 +2550,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+@@ -2558,6 +2559,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
              // This was required for slimming paint v1 but is only temporarily
              // needed for slimming paint v2.
              view.compositor()->updateIfNeededRecursive();
@@ -604,10 +604,10 @@ index 687b58d..65bd576 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index 8a16dce..ea3bb52 100644
+index fef16f2..bb38e23 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1261,6 +1261,8 @@ public:
+@@ -1259,6 +1259,8 @@ public:
          SVGSMILBeginOrEndSyncbaseValue = 1456,
          SVGSMILElementInsertedAfterLoad = 1457,
  
@@ -759,10 +759,10 @@ index 48e61ea..abe5f50 100644
  const uint64_t CompositingReasonCombo3DDescendants =
      CompositingReasonPreserve3DWith3DDescendants
 diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
-index 598edd9..3c36383 100644
+index 1675ae9..6b2e4e6 100644
 --- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
 +++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
-@@ -135,6 +135,7 @@ GraphicsLayer::GraphicsLayer(GraphicsLayerClient* client)
+@@ -133,6 +133,7 @@ GraphicsLayer::GraphicsLayer(GraphicsLayerClient* client)
      , m_isTrackingPaintInvalidations(client && client->isTrackingPaintInvalidations())
      , m_paintingPhase(GraphicsLayerPaintAllWithOverflowClip)
      , m_parent(0)
@@ -770,7 +770,7 @@ index 598edd9..3c36383 100644
      , m_maskLayer(0)
      , m_contentsClippingMaskLayer(0)
      , m_replicaLayer(0)
-@@ -203,6 +204,12 @@ void GraphicsLayer::setParent(GraphicsLayer* layer)
+@@ -196,6 +197,12 @@ void GraphicsLayer::setParent(GraphicsLayer* layer)
      m_parent = layer;
  }
  
@@ -783,7 +783,7 @@ index 598edd9..3c36383 100644
  #if ENABLE(ASSERT)
  
  bool GraphicsLayer::hasAncestor(GraphicsLayer* ancestor) const
-@@ -296,6 +303,16 @@ void GraphicsLayer::removeFromParent()
+@@ -289,6 +296,16 @@ void GraphicsLayer::removeFromParent()
      platformLayer()->removeFromParent();
  }
  
@@ -801,7 +801,7 @@ index 598edd9..3c36383 100644
  {
      // FIXME: this could probably be a full early exit.
 diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
-index 4053249..0aa86b9 100644
+index dcb5611..b220db8 100644
 --- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
 +++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
 @@ -87,6 +87,9 @@ public:
@@ -822,7 +822,7 @@ index 4053249..0aa86b9 100644
  
      GraphicsLayer* maskLayer() const { return m_maskLayer; }
      void setMaskLayer(GraphicsLayer*);
-@@ -343,6 +347,7 @@ private:
+@@ -342,6 +346,7 @@ private:
  
      Vector<GraphicsLayer*> m_children;
      GraphicsLayer* m_parent;
@@ -834,7 +834,7 @@ index 4053249..0aa86b9 100644
 1.9.1
 
 
-From 692f5142e424b1d09a1785e6b0805173daa02b57 Mon Sep 17 00:00:00 2001
+From e650586bc0712c8da1a8079b79e09e060948c625 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 03:58:00 -0400
 Subject: [PATCH 2/9] Ironframe - Add Layout test
@@ -7275,7 +7275,7 @@ HcmV?d00001
 1.9.1
 
 
-From 6364958c32a605e136483399e45a77673e34c138 Mon Sep 17 00:00:00 2001
+From 7aa56673a63f27fe597e4a003de263b20b9c6bec Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 04:12:21 -0400
 Subject: [PATCH 3/9] Ironframe - Fix layout test
@@ -7356,7 +7356,7 @@ index b79dcbd..53ad2ec 100644
 1.9.1
 
 
-From 975d952f050d7da1b5b20dbb609e57074a26b406 Mon Sep 17 00:00:00 2001
+From e7e3a1c4459c0e32a23c83d1d46df704e7b645d3 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 06:53:57 -0400
 Subject: [PATCH 4/9] IronFrame - Fix nits in layout test
@@ -7476,7 +7476,7 @@ index cb9bcb0..5d2f5b0f 100644
 1.9.1
 
 
-From 0f6f5947fe33a8d30edaec860d806ce1549b653e Mon Sep 17 00:00:00 2001
+From dd3eb9fc67a1e6bf1d1cf06762e0aa324692daa4 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:04:37 -0400
 Subject: [PATCH 5/9] IronFrame - Remove unused files from layout test
@@ -7664,7 +7664,7 @@ index 9e4f0f1..0000000
 1.9.1
 
 
-From 4d4aff4595f5c47039c96ff3bed8c8a645e77dac Mon Sep 17 00:00:00 2001
+From b6154e09cd697226f69ade1283af070c9c135e13 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:14:24 -0400
 Subject: [PATCH 6/9] IronFrame - Fix nits in layout test
@@ -7934,7 +7934,7 @@ index cb09a11..41b1a6f 100644
 1.9.1
 
 
-From 195cd18b6f2c6f8aba9de6f0c46f880f9c3a3108 Mon Sep 17 00:00:00 2001
+From 43ac08d29efa07dd6d2bbf42df63e55a63f8c178 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 09:21:04 -0400
 Subject: [PATCH 7/9] IronFrame - Use testharness.js in layout test
@@ -8175,7 +8175,7 @@ index 41b1a6f..6445755 100644
 1.9.1
 
 
-From bb1a94e574f4bb31f86f56b66cd5f51da27fa705 Mon Sep 17 00:00:00 2001
+From ecdab2cd8ea2da4841e452859fa88c1f0075ffab Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 8 Jul 2016 20:05:03 -0400
 Subject: [PATCH 8/9] IronFrame - Fix regression with RequestVisibility
@@ -8234,7 +8234,7 @@ index abe5f50..c176a29 100644
 1.9.1
 
 
-From e9cc24c429d2503c38da8e16dfbbd8a0216d2908 Mon Sep 17 00:00:00 2001
+From 546e11f22e15db58056ead05cbd22d1cefe5e490 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 19 Jul 2016 23:23:39 -0400
 Subject: [PATCH 9/9] Ironframe - Set EventTypeName in constructor
@@ -8245,10 +8245,10 @@ Subject: [PATCH 9/9] Ironframe - Set EventTypeName in constructor
  2 files changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 7612146..8510d4f 100644
+index 440faa0..b3ea012 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
-@@ -3909,7 +3909,6 @@ void Document::enqueueAnimationFrameEvent(Event* event)
+@@ -3910,7 +3910,6 @@ void Document::enqueueAnimationFrameEvent(Event* event)
  void Document::enqueueRequestedVisibilityEvent(const String& msg)
  {
      RequestedVisibilityEvent* event = RequestedVisibilityEvent::create(msg);
