@@ -301,7 +301,7 @@ new file mode 100644
 index 0000000..6c950c8
 Binary files /dev/null and b/third_party/WebKit/LayoutTests/http/tests/ironframe/tile.gif differ
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index 54599e0..7ffd89b 100644
+index 1e1a01c..3a96f2b 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -131,6 +131,7 @@
@@ -320,7 +320,7 @@ index 54599e0..7ffd89b 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2765,6 +2767,8 @@
+@@ -2767,6 +2769,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -329,7 +329,7 @@ index 54599e0..7ffd89b 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3755,6 +3759,7 @@
+@@ -3757,6 +3761,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -337,7 +337,7 @@ index 54599e0..7ffd89b 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3835,6 +3840,8 @@
+@@ -3837,6 +3842,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -875,12 +875,12 @@ index 3fa8e63..8f2feb0 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index f7c528c..8eb552f 100644
+index f7bf9a3..8aa3013 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1270,6 +1270,8 @@ public:
-         VisualViewportResizeFired = 1466,
-         NodeGetRootNode = 1467,
+@@ -1278,6 +1278,8 @@ public:
+         CSSValueAppearanceTextFieldForSearch = 1474,
+         CSSValueAppearanceTextFieldForTextField = 1475,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1500,
 +
@@ -888,7 +888,7 @@ index f7c528c..8eb552f 100644
          // numbers of any item, and don't reuse removed slots.
          // Also, run update_use_counter_feature_enum.py in chromium/src/tools/metrics/histograms/
 diff --git a/third_party/WebKit/Source/core/layout/LayoutView.cpp b/third_party/WebKit/Source/core/layout/LayoutView.cpp
-index 88a2b50..1195aff 100644
+index 35466da..7d33a0e 100644
 --- a/third_party/WebKit/Source/core/layout/LayoutView.cpp
 +++ b/third_party/WebKit/Source/core/layout/LayoutView.cpp
 @@ -24,7 +24,9 @@
