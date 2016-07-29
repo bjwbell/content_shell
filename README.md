@@ -1,7 +1,3 @@
-# content_shell
-Execute `cp-content-shell.sh` to copy content_shell from chromium build.
-
-
 ## IronFrame Layout Tests
 The IronFrame layout tests are under `third_party/WebKit/LayoutTests/http/tests/ironframe`.
 
