@@ -52,3 +52,7 @@ ssh -N -T -L 5900:localhost:5900 user@remotehost &
 vncviewer -encodings 'copyrect tight zrle hextile' localhost:5900
 ```
 
+# RequestVisibility, UISecurity and IntersectionObserver
+W3C UISecurity - [https://w3c.github.io/webappsec/specs/uisecurity/](https://w3c.github.io/webappsec/specs/uisecurity/), https://github.com/w3c/webappsec.
+
+IntersectionObserver - [https://github.com/WICG/IntersectionObserver/](https://github.com/WICG/IntersectionObserver/)
