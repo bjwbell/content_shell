@@ -1,7 +1,7 @@
-From 502b04a4f59e355ecb01bcbacc6d2bab73353e25 Mon Sep 17 00:00:00 2001
+From d197505114ce01f135890a2ac869163e3a9ed628 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 27 Jun 2016 21:20:47 -0400
-Subject: [PATCH 1/9] Ironframe - Add RequestVisibility
+Subject: [PATCH 01/10] Ironframe - Add RequestVisibility
 
 ---
  third_party/WebKit/Source/core/core.gypi           |   7 ++
@@ -75,7 +75,7 @@ index d9b2489..77de353 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index c2d0219..e315c07 100644
+index 95c5404..477ecab 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -127,7 +127,7 @@ index c2d0219..e315c07 100644
      , m_wellFormed(false)
      , m_printing(false)
      , m_wasPrinting(false)
-@@ -3901,6 +3910,14 @@ void Document::enqueueAnimationFrameEvent(Event* event)
+@@ -3902,6 +3911,14 @@ void Document::enqueueAnimationFrameEvent(Event* event)
      ensureScriptedAnimationController().enqueueEvent(event);
  }
  
@@ -142,7 +142,7 @@ index c2d0219..e315c07 100644
  void Document::enqueueUniqueAnimationFrameEvent(Event* event)
  {
      ensureScriptedAnimationController().enqueuePerFrameEvent(event);
-@@ -5807,6 +5824,121 @@ bool Document::hasFocus() const
+@@ -5798,6 +5815,121 @@ bool Document::hasFocus() const
      return page() && page()->focusController().isDocumentFocused(*this);
  }
  
@@ -264,7 +264,7 @@ index c2d0219..e315c07 100644
  template<unsigned type>
  bool shouldInvalidateNodeListCachesForAttr(const HeapHashSet<WeakMember<const LiveNodeListBase>> nodeLists[], const QualifiedName& attrName)
  {
-@@ -6010,6 +6142,7 @@ DEFINE_TRACE(Document)
+@@ -6000,6 +6132,7 @@ DEFINE_TRACE(Document)
      visitor->trace(m_intersectionObserverData);
      visitor->trace(m_snapCoordinator);
      visitor->trace(m_resizeObserverController);
@@ -273,7 +273,7 @@ index c2d0219..e315c07 100644
      TreeScope::trace(visitor);
      ContainerNode::trace(visitor);
 diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
-index 751ed94..569d5d7 100644
+index 1a45f92..e896fe8 100644
 --- a/third_party/WebKit/Source/core/dom/Document.h
 +++ b/third_party/WebKit/Source/core/dom/Document.h
 @@ -177,6 +177,7 @@ struct AnnotatedRegionValue;
@@ -576,7 +576,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index 5c308d5..4c9d74a 100644
+index 0080819..b5bf97f 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -40,6 +40,7 @@
@@ -587,7 +587,7 @@ index 5c308d5..4c9d74a 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2559,6 +2560,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+@@ -2553,6 +2554,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
              // This was required for slimming paint v1 but is only temporarily
              // needed for slimming paint v2.
              view.compositor()->updateIfNeededRecursive();
@@ -604,12 +604,12 @@ index 5c308d5..4c9d74a 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index fc6a5e8..62add1c 100644
+index 29e309c..f2d5c35 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1282,6 +1282,8 @@ public:
- 
-         PerformanceResourceTimingSizes = 1478,
+@@ -1283,6 +1283,8 @@ public:
+         EventSourceDocument = 1479,
+         EventSourceWorker = 1480,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1500,
 +
@@ -617,7 +617,7 @@ index fc6a5e8..62add1c 100644
          // numbers of any item, and don't reuse removed slots.
          // Also, run update_use_counter_feature_enum.py in chromium/src/tools/metrics/histograms/
 diff --git a/third_party/WebKit/Source/core/layout/LayoutView.cpp b/third_party/WebKit/Source/core/layout/LayoutView.cpp
-index 35466da..7d33a0e7 100644
+index a1f5a97..8bb8c58 100644
 --- a/third_party/WebKit/Source/core/layout/LayoutView.cpp
 +++ b/third_party/WebKit/Source/core/layout/LayoutView.cpp
 @@ -24,7 +24,9 @@
@@ -834,10 +834,10 @@ index dcb5611..b220db8 100644
 1.9.1
 
 
-From 5d701fef680c7672e9a12a61ee01bf3f2bed4caa Mon Sep 17 00:00:00 2001
+From db515a70df620a95594ce2aa084e9b006b527452 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 03:58:00 -0400
-Subject: [PATCH 2/9] Ironframe - Add Layout test
+Subject: [PATCH 02/10] Ironframe - Add Layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt    |  35 +++++
@@ -7275,10 +7275,10 @@ HcmV?d00001
 1.9.1
 
 
-From 983a8871aa0a6b37a94ddc4f49872cb76e3fbaeb Mon Sep 17 00:00:00 2001
+From cc8e3caea5b338684ae401e59558b5ad977c20df Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 04:12:21 -0400
-Subject: [PATCH 3/9] Ironframe - Fix layout test
+Subject: [PATCH 03/10] Ironframe - Fix layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt          |  2 +-
@@ -7356,10 +7356,10 @@ index b79dcbd..53ad2ec 100644
 1.9.1
 
 
-From 50c73a1a857bf8ea15b4a0c07561bda0010d9694 Mon Sep 17 00:00:00 2001
+From b7be3db3b39788b6e24859c61c1fb792d78747b2 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 06:53:57 -0400
-Subject: [PATCH 4/9] IronFrame - Fix nits in layout test
+Subject: [PATCH 04/10] IronFrame - Fix nits in layout test
 
 ---
  .../http/tests/ironframe/ironframe.html            | 49 +++++++++++-----------
@@ -7476,10 +7476,10 @@ index cb9bcb0..5d2f5b0f 100644
 1.9.1
 
 
-From b5036d7cad35bf29e9907e34ccb183b20d1ad0ee Mon Sep 17 00:00:00 2001
+From 63f89ed8dfea16a799e2dc25f13800207ca1f92e Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:04:37 -0400
-Subject: [PATCH 5/9] IronFrame - Remove unused files from layout test
+Subject: [PATCH 05/10] IronFrame - Remove unused files from layout test
 
 ---
  .../ironframe/resources/ironframe-expected.txt     |   1 -
@@ -7664,10 +7664,10 @@ index 9e4f0f1..0000000
 1.9.1
 
 
-From eac5400f80a3b2de1749b398d792a38b4fbe5e9d Mon Sep 17 00:00:00 2001
+From 0aadeb89b3aa175ee8ef2da27670d64f019846ac Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:14:24 -0400
-Subject: [PATCH 6/9] IronFrame - Fix nits in layout test
+Subject: [PATCH 06/10] IronFrame - Fix nits in layout test
 
 ---
  .../http/tests/ironframe/ironframe.html            | 104 ++++++++--------
@@ -7934,10 +7934,10 @@ index cb09a11..41b1a6f 100644
 1.9.1
 
 
-From f16f7cd38ab33120d8cdf6e48f64c3dc259db962 Mon Sep 17 00:00:00 2001
+From 21ad3967322d0f6f9bdb4b995555b7a5ab63a48f Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 09:21:04 -0400
-Subject: [PATCH 7/9] IronFrame - Use testharness.js in layout test
+Subject: [PATCH 07/10] IronFrame - Use testharness.js in layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt    |  35 --------
@@ -8175,10 +8175,10 @@ index 41b1a6f..6445755 100644
 1.9.1
 
 
-From 014e11d5f3cd8b8a51c049baec31ce4b0b8a983a Mon Sep 17 00:00:00 2001
+From af346b9ec32bd45124421ff64b661146a62e11aa Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 8 Jul 2016 20:05:03 -0400
-Subject: [PATCH 8/9] IronFrame - Fix regression with RequestVisibility
+Subject: [PATCH 08/10] IronFrame - Fix regression with RequestVisibility
  compositing reason
 
 ---
@@ -8234,10 +8234,10 @@ index abe5f50..c176a29 100644
 1.9.1
 
 
-From a7e32e942a1ed9c6eb319251cdc7b46568dd1e93 Mon Sep 17 00:00:00 2001
+From 0ed9e71fb84fe1d5d28ce48a7a35120a1debd672 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 19 Jul 2016 23:23:39 -0400
-Subject: [PATCH 9/9] Ironframe - Set EventTypeName in constructor
+Subject: [PATCH 09/10] Ironframe - Set EventTypeName in constructor
 
 ---
  third_party/WebKit/Source/core/dom/Document.cpp                    | 1 -
@@ -8245,10 +8245,10 @@ Subject: [PATCH 9/9] Ironframe - Set EventTypeName in constructor
  2 files changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index e315c07..ac630ba 100644
+index 477ecab..e10fd0c 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
-@@ -3913,7 +3913,6 @@ void Document::enqueueAnimationFrameEvent(Event* event)
+@@ -3914,7 +3914,6 @@ void Document::enqueueAnimationFrameEvent(Event* event)
  void Document::enqueueRequestedVisibilityEvent(const String& msg)
  {
      RequestedVisibilityEvent* event = RequestedVisibilityEvent::create(msg);
@@ -8269,6 +8269,40 @@ index 5f17327..c32b661 100644
      , m_sanitizedMessage(message)
  {
  }
+-- 
+1.9.1
+
+
+From abc4a8fac44deeff3ee9680488edbbeb16454375 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Fri, 29 Jul 2016 14:25:22 -0400
+Subject: [PATCH 10/10] IronFrame - Avoid duplicate events
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index e10fd0c..54acff5 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5926,7 +5926,15 @@ void Document::requestVisibilityImpl(){
+     bounds.setHeight(fmax(bounds.size().height()- sy, 0));
+     //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
+     String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
+-    this->enqueueRequestedVisibilityEvent(s);
++    DEFINE_STATIC_LOCAL(String, prev_event, ());
++    bool duplicate = false;
++    if (s == prev_event) {
++        duplicate = true;
++    }
++    prev_event = s;
++    if (!duplicate) {
++        this->enqueueRequestedVisibilityEvent(s);
++    }
+ };
+ 
+ template<unsigned type>
 -- 
 1.9.1
 
