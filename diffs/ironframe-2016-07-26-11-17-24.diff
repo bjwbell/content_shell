@@ -347,7 +347,7 @@ index d9b2489..77de353 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index c2d0219..ac630ba 100644
+index 95c5404..54acff5 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -399,7 +399,7 @@ index c2d0219..ac630ba 100644
      , m_wellFormed(false)
      , m_printing(false)
      , m_wasPrinting(false)
-@@ -3901,6 +3910,13 @@ void Document::enqueueAnimationFrameEvent(Event* event)
+@@ -3902,6 +3911,13 @@ void Document::enqueueAnimationFrameEvent(Event* event)
      ensureScriptedAnimationController().enqueueEvent(event);
  }
  
@@ -413,7 +413,7 @@ index c2d0219..ac630ba 100644
  void Document::enqueueUniqueAnimationFrameEvent(Event* event)
  {
      ensureScriptedAnimationController().enqueuePerFrameEvent(event);
-@@ -5807,6 +5823,121 @@ bool Document::hasFocus() const
+@@ -5798,6 +5814,129 @@ bool Document::hasFocus() const
      return page() && page()->focusController().isDocumentFocused(*this);
  }
  
@@ -529,13 +529,21 @@ index c2d0219..ac630ba 100644
 +    bounds.setHeight(fmax(bounds.size().height()- sy, 0));
 +    //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
 +    String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
-+    this->enqueueRequestedVisibilityEvent(s);
++    DEFINE_STATIC_LOCAL(String, prev_event, ());
++    bool duplicate = false;
++    if (s == prev_event) {
++        duplicate = true;
++    }
++    prev_event = s;
++    if (!duplicate) {
++        this->enqueueRequestedVisibilityEvent(s);
++    }
 +};
 +
  template<unsigned type>
  bool shouldInvalidateNodeListCachesForAttr(const HeapHashSet<WeakMember<const LiveNodeListBase>> nodeLists[], const QualifiedName& attrName)
  {
-@@ -6010,6 +6141,7 @@ DEFINE_TRACE(Document)
+@@ -6000,6 +6139,7 @@ DEFINE_TRACE(Document)
      visitor->trace(m_intersectionObserverData);
      visitor->trace(m_snapCoordinator);
      visitor->trace(m_resizeObserverController);
@@ -544,7 +552,7 @@ index c2d0219..ac630ba 100644
      TreeScope::trace(visitor);
      ContainerNode::trace(visitor);
 diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
-index 751ed94..569d5d7 100644
+index 1a45f92..e896fe8 100644
 --- a/third_party/WebKit/Source/core/dom/Document.h
 +++ b/third_party/WebKit/Source/core/dom/Document.h
 @@ -177,6 +177,7 @@ struct AnnotatedRegionValue;
@@ -847,7 +855,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index 5c308d5..4c9d74a 100644
+index 0080819..b5bf97f 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -40,6 +40,7 @@
@@ -858,7 +866,7 @@ index 5c308d5..4c9d74a 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2559,6 +2560,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+@@ -2553,6 +2554,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
              // This was required for slimming paint v1 but is only temporarily
              // needed for slimming paint v2.
              view.compositor()->updateIfNeededRecursive();
@@ -875,12 +883,12 @@ index 5c308d5..4c9d74a 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index fc6a5e8..62add1c 100644
+index 29e309c..f2d5c35 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1282,6 +1282,8 @@ public:
- 
-         PerformanceResourceTimingSizes = 1478,
+@@ -1283,6 +1283,8 @@ public:
+         EventSourceDocument = 1479,
+         EventSourceWorker = 1480,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1500,
 +
@@ -888,7 +896,7 @@ index fc6a5e8..62add1c 100644
          // numbers of any item, and don't reuse removed slots.
          // Also, run update_use_counter_feature_enum.py in chromium/src/tools/metrics/histograms/
 diff --git a/third_party/WebKit/Source/core/layout/LayoutView.cpp b/third_party/WebKit/Source/core/layout/LayoutView.cpp
-index 35466da..7d33a0e 100644
+index a1f5a97..8bb8c58 100644
 --- a/third_party/WebKit/Source/core/layout/LayoutView.cpp
 +++ b/third_party/WebKit/Source/core/layout/LayoutView.cpp
 @@ -24,7 +24,9 @@
