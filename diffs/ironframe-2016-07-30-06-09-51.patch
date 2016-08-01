@@ -1,4 +1,4 @@
-From 7c052fc443ffc6f4f9ea5b55bc359d6424614191 Mon Sep 17 00:00:00 2001
+From 2f4a821a6395e65341e56adfb8aeb7f2cb1d155a Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 27 Jun 2016 21:20:47 -0400
 Subject: [PATCH 01/10] Ironframe - Add RequestVisibility
@@ -604,12 +604,12 @@ index 15ae442..6813da6 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index 29e309c..f2d5c35 100644
+index 26c3022..78b138c 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1283,6 +1283,8 @@ public:
-         EventSourceDocument = 1479,
-         EventSourceWorker = 1480,
+@@ -1286,6 +1286,8 @@ public:
+         MultipleOriginsInTimingAllowOrigin = 1482,
+         StarInTimingAllowOrigin = 1483,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1500,
 +
@@ -834,7 +834,7 @@ index dcb5611..b220db8 100644
 1.9.1
 
 
-From bcdd8d6a60bf7615a252935f10e83cb187ab748f Mon Sep 17 00:00:00 2001
+From 7e8570aa83c394601676aed2885ec8bcdc299d12 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 03:58:00 -0400
 Subject: [PATCH 02/10] Ironframe - Add Layout test
@@ -7275,7 +7275,7 @@ HcmV?d00001
 1.9.1
 
 
-From 2b98a1e7dfb9f9058c5b006a3ed2f52a7ce4f53f Mon Sep 17 00:00:00 2001
+From 0e932d727840027761e397e8722793497627d71d Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 04:12:21 -0400
 Subject: [PATCH 03/10] Ironframe - Fix layout test
@@ -7356,7 +7356,7 @@ index b79dcbd..53ad2ec 100644
 1.9.1
 
 
-From add900abfc2548418b00081079e81ecb9ea118b3 Mon Sep 17 00:00:00 2001
+From 481850e8a99d0a967410e5431ea7c471909f6349 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 06:53:57 -0400
 Subject: [PATCH 04/10] IronFrame - Fix nits in layout test
@@ -7476,7 +7476,7 @@ index cb9bcb0..5d2f5b0f 100644
 1.9.1
 
 
-From 50f7b3e0c4df42d189f1f01d9fb8ece5db9811e4 Mon Sep 17 00:00:00 2001
+From f8b3f2ef9feede3e4cb6c1a22b3fce73c7eb4fd8 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:04:37 -0400
 Subject: [PATCH 05/10] IronFrame - Remove unused files from layout test
@@ -7664,7 +7664,7 @@ index 9e4f0f1..0000000
 1.9.1
 
 
-From 0f25e03b4158b5f509107fa007ec1faf827fdf2a Mon Sep 17 00:00:00 2001
+From 82c20fa9b086a6643918c8f97582d891b2f92227 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:14:24 -0400
 Subject: [PATCH 06/10] IronFrame - Fix nits in layout test
@@ -7934,7 +7934,7 @@ index cb09a11..41b1a6f 100644
 1.9.1
 
 
-From caf7af08c17a48f96eeb750f2e7cb4a91c744110 Mon Sep 17 00:00:00 2001
+From e6a79767c5f11a23a5269220bd2f261e92896bea Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 09:21:04 -0400
 Subject: [PATCH 07/10] IronFrame - Use testharness.js in layout test
@@ -8175,7 +8175,7 @@ index 41b1a6f..6445755 100644
 1.9.1
 
 
-From 9bedf11a833add7e6140a8a896d0c62fd05038f1 Mon Sep 17 00:00:00 2001
+From 45130c448ac494f069d2b9b55f1fc100e3d81264 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 8 Jul 2016 20:05:03 -0400
 Subject: [PATCH 08/10] IronFrame - Fix regression with RequestVisibility
@@ -8234,7 +8234,7 @@ index abe5f50..c176a29 100644
 1.9.1
 
 
-From 6d65438629e3a6c673cfecf0104f7e0812748d14 Mon Sep 17 00:00:00 2001
+From 8091d97aa38720a82456d0ed413998e52bfb65be Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 19 Jul 2016 23:23:39 -0400
 Subject: [PATCH 09/10] Ironframe - Set EventTypeName in constructor
@@ -8273,7 +8273,7 @@ index 5f17327..c32b661 100644
 1.9.1
 
 
-From f34f215119f1c84130c4cb669a6f79ca3641dc9c Mon Sep 17 00:00:00 2001
+From d1a3ebf8acb6342ace587f1fa671aec24866a040 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 29 Jul 2016 14:25:22 -0400
 Subject: [PATCH 10/10] IronFrame - Avoid duplicate events
