@@ -883,12 +883,12 @@ index 15ae442..6813da6 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index 29e309c..f2d5c35 100644
+index 26c3022..78b138c 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1283,6 +1283,8 @@ public:
-         EventSourceDocument = 1479,
-         EventSourceWorker = 1480,
+@@ -1286,6 +1286,8 @@ public:
+         MultipleOriginsInTimingAllowOrigin = 1482,
+         StarInTimingAllowOrigin = 1483,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1500,
 +
