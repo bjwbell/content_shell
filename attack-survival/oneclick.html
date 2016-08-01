@@ -1,0 +1,55 @@
+<html requestVisibility=1>
+<body>
+  <br/>
+  <br/>
+  <br/>
+    <a onClick="newWindow()" href="https://www.amazon.com/Elon-Musk-SpaceX-Fantastic-Future/dp/0062301233/ref=sr_1_1?ie=UTF8&qid=1468520341&sr=8-1&keywords=ashlee+vance+musk">
+        <img id=oneclick style="z-index:999" width=200px src="assets/oneclick.png"></img>
+    </a>
+<script>
+ var prev;
+ var prevMsg="";
+ var v={};
+ var visible=false;
+ var viz = top.document.getElementById("viz").contentWindow.document.getElementById("render");
+ function newWindow() {
+     window.open("https://www.amazon.com/Elon-Musk-SpaceX-Fantastic-Future/dp/0062301233/ref=sr_1_1?ie=UTF8&qid=1468520341&sr=8-1&keywords=ashlee+vance+musk");
+ }
+ var update = function(){
+     if(v.visible.width < 200 || v.visible.height< 245 ) {
+         visible=false;
+     } else {
+         visible=true;
+     }
+     if(!visible) {
+         viz.style.backgroundColor="red";
+     } else {
+         if(visible && Date.now()-prev < 2000) {
+             viz.style.backgroundColor="yellow";
+             setTimeout(update, 2250);
+         } else {
+             viz.style.backgroundColor="white";
+         }
+     }
+ }
+ function go() {
+     document.documentElement.addEventListener('requestedvisibility', function(e) {
+         if(e.message!=prevMsg){
+             prev=e.timeStamp;
+             prevMsg=e.message;
+         }
+         v = JSON.parse(e.message);
+         v.innerHeight = innerHeight;
+         v.innerWidth  = innerWidth;
+         v.ancestorOrigins = document.location.ancestorOrigins;
+         v.timestamp = e.timeStamp;
+         viz.innerText = JSON.stringify(v);
+         var x = viz.innerText;
+         update();
+         console.log(viz.innerText);
+     });
+ }
+ window.onload=go;
+</script>
+</body>
+</html>
