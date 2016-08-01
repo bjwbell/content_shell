@@ -1,0 +1,51 @@
+<html>
+<body>
+    <div height=100><br><br><br><br><br></div>
+    <a href="https://www.amazon.com/Elon-Musk-SpaceX-Fantastic-Future/dp/0062301233/ref=sr_1_1?ie=UTF8&qid=1468520341&sr=8-1&keywords=ashlee+vance+musk">
+        <img id=oneclick style="position:absolute;z-index:999;top:355;left:60;" width=200 src="assets/oneclick.png"></img>
+    </a>
+    <iframe id=ifr style="pointer-events:none" height=5000 width=100% border=0 frameborder=0 scrolling=no src="https://www.nybooks.com/articles/2015/08/13/elon-musk-man-mars/"></iframe>
+    <script>
+    
+        var oh = oneclick.style.top = 435;
+        var ow = oneclick.style.left = (window.innerWidth/2) - 485;
+        
+        var follow=0
+        var shrink=0
+    
+        ifr.onfocus = function() { blur(); document.body.focus(); }
+        
+        
+        window.onkeydown = function(e){
+            if(e.key=='f') {
+                follow=!follow;
+            }
+            if(e.key=='s') {
+                shrink=!shrink;
+            }
+            update();
+            console.log(e);
+        }
+        function update(){
+            if(shrink) {
+                oneclick.width=50;
+            } else {
+                oneclick.width=200;
+            }
+            if(follow) {
+                document.body.onmousemove = function(e) {
+                    oneclick.style.top = e.y + scrollY - (oneclick.height/2);
+                    oneclick.style.left = e.x + scrollX - (oneclick.width/2);
+                }
+            }
+            else {
+                document.body.onmousemove = null;
+                oneclick.style.top = oh;
+                oneclick.style.left = ow; 
+            }
+        }
+        
+        
+    </script>
+</body>
+</html>
