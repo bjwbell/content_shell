@@ -22,13 +22,15 @@
          visible=true;
      }
      if(!visible) {
-         viz.style.backgroundColor="red";
+	 document.invalidIronframe();
+         //viz.style.backgroundColor="red";
      } else {
          if(visible && Date.now()-prev < 2000) {
              viz.style.backgroundColor="yellow";
              setTimeout(update, 2250);
          } else {
              viz.style.backgroundColor="white";
+	     document.validIronframe();
          }
      }
  }
