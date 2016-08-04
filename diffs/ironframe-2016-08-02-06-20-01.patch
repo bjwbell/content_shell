@@ -1,7 +1,7 @@
-From 2c1f62233544d7b8ef17c77c7c486463d8ed3eb8 Mon Sep 17 00:00:00 2001
+From 5ca5359b1cce60f7f1eb2f19c74869d26c6d30b4 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 27 Jun 2016 21:20:47 -0400
-Subject: [PATCH 01/13] Ironframe - Add RequestVisibility
+Subject: [PATCH 01/14] Ironframe - Add RequestVisibility
 
 ---
  third_party/WebKit/Source/core/core.gypi           |   7 ++
@@ -29,7 +29,7 @@ Subject: [PATCH 01/13] Ironframe - Add RequestVisibility
  create mode 100644 third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
 
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index c750e2f..4abcdd3 100644
+index 58ebe53..16e6e4e 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -131,6 +131,7 @@
@@ -48,7 +48,7 @@ index c750e2f..4abcdd3 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2766,6 +2768,8 @@
+@@ -2768,6 +2770,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -57,7 +57,7 @@ index c750e2f..4abcdd3 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3756,6 +3760,7 @@
+@@ -3758,6 +3762,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -65,7 +65,7 @@ index c750e2f..4abcdd3 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3836,6 +3841,8 @@
+@@ -3838,6 +3843,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -75,7 +75,7 @@ index c750e2f..4abcdd3 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 73f1c21..94cabdc 100644
+index 44900c5..7972999 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -142,7 +142,7 @@ index 73f1c21..94cabdc 100644
  void Document::enqueueUniqueAnimationFrameEvent(Event* event)
  {
      ensureScriptedAnimationController().enqueuePerFrameEvent(event);
-@@ -5798,6 +5815,121 @@ bool Document::hasFocus() const
+@@ -5794,6 +5811,121 @@ bool Document::hasFocus() const
      return page() && page()->focusController().isDocumentFocused(*this);
  }
  
@@ -264,7 +264,7 @@ index 73f1c21..94cabdc 100644
  template<unsigned type>
  bool shouldInvalidateNodeListCachesForAttr(const HeapHashSet<WeakMember<const LiveNodeListBase>> nodeLists[], const QualifiedName& attrName)
  {
-@@ -6000,6 +6132,7 @@ DEFINE_TRACE(Document)
+@@ -5996,6 +6128,7 @@ DEFINE_TRACE(Document)
      visitor->trace(m_intersectionObserverData);
      visitor->trace(m_snapCoordinator);
      visitor->trace(m_resizeObserverController);
@@ -273,7 +273,7 @@ index 73f1c21..94cabdc 100644
      TreeScope::trace(visitor);
      ContainerNode::trace(visitor);
 diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
-index dff3a39..c66cdde 100644
+index 2d874b3..bdf8d1a 100644
 --- a/third_party/WebKit/Source/core/dom/Document.h
 +++ b/third_party/WebKit/Source/core/dom/Document.h
 @@ -177,6 +177,7 @@ struct AnnotatedRegionValue;
@@ -301,7 +301,7 @@ index dff3a39..c66cdde 100644
  
      void dispatchEventsForPrinting();
  
-@@ -1096,6 +1100,10 @@ public:
+@@ -1095,6 +1099,10 @@ public:
  
      bool isInMainFrame() const;
  
@@ -312,7 +312,7 @@ index dff3a39..c66cdde 100644
  protected:
      Document(const DocumentInit&, DocumentClassFlags = DefaultDocumentClass);
  
-@@ -1208,6 +1216,9 @@ private:
+@@ -1207,6 +1215,9 @@ private:
      Member<DocumentParser> m_parser;
      Member<ContextFeatures> m_contextFeatures;
  
@@ -576,7 +576,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index 15ae442..6813da6 100644
+index 4784dd74..fc31d7f 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -40,6 +40,7 @@
@@ -587,7 +587,7 @@ index 15ae442..6813da6 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2553,6 +2554,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+@@ -2558,6 +2559,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
              // This was required for slimming paint v1 but is only temporarily
              // needed for slimming paint v2.
              view.compositor()->updateIfNeededRecursive();
@@ -604,12 +604,12 @@ index 15ae442..6813da6 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index 26c3022..78b138c 100644
+index a41064e..f46e33d 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1286,6 +1286,8 @@ public:
-         MultipleOriginsInTimingAllowOrigin = 1482,
+@@ -1287,6 +1287,8 @@ public:
          StarInTimingAllowOrigin = 1483,
+         SVGSMILAdditiveAnimation = 1484,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1500,
 +
@@ -834,10 +834,10 @@ index dcb5611..b220db8 100644
 1.9.1
 
 
-From 8dd480d178a256f84d82fa736e6b450ea9240b46 Mon Sep 17 00:00:00 2001
+From f0f48689d4c122b46360ac778d1bf9f96f6067ec Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 03:58:00 -0400
-Subject: [PATCH 02/13] Ironframe - Add Layout test
+Subject: [PATCH 02/14] Ironframe - Add Layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt    |  35 +++++
@@ -7275,10 +7275,10 @@ HcmV?d00001
 1.9.1
 
 
-From 0a3cf4f41742b199ecdbcbb8024d37e0a71c5033 Mon Sep 17 00:00:00 2001
+From 879a050725e97a9451d634993f1ab5cf8f71776b Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 04:12:21 -0400
-Subject: [PATCH 03/13] Ironframe - Fix layout test
+Subject: [PATCH 03/14] Ironframe - Fix layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt          |  2 +-
@@ -7356,10 +7356,10 @@ index b79dcbd..53ad2ec 100644
 1.9.1
 
 
-From a6be6ac98c9dd2dc8e13d6fd9395c9b87600575e Mon Sep 17 00:00:00 2001
+From 8460c573bc35fb163fae90f50621a258b115c3e3 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 06:53:57 -0400
-Subject: [PATCH 04/13] IronFrame - Fix nits in layout test
+Subject: [PATCH 04/14] IronFrame - Fix nits in layout test
 
 ---
  .../http/tests/ironframe/ironframe.html            | 49 +++++++++++-----------
@@ -7476,10 +7476,10 @@ index cb9bcb0..5d2f5b0f 100644
 1.9.1
 
 
-From 3a0e341e0edf490876b00f4271cd637a2467c9a4 Mon Sep 17 00:00:00 2001
+From 521a5cfd16fd435869eaf2e4a76b7d70334eab70 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:04:37 -0400
-Subject: [PATCH 05/13] IronFrame - Remove unused files from layout test
+Subject: [PATCH 05/14] IronFrame - Remove unused files from layout test
 
 ---
  .../ironframe/resources/ironframe-expected.txt     |   1 -
@@ -7664,10 +7664,10 @@ index 9e4f0f1..0000000
 1.9.1
 
 
-From db2bb51264babff5d93a3e2ec8b84581c77767ca Mon Sep 17 00:00:00 2001
+From 538a12bedc63f17f25ea95124ce2665336ddd406 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:14:24 -0400
-Subject: [PATCH 06/13] IronFrame - Fix nits in layout test
+Subject: [PATCH 06/14] IronFrame - Fix nits in layout test
 
 ---
  .../http/tests/ironframe/ironframe.html            | 104 ++++++++--------
@@ -7934,10 +7934,10 @@ index cb09a11..41b1a6f 100644
 1.9.1
 
 
-From 6bbc0452315e17c9686ee122eb535a2dede21c25 Mon Sep 17 00:00:00 2001
+From 201a4d33a4df762c3065467f535ffaf7c5d7e383 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 09:21:04 -0400
-Subject: [PATCH 07/13] IronFrame - Use testharness.js in layout test
+Subject: [PATCH 07/14] IronFrame - Use testharness.js in layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt    |  35 --------
@@ -8175,10 +8175,10 @@ index 41b1a6f..6445755 100644
 1.9.1
 
 
-From fe713146a1c951793c2867e0a46440a5483b327f Mon Sep 17 00:00:00 2001
+From e3e7b5b7d1da798866ebaf859daa24ce1a1115d7 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 8 Jul 2016 20:05:03 -0400
-Subject: [PATCH 08/13] IronFrame - Fix regression with RequestVisibility
+Subject: [PATCH 08/14] IronFrame - Fix regression with RequestVisibility
  compositing reason
 
 ---
@@ -8234,10 +8234,10 @@ index abe5f50..c176a29 100644
 1.9.1
 
 
-From 2fe3a60054aee39b5204f43ee64edcf995f3b3d9 Mon Sep 17 00:00:00 2001
+From 1e663163e597a84def7d3f9d7e8003ccc86bdf5a Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 19 Jul 2016 23:23:39 -0400
-Subject: [PATCH 09/13] Ironframe - Set EventTypeName in constructor
+Subject: [PATCH 09/14] Ironframe - Set EventTypeName in constructor
 
 ---
  third_party/WebKit/Source/core/dom/Document.cpp                    | 1 -
@@ -8245,7 +8245,7 @@ Subject: [PATCH 09/13] Ironframe - Set EventTypeName in constructor
  2 files changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 94cabdc..e4e3613 100644
+index 7972999..584230f 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -3914,7 +3914,6 @@ void Document::enqueueAnimationFrameEvent(Event* event)
@@ -8273,20 +8273,20 @@ index 5f17327..c32b661 100644
 1.9.1
 
 
-From 70886ea3579c7f52a2c10ec1f8fb8f69b381d2b9 Mon Sep 17 00:00:00 2001
+From c496f61ca6419472e951c03a74dd4715758507b2 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 29 Jul 2016 14:25:22 -0400
-Subject: [PATCH 10/13] IronFrame - Avoid duplicate events
+Subject: [PATCH 10/14] IronFrame - Avoid duplicate events
 
 ---
  third_party/WebKit/Source/core/dom/Document.cpp | 10 +++++++++-
  1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index e4e3613..3326a80 100644
+index 584230f..f719742 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
-@@ -5926,7 +5926,15 @@ void Document::requestVisibilityImpl(){
+@@ -5922,7 +5922,15 @@ void Document::requestVisibilityImpl(){
      bounds.setHeight(fmax(bounds.size().height()- sy, 0));
      //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
      String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
@@ -8307,10 +8307,10 @@ index e4e3613..3326a80 100644
 1.9.1
 
 
-From b1b38d12f5c4618fd09cdb8c4b1e01261d101f72 Mon Sep 17 00:00:00 2001
+From 8585dc052da9f0a447f42da96974b5b2bf05ec4a Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 07:43:24 -0400
-Subject: [PATCH 11/13] Ironframe - First pass on adding ironframe to the
+Subject: [PATCH 11/14] Ironframe - First pass on adding ironframe to the
  location_bar
 
 ---
@@ -8330,10 +8330,10 @@ Subject: [PATCH 11/13] Ironframe - First pass on adding ironframe to the
  13 files changed, 73 insertions(+)
 
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index e3d331a..bf71c9a 100644
+index 19d9d26..6b8803f 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -696,6 +696,10 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
+@@ -697,6 +697,10 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
                          OnFirstVisuallyNonEmptyPaint)
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidLoadResourceFromMemoryCache,
                          OnDidLoadResourceFromMemoryCache)
@@ -8344,7 +8344,7 @@ index e3d331a..bf71c9a 100644
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidDisplayInsecureContent,
                          OnDidDisplayInsecureContent)
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidRunInsecureContent,
-@@ -3479,6 +3483,20 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
+@@ -3480,6 +3484,20 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
    }
  }
  
@@ -8425,10 +8425,10 @@ index e8840bf..0c1ae63 100644
    void didRunInsecureContent(const blink::WebSecurityOrigin& origin,
                               const blink::WebURL& target) override;
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 3326a80..7f4f720 100644
+index f719742..bc8d0b8 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
-@@ -5814,6 +5814,21 @@ bool Document::hasFocus() const
+@@ -5810,6 +5810,21 @@ bool Document::hasFocus() const
      return page() && page()->focusController().isDocumentFocused(*this);
  }
  
@@ -8451,10 +8451,10 @@ index 3326a80..7f4f720 100644
      return m_requestedVisibility;
  }
 diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
-index c66cdde..e32797e 100644
+index bdf8d1a..cbf3003 100644
 --- a/third_party/WebKit/Source/core/dom/Document.h
 +++ b/third_party/WebKit/Source/core/dom/Document.h
-@@ -1101,6 +1101,8 @@ public:
+@@ -1100,6 +1100,8 @@ public:
      bool isInMainFrame() const;
  
      void set_requestVisibilityRect(FloatRect *r) { m_requestVisibilityRect = r; }
@@ -8556,10 +8556,10 @@ index a9e59c4..b20d429 100644
 1.9.1
 
 
-From c75a4d62b6611242835806540242089370c76b16 Mon Sep 17 00:00:00 2001
+From fe203ebf7b7cf709d738910e3e014ba01986874a Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 18:29:14 -0400
-Subject: [PATCH 12/13] Ironframe - Working version of valid/InvalidIronframe()
+Subject: [PATCH 12/14] Ironframe - Working version of valid/InvalidIronframe()
  functions
 
 ---
@@ -8592,10 +8592,10 @@ index e710e7c..3779d8e 100644
      return;
  
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index bf71c9a..2236e3e9 100644
+index 6b8803f..81c03e6 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -1184,6 +1184,10 @@ const std::string& WebContentsImpl::GetEncoding() const {
+@@ -1185,6 +1185,10 @@ const std::string& WebContentsImpl::GetEncoding() const {
    return canonical_encoding_;
  }
  
@@ -8606,7 +8606,7 @@ index bf71c9a..2236e3e9 100644
  bool WebContentsImpl::DisplayedInsecureContent() const {
    return displayed_insecure_content_;
  }
-@@ -3485,15 +3489,17 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
+@@ -3486,15 +3490,17 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
  
  void WebContentsImpl::OnValidIronframe() {
    RecordAction(base::UserMetricsAction("Ironframe.Valid"));
@@ -8670,10 +8670,10 @@ index c34b118..6994986 100644
 1.9.1
 
 
-From 8a49542045508c7a8d8e0234fb30ed5ac8cc5add Mon Sep 17 00:00:00 2001
+From f2863964b3d58f5dcb3317e560313a0f34c9de92 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 22:06:37 -0400
-Subject: [PATCH 13/13] Ironframe - Add IronframeStatus api
+Subject: [PATCH 13/14] Ironframe - Add IronframeStatus api
 
 ---
  .../ui/toolbar/chrome_toolbar_model_delegate.cc    | 12 ++++++++++
@@ -8855,10 +8855,10 @@ index 3779d8e..6952a26 100644
  
    
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 2236e3e9..6c10862 100644
+index 81c03e6..1137016 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -3490,16 +3490,18 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
+@@ -3491,16 +3491,18 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
  void WebContentsImpl::OnValidIronframe() {
    RecordAction(base::UserMetricsAction("Ironframe.Valid"));
    ironframe_status_ = 1;
@@ -8882,6 +8882,357 @@ index 2236e3e9..6c10862 100644
  }
  
  
+-- 
+1.9.1
+
+
+From e256da5dbf018753e4c8c71889d0f113ffef4fa6 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Wed, 3 Aug 2016 04:02:03 -0400
+Subject: [PATCH 14/14] Ironframe - Add origin text to location bar
+
+---
+ chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc |  8 ++++++++
+ chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.h  |  1 +
+ chrome/browser/ui/views/location_bar/location_bar_view.cc  |  7 ++++---
+ components/toolbar/toolbar_model.h                         |  2 +-
+ components/toolbar/toolbar_model_delegate.h                |  2 ++
+ components/toolbar/toolbar_model_impl.cc                   |  8 ++++++++
+ components/toolbar/toolbar_model_impl.h                    |  2 +-
+ content/browser/web_contents/web_contents_impl.cc          | 13 +++++++++++++
+ content/browser/web_contents/web_contents_impl.h           |  4 ++++
+ content/common/frame_messages.h                            |  2 +-
+ content/public/browser/web_contents.h                      |  3 +++
+ content/renderer/render_frame_impl.cc                      |  4 ++++
+ content/renderer/render_frame_impl.h                       |  1 +
+ third_party/WebKit/Source/core/dom/Document.cpp            |  1 +
+ third_party/WebKit/Source/core/loader/EmptyClients.h       |  1 +
+ third_party/WebKit/Source/core/loader/FrameLoaderClient.h  |  1 +
+ third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp    |  6 ++++++
+ third_party/WebKit/Source/web/FrameLoaderClientImpl.h      |  1 +
+ third_party/WebKit/public/web/WebFrameClient.h             |  2 ++
+ 19 files changed, 63 insertions(+), 6 deletions(-)
+
+diff --git a/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc b/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc
+index 9b33c5e..81f438b 100644
+--- a/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc
++++ b/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc
+@@ -92,6 +92,14 @@ ChromeToolbarModelDelegate::GetIronframeStatus() const {
+   //return client->GetSecurityInfo().security_level;
+ }
+ 
++std::string
++ChromeToolbarModelDelegate::GetIronframeOrigin() const {
++  content::WebContents* web_contents = GetActiveWebContents();
++  if (!web_contents)
++      return std::string();
++  return web_contents->IronframeOrigin();
++}
++
+ base::string16 ChromeToolbarModelDelegate::GetSearchTerms(
+     security_state::SecurityStateModel::SecurityLevel security_level) const {
+   content::WebContents* web_contents = GetActiveWebContents();
+diff --git a/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.h b/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.h
+index b30e934..8577307 100644
+--- a/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.h
++++ b/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.h
+@@ -35,6 +35,7 @@ class ChromeToolbarModelDelegate : public ToolbarModelDelegate {
+   bool ShouldDisplayURL() const override;
+   SecurityLevel GetSecurityLevel() const override;
+   int GetIronframeStatus() const override;
++  std::string GetIronframeOrigin() const override;
+   base::string16 GetSearchTerms(SecurityLevel security_level) const override;
+   scoped_refptr<net::X509Certificate> GetCertificate() const override;
+ 
+diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
+index 3c18c97..3e2e36a 100644
+--- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
++++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
+@@ -567,7 +567,7 @@ void LocationBarView::Layout() {
+     return;
+ 
+   selected_keyword_view_->SetVisible(false);
+-  location_icon_view_->SetVisible(false);
++  //location_icon_view_->SetVisible(false);
+   keyword_hint_view_->SetVisible(false);
+ 
+   const int item_padding = GetLayoutConstant(LOCATION_BAR_HORIZONTAL_PADDING);
+@@ -590,7 +590,7 @@ void LocationBarView::Layout() {
+   const int vertical_padding = GetVerticalEdgeThicknessWithPadding();
+   const int location_height = std::max(height() - (vertical_padding * 2), 0);
+ 
+-  location_icon_view_->SetLabel(base::string16());
++  //location_icon_view_->SetLabel(base::string16(base::ASCIIToUTF16("ironframe")));
+   location_icon_view_->SetBackground(false);
+   if (ShouldShowKeywordBubble()) {
+     leading_decorations.AddDecoration(vertical_padding, location_height, true,
+@@ -613,7 +613,7 @@ void LocationBarView::Layout() {
+       }
+     }
+   } else if (ShouldShowEVBubble()) {
+-    location_icon_view_->SetLabel(GetToolbarModel()->GetEVCertName());
++      //GetToolbarModel()->GetEVCertName());
+     location_icon_view_->SetBackground(true);
+     // The largest fraction of the omnibox that can be taken by the EV bubble.
+     const double kMaxBubbleFraction = 0.5;
+@@ -869,6 +869,7 @@ void LocationBarView::RefreshLocationIcon() {
+           //security_level = security_state::SecurityStateModel::SECURE;
+           if (ironframe_status == 1) {
+               security_level = security_state::SecurityStateModel::SECURE;
++              location_icon_view_->SetLabel(base::ASCIIToUTF16(GetToolbarModel()->GetIronframeOrigin()));
+           } else if (ironframe_status == 2) {
+               security_level = security_state::SecurityStateModel::SECURITY_ERROR;
+           }
+diff --git a/components/toolbar/toolbar_model.h b/components/toolbar/toolbar_model.h
+index dced7f2..9b2858f 100644
+--- a/components/toolbar/toolbar_model.h
++++ b/components/toolbar/toolbar_model.h
+@@ -63,7 +63,7 @@ class ToolbarModel {
+ 
+ 
+   virtual int GetIronframeStatus() const = 0;
+-
++  virtual std::string GetIronframeOrigin() const = 0;
+ 
+   // Returns true if a call to GetText() would return something other than the
+   // URL because of search term replacement.
+diff --git a/components/toolbar/toolbar_model_delegate.h b/components/toolbar/toolbar_model_delegate.h
+index 7fd6dd5..5fcac02 100644
+--- a/components/toolbar/toolbar_model_delegate.h
++++ b/components/toolbar/toolbar_model_delegate.h
+@@ -42,6 +42,8 @@ class ToolbarModelDelegate {
+ 
+   virtual int GetIronframeStatus() const = 0;
+ 
++  virtual std::string GetIronframeOrigin() const = 0;
++
+   // Returns search terms as in search::GetSearchTerms() if such terms should
+   // appear in the omnibox (i.e. the page is sufficiently secure, search term
+   // replacement is enabled, editing is not in progress, etc.) given that the
+diff --git a/components/toolbar/toolbar_model_impl.cc b/components/toolbar/toolbar_model_impl.cc
+index b0287d4..d86c7c3 100644
+--- a/components/toolbar/toolbar_model_impl.cc
++++ b/components/toolbar/toolbar_model_impl.cc
+@@ -90,6 +90,14 @@ int ToolbarModelImpl::GetIronframeStatus() const {
+              : delegate_->GetIronframeStatus();
+ }
+ 
++std::string ToolbarModelImpl::GetIronframeOrigin() const {
++  // When editing or empty, assume no ironframe
++    base::string16 empty;
++  return ((input_in_progress()) || !ShouldDisplayURL())
++      ? std::string()
++             : delegate_->GetIronframeOrigin();
++}
++
+ int ToolbarModelImpl::GetIcon() const {
+   switch (GetSecurityLevel(false)) {
+     case SecurityStateModel::NONE:
+diff --git a/components/toolbar/toolbar_model_impl.h b/components/toolbar/toolbar_model_impl.h
+index 93716bd..5ba4e10 100644
+--- a/components/toolbar/toolbar_model_impl.h
++++ b/components/toolbar/toolbar_model_impl.h
+@@ -40,7 +40,7 @@ class ToolbarModelImpl : public ToolbarModel {
+       bool ignore_editing) const override;
+ 
+   int GetIronframeStatus() const override;
+-      
++  std::string GetIronframeOrigin() const override;
+ 
+   int GetIcon() const override;
+   gfx::VectorIconId GetVectorIcon() const override;
+diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
+index 1137016..fc83a66 100644
+--- a/content/browser/web_contents/web_contents_impl.cc
++++ b/content/browser/web_contents/web_contents_impl.cc
+@@ -697,6 +697,8 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
+                         OnFirstVisuallyNonEmptyPaint)
+     IPC_MESSAGE_HANDLER(FrameHostMsg_DidLoadResourceFromMemoryCache,
+                         OnDidLoadResourceFromMemoryCache)
++    IPC_MESSAGE_HANDLER(FrameHostMsg_IronframeOrigin,
++                        OnIronframeOrigin)
+     IPC_MESSAGE_HANDLER(FrameHostMsg_ValidIronframe,
+                         OnValidIronframe)
+     IPC_MESSAGE_HANDLER(FrameHostMsg_InvalidIronframe,
+@@ -3488,6 +3490,17 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
+   }
+ }
+ 
++
++std::string WebContentsImpl::IronframeOrigin() const {
++      RecordAction(base::UserMetricsAction("Ironframe.Origin"));
++      return ironframe_origin_;
++}
++
++
++void WebContentsImpl::OnIronframeOrigin(const std::string& origin) {
++    ironframe_origin_ = origin;
++}
++
+ void WebContentsImpl::OnValidIronframe() {
+   RecordAction(base::UserMetricsAction("Ironframe.Valid"));
+   ironframe_status_ = 1;
+diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
+index be8b9ef..a962147 100644
+--- a/content/browser/web_contents/web_contents_impl.h
++++ b/content/browser/web_contents/web_contents_impl.h
+@@ -292,6 +292,7 @@ class CONTENT_EXPORT WebContentsImpl
+   uint64_t GetUploadPosition() const override;
+   const std::string& GetEncoding() const override;
+   int IronframeStatus() const override;
++  std::string IronframeOrigin() const override;
+   bool DisplayedInsecureContent() const override;
+   void IncrementCapturerCount(const gfx::Size& capture_size) override;
+   void DecrementCapturerCount() override;
+@@ -910,6 +911,7 @@ class CONTENT_EXPORT WebContentsImpl
+                                         const std::string& http_request,
+                                         const std::string& mime_type,
+                                         ResourceType resource_type);
++  void OnIronframeOrigin(const std::string& origin);
+   void OnValidIronframe();
+   void OnInvalidIronframe();
+   void OnDidDisplayInsecureContent();
+@@ -1204,6 +1206,8 @@ class CONTENT_EXPORT WebContentsImpl
+ 
+   //   0 - no ironframe, 1 - valid ironframe, 2 - invalid ironframe
+   int  ironframe_status_;
++
++  std::string ironframe_origin_;
+   
+   // True if this is a secure page which displayed insecure content.
+   bool displayed_insecure_content_;
+diff --git a/content/common/frame_messages.h b/content/common/frame_messages.h
+index 2d9308b..d78a0c7 100644
+--- a/content/common/frame_messages.h
++++ b/content/common/frame_messages.h
+@@ -1464,7 +1464,7 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
+ IPC_MESSAGE_ROUTED1(FrameHostMsg_RouteMessageEvent,
+                     FrameMsg_PostMessage_Params)
+ 
+-
++IPC_MESSAGE_ROUTED1(FrameHostMsg_IronframeOrigin, std::string)
+ IPC_MESSAGE_ROUTED0(FrameHostMsg_ValidIronframe)
+ IPC_MESSAGE_ROUTED0(FrameHostMsg_InvalidIronframe)
+ 
+diff --git a/content/public/browser/web_contents.h b/content/public/browser/web_contents.h
+index 6994986..1cbb335 100644
+--- a/content/public/browser/web_contents.h
++++ b/content/public/browser/web_contents.h
+@@ -369,6 +369,9 @@ class WebContents : public PageNavigator,
+   virtual int IronframeStatus() const = 0;
+ 
+   // True if this is a secure page which displayed insecure content.
++  virtual std::string IronframeOrigin() const = 0;
++
++  // True if this is a secure page which displayed insecure content.
+   virtual bool DisplayedInsecureContent() const = 0;
+ 
+   // Internal state ------------------------------------------------------------
+diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
+index 66381dd..1e11bb9 100644
+--- a/content/renderer/render_frame_impl.cc
++++ b/content/renderer/render_frame_impl.cc
+@@ -4199,6 +4199,10 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
+       response.mimeType().utf8(), WebURLRequestToResourceType(request)));
+ }
+ 
++void RenderFrameImpl::ironframeOrigin(const blink::WebCString& origin) {
++    Send(new FrameHostMsg_IronframeOrigin(routing_id_, origin));
++}
++
+ void RenderFrameImpl::validIronframe() {
+   Send(new FrameHostMsg_ValidIronframe(routing_id_));
+ }
+diff --git a/content/renderer/render_frame_impl.h b/content/renderer/render_frame_impl.h
+index 0c1ae63..537dcb4 100644
+--- a/content/renderer/render_frame_impl.h
++++ b/content/renderer/render_frame_impl.h
+@@ -569,6 +569,7 @@ class CONTENT_EXPORT RenderFrameImpl
+       const blink::WebURLResponse& response) override;
+   void validIronframe() override;
+   void invalidIronframe() override;
++  void ironframeOrigin(const blink::WebCString& origin) override;
+   void didDisplayInsecureContent() override;
+   void didRunInsecureContent(const blink::WebSecurityOrigin& origin,
+                              const blink::WebURL& target) override;
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index bc8d0b8..d475305 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5812,6 +5812,7 @@ bool Document::hasFocus() const
+ 
+ 
+ void Document::validIronframe(){
++    m_frame->loader().client()->ironframeOrigin(this->origin().ascii());
+     m_frame->loader().client()->validIronframe();
+     
+     // Set attribute.
+diff --git a/third_party/WebKit/Source/core/loader/EmptyClients.h b/third_party/WebKit/Source/core/loader/EmptyClients.h
+index d0346f3..adb5901 100644
+--- a/third_party/WebKit/Source/core/loader/EmptyClients.h
++++ b/third_party/WebKit/Source/core/loader/EmptyClients.h
+@@ -241,6 +241,7 @@ public:
+     void transitionToCommittedForNewPage() override {}
+ 
+     bool navigateBackForward(int offset) const override { return false; }
++    void ironframeOrigin(const CString& origin) override {}
+     void validIronframe() override {}
+     void invalidIronframe() override {}
+     void didDisplayInsecureContent() override {}
+diff --git a/third_party/WebKit/Source/core/loader/FrameLoaderClient.h b/third_party/WebKit/Source/core/loader/FrameLoaderClient.h
+index de902f8..c8f59ec 100644
+--- a/third_party/WebKit/Source/core/loader/FrameLoaderClient.h
++++ b/third_party/WebKit/Source/core/loader/FrameLoaderClient.h
+@@ -127,6 +127,7 @@ public:
+     // is now possible.
+     virtual void didAccessInitialDocument() { }
+ 
++    virtual void ironframeOrigin(const CString& origin) = 0;
+     virtual void validIronframe() = 0;
+     virtual void invalidIronframe() = 0;
+     
+diff --git a/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp b/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp
+index 438979c..c39b584 100644
+--- a/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp
++++ b/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp
+@@ -658,6 +658,12 @@ void FrameLoaderClientImpl::didAccessInitialDocument()
+         m_webFrame->client()->didAccessInitialDocument();
+ }
+ 
++void FrameLoaderClientImpl::ironframeOrigin(const CString& origin)
++{
++    if (m_webFrame->client())
++        m_webFrame->client()->ironframeOrigin(origin);
++}
++
+ void FrameLoaderClientImpl::validIronframe()
+ {
+     if (m_webFrame->client())
+diff --git a/third_party/WebKit/Source/web/FrameLoaderClientImpl.h b/third_party/WebKit/Source/web/FrameLoaderClientImpl.h
+index 740a044..006af43 100644
+--- a/third_party/WebKit/Source/web/FrameLoaderClientImpl.h
++++ b/third_party/WebKit/Source/web/FrameLoaderClientImpl.h
+@@ -112,6 +112,7 @@ public:
+     void loadURLExternally(const ResourceRequest&, NavigationPolicy, const String& suggestedName, bool shouldReplaceCurrentEntry) override;
+     bool navigateBackForward(int offset) const override;
+     void didAccessInitialDocument() override;
++    void ironframeOrigin(const CString& origin) override;
+     void validIronframe() override;
+     void invalidIronframe() override;
+     void didDisplayInsecureContent() override;
+diff --git a/third_party/WebKit/public/web/WebFrameClient.h b/third_party/WebKit/public/web/WebFrameClient.h
+index b20d429..dd1d894 100644
+--- a/third_party/WebKit/public/web/WebFrameClient.h
++++ b/third_party/WebKit/public/web/WebFrameClient.h
+@@ -481,6 +481,8 @@ public:
+ 
+     virtual void validIronframe() { }
+     virtual void invalidIronframe() { }
++    virtual void ironframeOrigin(const WebCString&orgin) { }
++
+     // This frame has displayed inactive content (such as an image) from an
+     // insecure source.  Inactive content cannot spread to other frames.
+     virtual void didDisplayInsecureContent() { }
 -- 
 1.9.1
 
