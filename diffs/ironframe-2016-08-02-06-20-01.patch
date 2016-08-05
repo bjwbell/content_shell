@@ -1,4 +1,4 @@
-From 5ca5359b1cce60f7f1eb2f19c74869d26c6d30b4 Mon Sep 17 00:00:00 2001
+From f76a9e3361facbbd461cf1c3162b6de5118e8214 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 27 Jun 2016 21:20:47 -0400
 Subject: [PATCH 01/14] Ironframe - Add RequestVisibility
@@ -576,7 +576,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index 4784dd74..fc31d7f 100644
+index deba6ab..fba68e87 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -40,6 +40,7 @@
@@ -587,7 +587,7 @@ index 4784dd74..fc31d7f 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2558,6 +2559,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+@@ -2541,6 +2542,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
              // This was required for slimming paint v1 but is only temporarily
              // needed for slimming paint v2.
              view.compositor()->updateIfNeededRecursive();
@@ -604,12 +604,12 @@ index 4784dd74..fc31d7f 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index a41064e..f46e33d 100644
+index be04cc7..8162ad1 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1287,6 +1287,8 @@ public:
-         StarInTimingAllowOrigin = 1483,
+@@ -1288,6 +1288,8 @@ public:
          SVGSMILAdditiveAnimation = 1484,
+         SendBeaconWithNonSimpleContentType = 1485,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1500,
 +
@@ -834,7 +834,7 @@ index dcb5611..b220db8 100644
 1.9.1
 
 
-From f0f48689d4c122b46360ac778d1bf9f96f6067ec Mon Sep 17 00:00:00 2001
+From 834a2cd613914c2d636840318bf3807a65c71291 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 03:58:00 -0400
 Subject: [PATCH 02/14] Ironframe - Add Layout test
@@ -7275,7 +7275,7 @@ HcmV?d00001
 1.9.1
 
 
-From 879a050725e97a9451d634993f1ab5cf8f71776b Mon Sep 17 00:00:00 2001
+From d962b269031c57cc4b5e981a39c7509e7ec83cb2 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 04:12:21 -0400
 Subject: [PATCH 03/14] Ironframe - Fix layout test
@@ -7356,7 +7356,7 @@ index b79dcbd..53ad2ec 100644
 1.9.1
 
 
-From 8460c573bc35fb163fae90f50621a258b115c3e3 Mon Sep 17 00:00:00 2001
+From a1e4039ee430907a6656207025cd7a75747cbd39 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 06:53:57 -0400
 Subject: [PATCH 04/14] IronFrame - Fix nits in layout test
@@ -7476,7 +7476,7 @@ index cb9bcb0..5d2f5b0f 100644
 1.9.1
 
 
-From 521a5cfd16fd435869eaf2e4a76b7d70334eab70 Mon Sep 17 00:00:00 2001
+From de01de9ac90a67a451adb56a6264ef2ee32e1cd4 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:04:37 -0400
 Subject: [PATCH 05/14] IronFrame - Remove unused files from layout test
@@ -7664,7 +7664,7 @@ index 9e4f0f1..0000000
 1.9.1
 
 
-From 538a12bedc63f17f25ea95124ce2665336ddd406 Mon Sep 17 00:00:00 2001
+From 532a64daae9731581cf090f776e00efa8a8c971a Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:14:24 -0400
 Subject: [PATCH 06/14] IronFrame - Fix nits in layout test
@@ -7934,7 +7934,7 @@ index cb09a11..41b1a6f 100644
 1.9.1
 
 
-From 201a4d33a4df762c3065467f535ffaf7c5d7e383 Mon Sep 17 00:00:00 2001
+From 989d4a951a70705bc4e8669c0e069688572a7043 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 09:21:04 -0400
 Subject: [PATCH 07/14] IronFrame - Use testharness.js in layout test
@@ -8175,7 +8175,7 @@ index 41b1a6f..6445755 100644
 1.9.1
 
 
-From e3e7b5b7d1da798866ebaf859daa24ce1a1115d7 Mon Sep 17 00:00:00 2001
+From 84d3f1bd21900b84e4e36e6565d2f8b94d112bea Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 8 Jul 2016 20:05:03 -0400
 Subject: [PATCH 08/14] IronFrame - Fix regression with RequestVisibility
@@ -8234,7 +8234,7 @@ index abe5f50..c176a29 100644
 1.9.1
 
 
-From 1e663163e597a84def7d3f9d7e8003ccc86bdf5a Mon Sep 17 00:00:00 2001
+From 77eae315ee8c6377b9b7f9b4a70a643d00f0766b Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 19 Jul 2016 23:23:39 -0400
 Subject: [PATCH 09/14] Ironframe - Set EventTypeName in constructor
@@ -8273,7 +8273,7 @@ index 5f17327..c32b661 100644
 1.9.1
 
 
-From c496f61ca6419472e951c03a74dd4715758507b2 Mon Sep 17 00:00:00 2001
+From 26b8492043aaa9ea3a0595ce2658fa95f6215541 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 29 Jul 2016 14:25:22 -0400
 Subject: [PATCH 10/14] IronFrame - Avoid duplicate events
@@ -8307,7 +8307,7 @@ index 584230f..f719742 100644
 1.9.1
 
 
-From 8585dc052da9f0a447f42da96974b5b2bf05ec4a Mon Sep 17 00:00:00 2001
+From 4bba7df993616b2f778f9c6603f3dea5633bfa82 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 07:43:24 -0400
 Subject: [PATCH 11/14] Ironframe - First pass on adding ironframe to the
@@ -8379,10 +8379,10 @@ index 91226f8..51bd48d 100644
    void OnDidRunInsecureContent(const GURL& security_origin,
                                 const GURL& target_url);
 diff --git a/content/common/frame_messages.h b/content/common/frame_messages.h
-index 27f9af7..2d9308b 100644
+index 96a3043..09158ce 100644
 --- a/content/common/frame_messages.h
 +++ b/content/common/frame_messages.h
-@@ -1464,6 +1464,10 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
+@@ -1456,6 +1456,10 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
  IPC_MESSAGE_ROUTED1(FrameHostMsg_RouteMessageEvent,
                      FrameMsg_PostMessage_Params)
  
@@ -8540,7 +8540,7 @@ index d72f15d..740a044 100644
      void didRunInsecureContent(SecurityOrigin*, const KURL& insecureURL) override;
      void didDetectXSS(const KURL&, bool didBlockEntirePage) override;
 diff --git a/third_party/WebKit/public/web/WebFrameClient.h b/third_party/WebKit/public/web/WebFrameClient.h
-index a9e59c4..b20d429 100644
+index 108c4c7..e787226 100644
 --- a/third_party/WebKit/public/web/WebFrameClient.h
 +++ b/third_party/WebKit/public/web/WebFrameClient.h
 @@ -479,6 +479,8 @@ public:
@@ -8556,7 +8556,7 @@ index a9e59c4..b20d429 100644
 1.9.1
 
 
-From fe203ebf7b7cf709d738910e3e014ba01986874a Mon Sep 17 00:00:00 2001
+From 6cd0b889a5088aea3b21a46d298fa4165d8d8270 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 18:29:14 -0400
 Subject: [PATCH 12/14] Ironframe - Working version of valid/InvalidIronframe()
@@ -8670,7 +8670,7 @@ index c34b118..6994986 100644
 1.9.1
 
 
-From f2863964b3d58f5dcb3317e560313a0f34c9de92 Mon Sep 17 00:00:00 2001
+From 0c0ff8732541cd11bd538f7f14ab097fabd18f14 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 22:06:37 -0400
 Subject: [PATCH 13/14] Ironframe - Add IronframeStatus api
@@ -8886,7 +8886,7 @@ index 81c03e6..1137016 100644
 1.9.1
 
 
-From e256da5dbf018753e4c8c71889d0f113ffef4fa6 Mon Sep 17 00:00:00 2001
+From d1e6ef80ffcefed3f1ab226189cbd68c8c76696a Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 3 Aug 2016 04:02:03 -0400
 Subject: [PATCH 14/14] Ironframe - Add origin text to location bar
@@ -9102,10 +9102,10 @@ index be8b9ef..a962147 100644
    // True if this is a secure page which displayed insecure content.
    bool displayed_insecure_content_;
 diff --git a/content/common/frame_messages.h b/content/common/frame_messages.h
-index 2d9308b..d78a0c7 100644
+index 09158ce..3887d3c 100644
 --- a/content/common/frame_messages.h
 +++ b/content/common/frame_messages.h
-@@ -1464,7 +1464,7 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
+@@ -1456,7 +1456,7 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
  IPC_MESSAGE_ROUTED1(FrameHostMsg_RouteMessageEvent,
                      FrameMsg_PostMessage_Params)
  
@@ -9221,7 +9221,7 @@ index 740a044..006af43 100644
      void invalidIronframe() override;
      void didDisplayInsecureContent() override;
 diff --git a/third_party/WebKit/public/web/WebFrameClient.h b/third_party/WebKit/public/web/WebFrameClient.h
-index b20d429..dd1d894 100644
+index e787226..07631bb 100644
 --- a/third_party/WebKit/public/web/WebFrameClient.h
 +++ b/third_party/WebKit/public/web/WebFrameClient.h
 @@ -481,6 +481,8 @@ public:
