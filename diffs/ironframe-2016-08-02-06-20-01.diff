@@ -307,10 +307,10 @@ index 91226f8..a962147 100644
    bool displayed_insecure_content_;
  
 diff --git a/content/common/frame_messages.h b/content/common/frame_messages.h
-index 27f9af7..d78a0c7 100644
+index 96a3043..3887d3c 100644
 --- a/content/common/frame_messages.h
 +++ b/content/common/frame_messages.h
-@@ -1464,6 +1464,10 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
+@@ -1456,6 +1456,10 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
  IPC_MESSAGE_ROUTED1(FrameHostMsg_RouteMessageEvent,
                      FrameMsg_PostMessage_Params)
  
@@ -1252,7 +1252,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index 4784dd7..fc31d7f 100644
+index deba6ab..fba68e8 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -40,6 +40,7 @@
@@ -1263,7 +1263,7 @@ index 4784dd7..fc31d7f 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2558,6 +2559,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+@@ -2541,6 +2542,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
              // This was required for slimming paint v1 but is only temporarily
              // needed for slimming paint v2.
              view.compositor()->updateIfNeededRecursive();
@@ -1280,12 +1280,12 @@ index 4784dd7..fc31d7f 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index a41064e..f46e33d 100644
+index be04cc7..8162ad1 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1287,6 +1287,8 @@ public:
-         StarInTimingAllowOrigin = 1483,
+@@ -1288,6 +1288,8 @@ public:
          SVGSMILAdditiveAnimation = 1484,
+         SendBeaconWithNonSimpleContentType = 1485,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1500,
 +
@@ -1609,7 +1609,7 @@ index d72f15d..006af43 100644
      void didRunInsecureContent(SecurityOrigin*, const KURL& insecureURL) override;
      void didDetectXSS(const KURL&, bool didBlockEntirePage) override;
 diff --git a/third_party/WebKit/public/web/WebFrameClient.h b/third_party/WebKit/public/web/WebFrameClient.h
-index a9e59c4..dd1d894 100644
+index 108c4c7..07631bb 100644
 --- a/third_party/WebKit/public/web/WebFrameClient.h
 +++ b/third_party/WebKit/public/web/WebFrameClient.h
 @@ -479,6 +479,10 @@ public:
