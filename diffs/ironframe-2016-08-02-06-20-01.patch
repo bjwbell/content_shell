@@ -1,4 +1,4 @@
-From f76a9e3361facbbd461cf1c3162b6de5118e8214 Mon Sep 17 00:00:00 2001
+From 0d86c4928bf47c6c9c8785811399ec1dcfcdd62f Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 27 Jun 2016 21:20:47 -0400
 Subject: [PATCH 01/14] Ironframe - Add RequestVisibility
@@ -29,7 +29,7 @@ Subject: [PATCH 01/14] Ironframe - Add RequestVisibility
  create mode 100644 third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
 
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index 58ebe53..16e6e4e 100644
+index 96062ce..7b927f2 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -131,6 +131,7 @@
@@ -48,7 +48,7 @@ index 58ebe53..16e6e4e 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2768,6 +2770,8 @@
+@@ -2769,6 +2771,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -57,7 +57,7 @@ index 58ebe53..16e6e4e 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3758,6 +3762,7 @@
+@@ -3759,6 +3763,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -65,7 +65,7 @@ index 58ebe53..16e6e4e 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3838,6 +3843,8 @@
+@@ -3839,6 +3844,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -75,7 +75,7 @@ index 58ebe53..16e6e4e 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 44900c5..7972999 100644
+index 8c1c043..0f708d3 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -264,7 +264,7 @@ index 44900c5..7972999 100644
  template<unsigned type>
  bool shouldInvalidateNodeListCachesForAttr(const HeapHashSet<WeakMember<const LiveNodeListBase>> nodeLists[], const QualifiedName& attrName)
  {
-@@ -5996,6 +6128,7 @@ DEFINE_TRACE(Document)
+@@ -5994,6 +6126,7 @@ DEFINE_TRACE(Document)
      visitor->trace(m_intersectionObserverData);
      visitor->trace(m_snapCoordinator);
      visitor->trace(m_resizeObserverController);
@@ -604,10 +604,10 @@ index deba6ab..fba68e87 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index be04cc7..8162ad1 100644
+index 944166c..c82c293 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1288,6 +1288,8 @@ public:
+@@ -1259,6 +1259,8 @@ public:
          SVGSMILAdditiveAnimation = 1484,
          SendBeaconWithNonSimpleContentType = 1485,
  
@@ -617,7 +617,7 @@ index be04cc7..8162ad1 100644
          // numbers of any item, and don't reuse removed slots.
          // Also, run update_use_counter_feature_enum.py in chromium/src/tools/metrics/histograms/
 diff --git a/third_party/WebKit/Source/core/layout/LayoutView.cpp b/third_party/WebKit/Source/core/layout/LayoutView.cpp
-index a1f5a97..8bb8c58 100644
+index ae252ca..27bb803 100644
 --- a/third_party/WebKit/Source/core/layout/LayoutView.cpp
 +++ b/third_party/WebKit/Source/core/layout/LayoutView.cpp
 @@ -24,7 +24,9 @@
@@ -834,7 +834,7 @@ index dcb5611..b220db8 100644
 1.9.1
 
 
-From 834a2cd613914c2d636840318bf3807a65c71291 Mon Sep 17 00:00:00 2001
+From 2ac138f453ab64c015a5f5ba17d09b05d3d27d05 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 03:58:00 -0400
 Subject: [PATCH 02/14] Ironframe - Add Layout test
@@ -7275,7 +7275,7 @@ HcmV?d00001
 1.9.1
 
 
-From d962b269031c57cc4b5e981a39c7509e7ec83cb2 Mon Sep 17 00:00:00 2001
+From 5eab47f14bb3d2eb888b35a11447ed413b5fb2bc Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 04:12:21 -0400
 Subject: [PATCH 03/14] Ironframe - Fix layout test
@@ -7356,7 +7356,7 @@ index b79dcbd..53ad2ec 100644
 1.9.1
 
 
-From a1e4039ee430907a6656207025cd7a75747cbd39 Mon Sep 17 00:00:00 2001
+From 18bebffb0a69e2813cf1bed55e37dba52b9e8b87 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 06:53:57 -0400
 Subject: [PATCH 04/14] IronFrame - Fix nits in layout test
@@ -7476,7 +7476,7 @@ index cb9bcb0..5d2f5b0f 100644
 1.9.1
 
 
-From de01de9ac90a67a451adb56a6264ef2ee32e1cd4 Mon Sep 17 00:00:00 2001
+From 4738d9e33671c4aaf6566ce962537214abef0d3c Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:04:37 -0400
 Subject: [PATCH 05/14] IronFrame - Remove unused files from layout test
@@ -7664,7 +7664,7 @@ index 9e4f0f1..0000000
 1.9.1
 
 
-From 532a64daae9731581cf090f776e00efa8a8c971a Mon Sep 17 00:00:00 2001
+From e4d6b989a9c51208cca219179002109e02035d98 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:14:24 -0400
 Subject: [PATCH 06/14] IronFrame - Fix nits in layout test
@@ -7934,7 +7934,7 @@ index cb09a11..41b1a6f 100644
 1.9.1
 
 
-From 989d4a951a70705bc4e8669c0e069688572a7043 Mon Sep 17 00:00:00 2001
+From 0da645352e4c5e75f56a1132f5a5a234d5e32890 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 09:21:04 -0400
 Subject: [PATCH 07/14] IronFrame - Use testharness.js in layout test
@@ -8175,7 +8175,7 @@ index 41b1a6f..6445755 100644
 1.9.1
 
 
-From 84d3f1bd21900b84e4e36e6565d2f8b94d112bea Mon Sep 17 00:00:00 2001
+From 60ad42e81d45456d3368a4ef889c43b949f3d623 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 8 Jul 2016 20:05:03 -0400
 Subject: [PATCH 08/14] IronFrame - Fix regression with RequestVisibility
@@ -8234,7 +8234,7 @@ index abe5f50..c176a29 100644
 1.9.1
 
 
-From 77eae315ee8c6377b9b7f9b4a70a643d00f0766b Mon Sep 17 00:00:00 2001
+From 01d1223e121302263137cae3d2748bdd1f9c5774 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 19 Jul 2016 23:23:39 -0400
 Subject: [PATCH 09/14] Ironframe - Set EventTypeName in constructor
@@ -8245,7 +8245,7 @@ Subject: [PATCH 09/14] Ironframe - Set EventTypeName in constructor
  2 files changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 7972999..584230f 100644
+index 0f708d3..4264a9f 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -3914,7 +3914,6 @@ void Document::enqueueAnimationFrameEvent(Event* event)
@@ -8273,7 +8273,7 @@ index 5f17327..c32b661 100644
 1.9.1
 
 
-From 26b8492043aaa9ea3a0595ce2658fa95f6215541 Mon Sep 17 00:00:00 2001
+From 031f694e63a0ac01731309ffd2d4194535212574 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 29 Jul 2016 14:25:22 -0400
 Subject: [PATCH 10/14] IronFrame - Avoid duplicate events
@@ -8283,7 +8283,7 @@ Subject: [PATCH 10/14] IronFrame - Avoid duplicate events
  1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 584230f..f719742 100644
+index 4264a9f..434791b 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -5922,7 +5922,15 @@ void Document::requestVisibilityImpl(){
@@ -8307,7 +8307,7 @@ index 584230f..f719742 100644
 1.9.1
 
 
-From 4bba7df993616b2f778f9c6603f3dea5633bfa82 Mon Sep 17 00:00:00 2001
+From 9663bebb7d5294c5f65aa42900f231e963bfbbd6 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 07:43:24 -0400
 Subject: [PATCH 11/14] Ironframe - First pass on adding ironframe to the
@@ -8330,7 +8330,7 @@ Subject: [PATCH 11/14] Ironframe - First pass on adding ironframe to the
  13 files changed, 73 insertions(+)
 
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 19d9d26..6b8803f 100644
+index 26e6d0a..949260a 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -697,6 +697,10 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
@@ -8379,10 +8379,10 @@ index 91226f8..51bd48d 100644
    void OnDidRunInsecureContent(const GURL& security_origin,
                                 const GURL& target_url);
 diff --git a/content/common/frame_messages.h b/content/common/frame_messages.h
-index 96a3043..09158ce 100644
+index 5a649f3..9509ebf 100644
 --- a/content/common/frame_messages.h
 +++ b/content/common/frame_messages.h
-@@ -1456,6 +1456,10 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
+@@ -1461,6 +1461,10 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
  IPC_MESSAGE_ROUTED1(FrameHostMsg_RouteMessageEvent,
                      FrameMsg_PostMessage_Params)
  
@@ -8394,10 +8394,10 @@ index 96a3043..09158ce 100644
  IPC_MESSAGE_ROUTED0(FrameHostMsg_DidDisplayInsecureContent)
  
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 1386b37..66381dd 100644
+index 3bd70a5..07f4c48 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
-@@ -4199,6 +4199,13 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
+@@ -4198,6 +4198,13 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
        response.mimeType().utf8(), WebURLRequestToResourceType(request)));
  }
  
@@ -8425,7 +8425,7 @@ index e8840bf..0c1ae63 100644
    void didRunInsecureContent(const blink::WebSecurityOrigin& origin,
                               const blink::WebURL& target) override;
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index f719742..bc8d0b8 100644
+index 434791b..489cfea 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -5810,6 +5810,21 @@ bool Document::hasFocus() const
@@ -8477,7 +8477,7 @@ index 626697b..c51e969 100644
  
      [NewObject, DoNotTestNewObject, CustomElementCallbacks, PerWorldBindings, RaisesException] Element createElement(DOMString localName);
 diff --git a/third_party/WebKit/Source/core/loader/EmptyClients.h b/third_party/WebKit/Source/core/loader/EmptyClients.h
-index 95706e3..d0346f3 100644
+index 722438a..cbbf10a 100644
 --- a/third_party/WebKit/Source/core/loader/EmptyClients.h
 +++ b/third_party/WebKit/Source/core/loader/EmptyClients.h
 @@ -241,6 +241,8 @@ public:
@@ -8556,7 +8556,7 @@ index 108c4c7..e787226 100644
 1.9.1
 
 
-From 6cd0b889a5088aea3b21a46d298fa4165d8d8270 Mon Sep 17 00:00:00 2001
+From 65956822e14d10464595d5d6ab3b8dabdd62509b Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 18:29:14 -0400
 Subject: [PATCH 12/14] Ironframe - Working version of valid/InvalidIronframe()
@@ -8570,10 +8570,10 @@ Subject: [PATCH 12/14] Ironframe - Working version of valid/InvalidIronframe()
  4 files changed, 30 insertions(+), 5 deletions(-)
 
 diff --git a/content/browser/ssl/ssl_policy.cc b/content/browser/ssl/ssl_policy.cc
-index e710e7c..3779d8e 100644
+index a45e135..dea7b06 100644
 --- a/content/browser/ssl/ssl_policy.cc
 +++ b/content/browser/ssl/ssl_policy.cc
-@@ -146,6 +146,17 @@ void SSLPolicy::UpdateEntry(NavigationEntryImpl* entry,
+@@ -147,6 +147,17 @@ void SSLPolicy::UpdateEntry(NavigationEntryImpl* entry,
  
    InitializeEntryIfNeeded(entry);
  
@@ -8592,7 +8592,7 @@ index e710e7c..3779d8e 100644
      return;
  
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 6b8803f..81c03e6 100644
+index 949260a..d3a7444 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -1185,6 +1185,10 @@ const std::string& WebContentsImpl::GetEncoding() const {
@@ -8670,7 +8670,7 @@ index c34b118..6994986 100644
 1.9.1
 
 
-From 0c0ff8732541cd11bd538f7f14ab097fabd18f14 Mon Sep 17 00:00:00 2001
+From 1ef550fa7fac748581fd07ff19c18933f31b84cc Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 22:06:37 -0400
 Subject: [PATCH 13/14] Ironframe - Add IronframeStatus api
@@ -8828,10 +8828,10 @@ index 4b823f6..93716bd 100644
    gfx::VectorIconId GetVectorIcon() const override;
    base::string16 GetEVCertName() const override;
 diff --git a/content/browser/ssl/ssl_policy.cc b/content/browser/ssl/ssl_policy.cc
-index 3779d8e..6952a26 100644
+index dea7b06..e84b99e0 100644
 --- a/content/browser/ssl/ssl_policy.cc
 +++ b/content/browser/ssl/ssl_policy.cc
-@@ -146,14 +146,14 @@ void SSLPolicy::UpdateEntry(NavigationEntryImpl* entry,
+@@ -147,14 +147,14 @@ void SSLPolicy::UpdateEntry(NavigationEntryImpl* entry,
  
    InitializeEntryIfNeeded(entry);
  
@@ -8855,7 +8855,7 @@ index 3779d8e..6952a26 100644
  
    
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 81c03e6..1137016 100644
+index d3a7444..2c25e3b 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -3491,16 +3491,18 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
@@ -8886,7 +8886,7 @@ index 81c03e6..1137016 100644
 1.9.1
 
 
-From d1e6ef80ffcefed3f1ab226189cbd68c8c76696a Mon Sep 17 00:00:00 2001
+From 37667f5eeb6cf60dca932ace818722d1053e9706 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 3 Aug 2016 04:02:03 -0400
 Subject: [PATCH 14/14] Ironframe - Add origin text to location bar
@@ -9042,7 +9042,7 @@ index 93716bd..5ba4e10 100644
    int GetIcon() const override;
    gfx::VectorIconId GetVectorIcon() const override;
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 1137016..fc83a66 100644
+index 2c25e3b..a99271c 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -697,6 +697,8 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
@@ -9102,10 +9102,10 @@ index be8b9ef..a962147 100644
    // True if this is a secure page which displayed insecure content.
    bool displayed_insecure_content_;
 diff --git a/content/common/frame_messages.h b/content/common/frame_messages.h
-index 09158ce..3887d3c 100644
+index 9509ebf..e2ec270 100644
 --- a/content/common/frame_messages.h
 +++ b/content/common/frame_messages.h
-@@ -1456,7 +1456,7 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
+@@ -1461,7 +1461,7 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
  IPC_MESSAGE_ROUTED1(FrameHostMsg_RouteMessageEvent,
                      FrameMsg_PostMessage_Params)
  
@@ -9129,10 +9129,10 @@ index 6994986..1cbb335 100644
  
    // Internal state ------------------------------------------------------------
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 66381dd..1e11bb9 100644
+index 07f4c48..3dd3b66 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
-@@ -4199,6 +4199,10 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
+@@ -4198,6 +4198,10 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
        response.mimeType().utf8(), WebURLRequestToResourceType(request)));
  }
  
@@ -9156,7 +9156,7 @@ index 0c1ae63..537dcb4 100644
    void didRunInsecureContent(const blink::WebSecurityOrigin& origin,
                               const blink::WebURL& target) override;
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index bc8d0b8..d475305 100644
+index 489cfea..e386f4a4 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -5812,6 +5812,7 @@ bool Document::hasFocus() const
@@ -9168,7 +9168,7 @@ index bc8d0b8..d475305 100644
      
      // Set attribute.
 diff --git a/third_party/WebKit/Source/core/loader/EmptyClients.h b/third_party/WebKit/Source/core/loader/EmptyClients.h
-index d0346f3..adb5901 100644
+index cbbf10a..1b49225 100644
 --- a/third_party/WebKit/Source/core/loader/EmptyClients.h
 +++ b/third_party/WebKit/Source/core/loader/EmptyClients.h
 @@ -241,6 +241,7 @@ public:
