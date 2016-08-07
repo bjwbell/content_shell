@@ -1,4 +1,4 @@
-From 0d86c4928bf47c6c9c8785811399ec1dcfcdd62f Mon Sep 17 00:00:00 2001
+From 7d115566439f86111f6e5f17bc9796c720dc57c0 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 27 Jun 2016 21:20:47 -0400
 Subject: [PATCH 01/14] Ironframe - Add RequestVisibility
@@ -576,7 +576,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index deba6ab..fba68e87 100644
+index 44f2446..96642cb 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -40,6 +40,7 @@
@@ -617,7 +617,7 @@ index 944166c..c82c293 100644
          // numbers of any item, and don't reuse removed slots.
          // Also, run update_use_counter_feature_enum.py in chromium/src/tools/metrics/histograms/
 diff --git a/third_party/WebKit/Source/core/layout/LayoutView.cpp b/third_party/WebKit/Source/core/layout/LayoutView.cpp
-index ae252ca..27bb803 100644
+index c18c3ee..2fdae2f 100644
 --- a/third_party/WebKit/Source/core/layout/LayoutView.cpp
 +++ b/third_party/WebKit/Source/core/layout/LayoutView.cpp
 @@ -24,7 +24,9 @@
@@ -759,7 +759,7 @@ index 48e61ea..abe5f50 100644
  const uint64_t CompositingReasonCombo3DDescendants =
      CompositingReasonPreserve3DWith3DDescendants
 diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
-index 1675ae9..6b2e4e6 100644
+index e2d0901..f5ebbc4 100644
 --- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
 +++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
 @@ -133,6 +133,7 @@ GraphicsLayer::GraphicsLayer(GraphicsLayerClient* client)
@@ -801,7 +801,7 @@ index 1675ae9..6b2e4e6 100644
  {
      // FIXME: this could probably be a full early exit.
 diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
-index dcb5611..b220db8 100644
+index 8a2c6373..a14a95e 100644
 --- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
 +++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
 @@ -87,6 +87,9 @@ public:
@@ -834,7 +834,7 @@ index dcb5611..b220db8 100644
 1.9.1
 
 
-From 2ac138f453ab64c015a5f5ba17d09b05d3d27d05 Mon Sep 17 00:00:00 2001
+From de6dedc86b7e4bc66cd985acd858a41f4511a6bb Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 03:58:00 -0400
 Subject: [PATCH 02/14] Ironframe - Add Layout test
@@ -7275,7 +7275,7 @@ HcmV?d00001
 1.9.1
 
 
-From 5eab47f14bb3d2eb888b35a11447ed413b5fb2bc Mon Sep 17 00:00:00 2001
+From 76d8e4d8eb5c2b77b1aa9bf1b2ebf5d8d2032e11 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 04:12:21 -0400
 Subject: [PATCH 03/14] Ironframe - Fix layout test
@@ -7356,7 +7356,7 @@ index b79dcbd..53ad2ec 100644
 1.9.1
 
 
-From 18bebffb0a69e2813cf1bed55e37dba52b9e8b87 Mon Sep 17 00:00:00 2001
+From f4b3b5127c3cebd27c60042da8e008f84796754b Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 06:53:57 -0400
 Subject: [PATCH 04/14] IronFrame - Fix nits in layout test
@@ -7476,7 +7476,7 @@ index cb9bcb0..5d2f5b0f 100644
 1.9.1
 
 
-From 4738d9e33671c4aaf6566ce962537214abef0d3c Mon Sep 17 00:00:00 2001
+From 947bddb21eeccbfd310041918301efca1a03f995 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:04:37 -0400
 Subject: [PATCH 05/14] IronFrame - Remove unused files from layout test
@@ -7664,7 +7664,7 @@ index 9e4f0f1..0000000
 1.9.1
 
 
-From e4d6b989a9c51208cca219179002109e02035d98 Mon Sep 17 00:00:00 2001
+From 84ed9af0571cdba17e18e42acb3f243d0609c15e Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:14:24 -0400
 Subject: [PATCH 06/14] IronFrame - Fix nits in layout test
@@ -7934,7 +7934,7 @@ index cb09a11..41b1a6f 100644
 1.9.1
 
 
-From 0da645352e4c5e75f56a1132f5a5a234d5e32890 Mon Sep 17 00:00:00 2001
+From e180b1ccfc3c35f8a68aaf2a5efc4e3b50bf7950 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 09:21:04 -0400
 Subject: [PATCH 07/14] IronFrame - Use testharness.js in layout test
@@ -8175,7 +8175,7 @@ index 41b1a6f..6445755 100644
 1.9.1
 
 
-From 60ad42e81d45456d3368a4ef889c43b949f3d623 Mon Sep 17 00:00:00 2001
+From a5958f1dcd5fcd1972093e6fee02610faaa54b3e Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 8 Jul 2016 20:05:03 -0400
 Subject: [PATCH 08/14] IronFrame - Fix regression with RequestVisibility
@@ -8234,7 +8234,7 @@ index abe5f50..c176a29 100644
 1.9.1
 
 
-From 01d1223e121302263137cae3d2748bdd1f9c5774 Mon Sep 17 00:00:00 2001
+From b4f69e7d63a65e03d6130444c03210284296cddf Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 19 Jul 2016 23:23:39 -0400
 Subject: [PATCH 09/14] Ironframe - Set EventTypeName in constructor
@@ -8273,7 +8273,7 @@ index 5f17327..c32b661 100644
 1.9.1
 
 
-From 031f694e63a0ac01731309ffd2d4194535212574 Mon Sep 17 00:00:00 2001
+From 910dbf47a8f6f2febb55b52312e1725ae8a8e375 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 29 Jul 2016 14:25:22 -0400
 Subject: [PATCH 10/14] IronFrame - Avoid duplicate events
@@ -8307,7 +8307,7 @@ index 4264a9f..434791b 100644
 1.9.1
 
 
-From 9663bebb7d5294c5f65aa42900f231e963bfbbd6 Mon Sep 17 00:00:00 2001
+From ff30297009d7a6e6218b0c5752f79cf9b5ace02e Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 07:43:24 -0400
 Subject: [PATCH 11/14] Ironframe - First pass on adding ironframe to the
@@ -8394,7 +8394,7 @@ index 5a649f3..9509ebf 100644
  IPC_MESSAGE_ROUTED0(FrameHostMsg_DidDisplayInsecureContent)
  
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 3bd70a5..07f4c48 100644
+index 9fb4467..e8803e0 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4198,6 +4198,13 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
@@ -8412,7 +8412,7 @@ index 3bd70a5..07f4c48 100644
    Send(new FrameHostMsg_DidDisplayInsecureContent(routing_id_));
  }
 diff --git a/content/renderer/render_frame_impl.h b/content/renderer/render_frame_impl.h
-index e8840bf..0c1ae63 100644
+index b670441..ad174d0a 100644
 --- a/content/renderer/render_frame_impl.h
 +++ b/content/renderer/render_frame_impl.h
 @@ -567,6 +567,8 @@ class CONTENT_EXPORT RenderFrameImpl
@@ -8504,7 +8504,7 @@ index e320cdd..de902f8 100644
      // insecure source.  Inactive content cannot spread to other frames.
      virtual void didDisplayInsecureContent() = 0;
 diff --git a/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp b/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp
-index 4bec7ca..438979c 100644
+index 1f10cdc..8f961d8 100644
 --- a/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp
 +++ b/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp
 @@ -658,6 +658,18 @@ void FrameLoaderClientImpl::didAccessInitialDocument()
@@ -8556,7 +8556,7 @@ index 108c4c7..e787226 100644
 1.9.1
 
 
-From 65956822e14d10464595d5d6ab3b8dabdd62509b Mon Sep 17 00:00:00 2001
+From 51e33f60ca80426110d93840703adc8888c2a369 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 18:29:14 -0400
 Subject: [PATCH 12/14] Ironframe - Working version of valid/InvalidIronframe()
@@ -8670,7 +8670,7 @@ index c34b118..6994986 100644
 1.9.1
 
 
-From 1ef550fa7fac748581fd07ff19c18933f31b84cc Mon Sep 17 00:00:00 2001
+From d5364e3fad2dfa205fb2e5075f778d5b54947812 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 22:06:37 -0400
 Subject: [PATCH 13/14] Ironframe - Add IronframeStatus api
@@ -8886,7 +8886,7 @@ index d3a7444..2c25e3b 100644
 1.9.1
 
 
-From 37667f5eeb6cf60dca932ace818722d1053e9706 Mon Sep 17 00:00:00 2001
+From 68156751fb4a21539bcb53c0f761080eb7cb0b98 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 3 Aug 2016 04:02:03 -0400
 Subject: [PATCH 14/14] Ironframe - Add origin text to location bar
@@ -9129,7 +9129,7 @@ index 6994986..1cbb335 100644
  
    // Internal state ------------------------------------------------------------
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 07f4c48..3dd3b66 100644
+index e8803e0..bd657d6 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4198,6 +4198,10 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
@@ -9144,7 +9144,7 @@ index 07f4c48..3dd3b66 100644
    Send(new FrameHostMsg_ValidIronframe(routing_id_));
  }
 diff --git a/content/renderer/render_frame_impl.h b/content/renderer/render_frame_impl.h
-index 0c1ae63..537dcb4 100644
+index ad174d0a..eac67d3 100644
 --- a/content/renderer/render_frame_impl.h
 +++ b/content/renderer/render_frame_impl.h
 @@ -569,6 +569,7 @@ class CONTENT_EXPORT RenderFrameImpl
@@ -9192,7 +9192,7 @@ index de902f8..c8f59ec 100644
      virtual void invalidIronframe() = 0;
      
 diff --git a/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp b/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp
-index 438979c..c39b584 100644
+index 8f961d8..8a90e5f 100644
 --- a/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp
 +++ b/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp
 @@ -658,6 +658,12 @@ void FrameLoaderClientImpl::didAccessInitialDocument()
