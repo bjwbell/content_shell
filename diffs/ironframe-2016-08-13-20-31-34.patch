@@ -1,7 +1,7 @@
-From ad806f7777368e09c0a4f50c21defff19293992b Mon Sep 17 00:00:00 2001
+From 1ab145454f9cc7a780691827a8c85dfaa87b2ee5 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 27 Jun 2016 21:20:47 -0400
-Subject: [PATCH 01/15] Ironframe - Add RequestVisibility
+Subject: [PATCH 01/16] Ironframe - Add RequestVisibility
 
 ---
  third_party/WebKit/Source/core/core.gypi           |   7 ++
@@ -29,10 +29,10 @@ Subject: [PATCH 01/15] Ironframe - Add RequestVisibility
  create mode 100644 third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
 
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index 84777cb..4a6236e 100644
+index cb40f8f..4e61ff9 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
-@@ -132,6 +132,7 @@
+@@ -133,6 +133,7 @@
              'events/CustomEvent.idl',
              'events/DragEvent.idl',
              'events/ErrorEvent.idl',
@@ -40,7 +40,7 @@ index 84777cb..4a6236e 100644
              'events/Event.idl',
              'events/EventTarget.idl',
              'events/FocusEvent.idl',
-@@ -473,6 +474,7 @@
+@@ -474,6 +475,7 @@
              'events/CustomEvent.idl',
              'events/DragEvent.idl',
              'events/ErrorEvent.idl',
@@ -48,7 +48,7 @@ index 84777cb..4a6236e 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2777,6 +2779,8 @@
+@@ -2796,6 +2798,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -57,7 +57,7 @@ index 84777cb..4a6236e 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3767,6 +3771,7 @@
+@@ -3786,6 +3790,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -65,7 +65,7 @@ index 84777cb..4a6236e 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3847,6 +3852,8 @@
+@@ -3866,6 +3871,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -75,7 +75,7 @@ index 84777cb..4a6236e 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 749d9d1..995f0de 100644
+index 8ba679e..bd80de0 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -118,7 +118,7 @@ index 749d9d1..995f0de 100644
  #include "core/timing/DOMWindowPerformance.h"
  #include "core/timing/Performance.h"
  #include "core/workers/SharedWorkerRepositoryClient.h"
-@@ -393,6 +400,8 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
+@@ -392,6 +399,8 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
      , m_domWindow(m_frame ? m_frame->localDOMWindow() : 0)
      , m_importsController(initializer.importsController())
      , m_contextFeatures(ContextFeatures::defaultSwitch())
@@ -127,7 +127,7 @@ index 749d9d1..995f0de 100644
      , m_wellFormed(false)
      , m_printing(false)
      , m_wasPrinting(false)
-@@ -3902,6 +3911,14 @@ void Document::enqueueAnimationFrameEvent(Event* event)
+@@ -3901,6 +3910,14 @@ void Document::enqueueAnimationFrameEvent(Event* event)
      ensureScriptedAnimationController().enqueueEvent(event);
  }
  
@@ -142,7 +142,7 @@ index 749d9d1..995f0de 100644
  void Document::enqueueUniqueAnimationFrameEvent(Event* event)
  {
      ensureScriptedAnimationController().enqueuePerFrameEvent(event);
-@@ -5794,6 +5811,121 @@ bool Document::hasFocus() const
+@@ -5793,6 +5810,121 @@ bool Document::hasFocus() const
      return page() && page()->focusController().isDocumentFocused(*this);
  }
  
@@ -264,7 +264,7 @@ index 749d9d1..995f0de 100644
  template<unsigned type>
  bool shouldInvalidateNodeListCachesForAttr(const HeapHashSet<WeakMember<const LiveNodeListBase>> nodeLists[], const QualifiedName& attrName)
  {
-@@ -5994,6 +6126,7 @@ DEFINE_TRACE(Document)
+@@ -5993,6 +6125,7 @@ DEFINE_TRACE(Document)
      visitor->trace(m_intersectionObserverData);
      visitor->trace(m_snapCoordinator);
      visitor->trace(m_resizeObserverController);
@@ -576,7 +576,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index 15cff79..d64ac91 100644
+index 1d4d771..feb5516 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -40,6 +40,7 @@
@@ -587,7 +587,7 @@ index 15cff79..d64ac91 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2541,6 +2542,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+@@ -2561,6 +2562,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
              // This was required for slimming paint v1 but is only temporarily
              // needed for slimming paint v2.
              view.compositor()->updateIfNeededRecursive();
@@ -604,7 +604,7 @@ index 15cff79..d64ac91 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index 839427c..b0fcacc 100644
+index a585e65..83f308f 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
 @@ -1277,6 +1277,9 @@ public:
@@ -760,10 +760,10 @@ index 48e61ea..abe5f50 100644
  const uint64_t CompositingReasonCombo3DDescendants =
      CompositingReasonPreserve3DWith3DDescendants
 diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
-index e2d0901..f5ebbc4 100644
+index 494b08f..c384d9e 100644
 --- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
 +++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
-@@ -133,6 +133,7 @@ GraphicsLayer::GraphicsLayer(GraphicsLayerClient* client)
+@@ -131,6 +131,7 @@ GraphicsLayer::GraphicsLayer(GraphicsLayerClient* client)
      , m_isTrackingPaintInvalidations(client && client->isTrackingPaintInvalidations())
      , m_paintingPhase(GraphicsLayerPaintAllWithOverflowClip)
      , m_parent(0)
@@ -771,7 +771,7 @@ index e2d0901..f5ebbc4 100644
      , m_maskLayer(0)
      , m_contentsClippingMaskLayer(0)
      , m_replicaLayer(0)
-@@ -196,6 +197,12 @@ void GraphicsLayer::setParent(GraphicsLayer* layer)
+@@ -194,6 +195,12 @@ void GraphicsLayer::setParent(GraphicsLayer* layer)
      m_parent = layer;
  }
  
@@ -784,7 +784,7 @@ index e2d0901..f5ebbc4 100644
  #if ENABLE(ASSERT)
  
  bool GraphicsLayer::hasAncestor(GraphicsLayer* ancestor) const
-@@ -289,6 +296,16 @@ void GraphicsLayer::removeFromParent()
+@@ -287,6 +294,16 @@ void GraphicsLayer::removeFromParent()
      platformLayer()->removeFromParent();
  }
  
@@ -802,7 +802,7 @@ index e2d0901..f5ebbc4 100644
  {
      // FIXME: this could probably be a full early exit.
 diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
-index 8a2c6373..a14a95e 100644
+index ef5f4744..940a723 100644
 --- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
 +++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
 @@ -87,6 +87,9 @@ public:
@@ -823,7 +823,7 @@ index 8a2c6373..a14a95e 100644
  
      GraphicsLayer* maskLayer() const { return m_maskLayer; }
      void setMaskLayer(GraphicsLayer*);
-@@ -342,6 +346,7 @@ private:
+@@ -340,6 +344,7 @@ private:
  
      Vector<GraphicsLayer*> m_children;
      GraphicsLayer* m_parent;
@@ -835,10 +835,10 @@ index 8a2c6373..a14a95e 100644
 1.9.1
 
 
-From c8c61b009d65a9fe689be848eae15671da4bf08a Mon Sep 17 00:00:00 2001
+From 9bec882468842935f726187768ef42e55243cc91 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 03:58:00 -0400
-Subject: [PATCH 02/15] Ironframe - Add Layout test
+Subject: [PATCH 02/16] Ironframe - Add Layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt    |  35 +++++
@@ -7276,10 +7276,10 @@ HcmV?d00001
 1.9.1
 
 
-From 07a20ba2c4f03a9b2eabff8453e3022d4c2836f1 Mon Sep 17 00:00:00 2001
+From 7b2d90eedd34dc8b20c4a3ce6bf45721199a832e Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 04:12:21 -0400
-Subject: [PATCH 03/15] Ironframe - Fix layout test
+Subject: [PATCH 03/16] Ironframe - Fix layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt          |  2 +-
@@ -7357,10 +7357,10 @@ index b79dcbd..53ad2ec 100644
 1.9.1
 
 
-From d5c63f4b4ed764b3fc7075b408e38cf4a8e13ddf Mon Sep 17 00:00:00 2001
+From 6f51a90e0fd99a4ad07e9ac20c8764362bc0ddb8 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 06:53:57 -0400
-Subject: [PATCH 04/15] IronFrame - Fix nits in layout test
+Subject: [PATCH 04/16] IronFrame - Fix nits in layout test
 
 ---
  .../http/tests/ironframe/ironframe.html            | 49 +++++++++++-----------
@@ -7477,10 +7477,10 @@ index cb9bcb0..5d2f5b0f 100644
 1.9.1
 
 
-From 32f75af1fd47b2c5e5a8e572098d7ee21fab38eb Mon Sep 17 00:00:00 2001
+From 539caa7ae917ec17668fc4c66a916d988c7e56ab Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:04:37 -0400
-Subject: [PATCH 05/15] IronFrame - Remove unused files from layout test
+Subject: [PATCH 05/16] IronFrame - Remove unused files from layout test
 
 ---
  .../ironframe/resources/ironframe-expected.txt     |   1 -
@@ -7665,10 +7665,10 @@ index 9e4f0f1..0000000
 1.9.1
 
 
-From b8fb531a50891a058af71f3d8ee7c5ed6aa82375 Mon Sep 17 00:00:00 2001
+From e05d94d7bc0d9ac0c9c50528a536fdf5adf0af7b Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:14:24 -0400
-Subject: [PATCH 06/15] IronFrame - Fix nits in layout test
+Subject: [PATCH 06/16] IronFrame - Fix nits in layout test
 
 ---
  .../http/tests/ironframe/ironframe.html            | 104 ++++++++--------
@@ -7935,10 +7935,10 @@ index cb09a11..41b1a6f 100644
 1.9.1
 
 
-From 44881f1580c94d1c8be5c58c123b4e397451ea46 Mon Sep 17 00:00:00 2001
+From b4e550df0f1c3dd2a9197d9170d51634c25f3a1e Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 09:21:04 -0400
-Subject: [PATCH 07/15] IronFrame - Use testharness.js in layout test
+Subject: [PATCH 07/16] IronFrame - Use testharness.js in layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt    |  35 --------
@@ -8176,10 +8176,10 @@ index 41b1a6f..6445755 100644
 1.9.1
 
 
-From 944a8a769cc2fdb164da7ebbb6c71fea531f60c7 Mon Sep 17 00:00:00 2001
+From c673bb969412fafc8fe02424c7d46f5fbde17f00 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 8 Jul 2016 20:05:03 -0400
-Subject: [PATCH 08/15] IronFrame - Fix regression with RequestVisibility
+Subject: [PATCH 08/16] IronFrame - Fix regression with RequestVisibility
  compositing reason
 
 ---
@@ -8235,10 +8235,10 @@ index abe5f50..c176a29 100644
 1.9.1
 
 
-From 629843d7a770406a8e10ac10692ba1513d41c049 Mon Sep 17 00:00:00 2001
+From c5ed4463ae71b6a8863da9c5c8ea3c5a749692c3 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 19 Jul 2016 23:23:39 -0400
-Subject: [PATCH 09/15] Ironframe - Set EventTypeName in constructor
+Subject: [PATCH 09/16] Ironframe - Set EventTypeName in constructor
 
 ---
  third_party/WebKit/Source/core/dom/Document.cpp                    | 1 -
@@ -8246,10 +8246,10 @@ Subject: [PATCH 09/15] Ironframe - Set EventTypeName in constructor
  2 files changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 995f0de..3e2a6bc 100644
+index bd80de0..3b6dc8f 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
-@@ -3914,7 +3914,6 @@ void Document::enqueueAnimationFrameEvent(Event* event)
+@@ -3913,7 +3913,6 @@ void Document::enqueueAnimationFrameEvent(Event* event)
  void Document::enqueueRequestedVisibilityEvent(const String& msg)
  {
      RequestedVisibilityEvent* event = RequestedVisibilityEvent::create(msg);
@@ -8274,20 +8274,20 @@ index 5f17327..c32b661 100644
 1.9.1
 
 
-From 98639eefef2d0a02341798f2317d311e171a571f Mon Sep 17 00:00:00 2001
+From 8f47feeb0569b72fceb058819ce21e00d6f53a83 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 29 Jul 2016 14:25:22 -0400
-Subject: [PATCH 10/15] IronFrame - Avoid duplicate events
+Subject: [PATCH 10/16] IronFrame - Avoid duplicate events
 
 ---
  third_party/WebKit/Source/core/dom/Document.cpp | 10 +++++++++-
  1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 3e2a6bc..94d034d 100644
+index 3b6dc8f..d64f390 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
-@@ -5922,7 +5922,15 @@ void Document::requestVisibilityImpl(){
+@@ -5921,7 +5921,15 @@ void Document::requestVisibilityImpl(){
      bounds.setHeight(fmax(bounds.size().height()- sy, 0));
      //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
      String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
@@ -8308,10 +8308,10 @@ index 3e2a6bc..94d034d 100644
 1.9.1
 
 
-From 7c3dd305e1e3116dc9af9f569b63503560c27df2 Mon Sep 17 00:00:00 2001
+From bccae8272b2f8f1aef2469df6c235127fa5fd8cc Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 07:43:24 -0400
-Subject: [PATCH 11/15] Ironframe - First pass on adding ironframe to the
+Subject: [PATCH 11/16] Ironframe - First pass on adding ironframe to the
  location_bar
 
 ---
@@ -8331,10 +8331,10 @@ Subject: [PATCH 11/15] Ironframe - First pass on adding ironframe to the
  13 files changed, 73 insertions(+)
 
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index a25b0a0..0e0d453 100644
+index 40ec7e7..4410188 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -697,6 +697,10 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
+@@ -692,6 +692,10 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
                          OnFirstVisuallyNonEmptyPaint)
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidLoadResourceFromMemoryCache,
                          OnDidLoadResourceFromMemoryCache)
@@ -8345,7 +8345,7 @@ index a25b0a0..0e0d453 100644
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidDisplayInsecureContent,
                          OnDidDisplayInsecureContent)
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidRunInsecureContent,
-@@ -3477,6 +3481,20 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
+@@ -3468,6 +3472,20 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
    }
  }
  
@@ -8367,10 +8367,10 @@ index a25b0a0..0e0d453 100644
    RecordAction(base::UserMetricsAction("SSL.DisplayedInsecureContent"));
    displayed_insecure_content_ = true;
 diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
-index 91226f8..51bd48d 100644
+index 65d1a9b..3613484 100644
 --- a/content/browser/web_contents/web_contents_impl.h
 +++ b/content/browser/web_contents/web_contents_impl.h
-@@ -909,6 +909,8 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -917,6 +917,8 @@ class CONTENT_EXPORT WebContentsImpl
                                          const std::string& http_request,
                                          const std::string& mime_type,
                                          ResourceType resource_type);
@@ -8380,10 +8380,10 @@ index 91226f8..51bd48d 100644
    void OnDidRunInsecureContent(const GURL& security_origin,
                                 const GURL& target_url);
 diff --git a/content/common/frame_messages.h b/content/common/frame_messages.h
-index 5a649f3..9509ebf 100644
+index 2fa1b54..d618fae 100644
 --- a/content/common/frame_messages.h
 +++ b/content/common/frame_messages.h
-@@ -1461,6 +1461,10 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
+@@ -1467,6 +1467,10 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
  IPC_MESSAGE_ROUTED1(FrameHostMsg_RouteMessageEvent,
                      FrameMsg_PostMessage_Params)
  
@@ -8395,11 +8395,11 @@ index 5a649f3..9509ebf 100644
  IPC_MESSAGE_ROUTED0(FrameHostMsg_DidDisplayInsecureContent)
  
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 026c472..d8b99dc 100644
+index cb9e3d3..a56cb79 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
-@@ -4159,6 +4159,13 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
-       response.mimeType().utf8(), WebURLRequestToResourceType(request)));
+@@ -4190,6 +4190,13 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
+       WebURLRequestToResourceType(request)));
  }
  
 +void RenderFrameImpl::validIronframe() {
@@ -8413,10 +8413,10 @@ index 026c472..d8b99dc 100644
    Send(new FrameHostMsg_DidDisplayInsecureContent(routing_id_));
  }
 diff --git a/content/renderer/render_frame_impl.h b/content/renderer/render_frame_impl.h
-index c04183e..c345fdc 100644
+index a2b0c2e..3f212cf 100644
 --- a/content/renderer/render_frame_impl.h
 +++ b/content/renderer/render_frame_impl.h
-@@ -571,6 +571,8 @@ class CONTENT_EXPORT RenderFrameImpl
+@@ -573,6 +573,8 @@ class CONTENT_EXPORT RenderFrameImpl
    void didLoadResourceFromMemoryCache(
        const blink::WebURLRequest& request,
        const blink::WebURLResponse& response) override;
@@ -8426,10 +8426,10 @@ index c04183e..c345fdc 100644
    void didRunInsecureContent(const blink::WebSecurityOrigin& origin,
                               const blink::WebURL& target) override;
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 94d034d..06b875b 100644
+index d64f390..811016a 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
-@@ -5810,6 +5810,21 @@ bool Document::hasFocus() const
+@@ -5809,6 +5809,21 @@ bool Document::hasFocus() const
      return page() && page()->focusController().isDocumentFocused(*this);
  }
  
@@ -8478,7 +8478,7 @@ index 626697b..c51e969 100644
  
      [NewObject, DoNotTestNewObject, CustomElementCallbacks, PerWorldBindings, RaisesException] Element createElement(DOMString localName);
 diff --git a/third_party/WebKit/Source/core/loader/EmptyClients.h b/third_party/WebKit/Source/core/loader/EmptyClients.h
-index 4095424..b3159db 100644
+index 28762b9..d1fe032 100644
 --- a/third_party/WebKit/Source/core/loader/EmptyClients.h
 +++ b/third_party/WebKit/Source/core/loader/EmptyClients.h
 @@ -241,6 +241,8 @@ public:
@@ -8557,24 +8557,24 @@ index ebde5da..738aa9e 100644
 1.9.1
 
 
-From dd7d417a34e1d19774fb1c27a91102dae775d262 Mon Sep 17 00:00:00 2001
+From 2392846b6ae28df4fe044d27388663bd9dacbc69 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 18:29:14 -0400
-Subject: [PATCH 12/15] Ironframe - Working version of valid/InvalidIronframe()
+Subject: [PATCH 12/16] Ironframe - Working version of valid/InvalidIronframe()
  functions
 
 ---
  content/browser/ssl/ssl_policy.cc                 | 11 +++++++++++
- content/browser/web_contents/web_contents_impl.cc | 16 +++++++++++-----
- content/browser/web_contents/web_contents_impl.h  |  4 ++++
- content/public/browser/web_contents.h             |  4 ++++
- 4 files changed, 30 insertions(+), 5 deletions(-)
+ content/browser/web_contents/web_contents_impl.cc | 20 +++++++++++++++-----
+ content/browser/web_contents/web_contents_impl.h  |  7 +++++++
+ content/public/browser/web_contents.h             |  6 ++++++
+ 4 files changed, 39 insertions(+), 5 deletions(-)
 
 diff --git a/content/browser/ssl/ssl_policy.cc b/content/browser/ssl/ssl_policy.cc
-index 9d60c36..ccb000a 100644
+index f94d0c6..5825834 100644
 --- a/content/browser/ssl/ssl_policy.cc
 +++ b/content/browser/ssl/ssl_policy.cc
-@@ -179,6 +179,17 @@ void SSLPolicy::UpdateEntry(NavigationEntryImpl* entry,
+@@ -195,6 +195,17 @@ void SSLPolicy::UpdateEntry(NavigationEntryImpl* entry,
  
    InitializeEntryIfNeeded(entry);
  
@@ -8593,10 +8593,10 @@ index 9d60c36..ccb000a 100644
      return;
  
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 0e0d453..770f21e 100644
+index 4410188..e09a8d6 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -1185,6 +1185,10 @@ const std::string& WebContentsImpl::GetEncoding() const {
+@@ -1190,6 +1190,14 @@ const std::string& WebContentsImpl::GetEncoding() const {
    return canonical_encoding_;
  }
  
@@ -8604,10 +8604,14 @@ index 0e0d453..770f21e 100644
 +  return ironframe_status_;
 +}
 +
- bool WebContentsImpl::DisplayedInsecureContent() const {
-   return displayed_insecure_content_;
- }
-@@ -3483,15 +3487,17 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
++bool WebContentsImpl::DisplayedInsecureContent() const {
++  return displayed_insecure_content_;
++}
++
+ void WebContentsImpl::IncrementCapturerCount(const gfx::Size& capture_size) {
+   DCHECK(!is_being_destroyed_);
+   ++capturer_count_;
+@@ -3474,15 +3482,17 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
  
  void WebContentsImpl::OnValidIronframe() {
    RecordAction(base::UserMetricsAction("Ironframe.Valid"));
@@ -8631,50 +8635,57 @@ index 0e0d453..770f21e 100644
  
  
 diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
-index 51bd48d..be8b9ef 100644
+index 3613484..e11d779 100644
 --- a/content/browser/web_contents/web_contents_impl.h
 +++ b/content/browser/web_contents/web_contents_impl.h
-@@ -291,6 +291,7 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -291,6 +291,8 @@ class CONTENT_EXPORT WebContentsImpl
    uint64_t GetUploadSize() const override;
    uint64_t GetUploadPosition() const override;
    const std::string& GetEncoding() const override;
 +  int IronframeStatus() const override;
-   bool DisplayedInsecureContent() const override;
++  bool DisplayedInsecureContent() const override;
    void IncrementCapturerCount(const gfx::Size& capture_size) override;
    void DecrementCapturerCount() override;
-@@ -1201,6 +1202,9 @@ class CONTENT_EXPORT WebContentsImpl
+   int GetCapturerCount() const override;
+@@ -1209,8 +1211,13 @@ class CONTENT_EXPORT WebContentsImpl
    // The canonicalized character encoding.
    std::string canonical_encoding_;
  
 +  //   0 - no ironframe, 1 - valid ironframe, 2 - invalid ironframe
 +  int  ironframe_status_;
++
+   // True if this is a secure page which displayed mixed content (loaded
+   // over HTTP).
 +  
-   // True if this is a secure page which displayed insecure content.
++  // True if this is a secure page which displayed insecure content.
    bool displayed_insecure_content_;
  
+   // True if this page displayed subresources loaded with HTTPS
 diff --git a/content/public/browser/web_contents.h b/content/public/browser/web_contents.h
-index c34b118..6994986 100644
+index efa8ae5..a897f1cc 100644
 --- a/content/public/browser/web_contents.h
 +++ b/content/public/browser/web_contents.h
-@@ -364,6 +364,10 @@ class WebContents : public PageNavigator,
+@@ -364,6 +364,12 @@ class WebContents : public PageNavigator,
    // Returns the character encoding of the page.
    virtual const std::string& GetEncoding() const = 0;
  
-+
 +  // True if this is a secure page which displayed insecure content.
 +  virtual int IronframeStatus() const = 0;
 +
-   // True if this is a secure page which displayed insecure content.
-   virtual bool DisplayedInsecureContent() const = 0;
++  // True if this is a secure page which displayed insecure content.
++  virtual bool DisplayedInsecureContent() const = 0;
++
+   // Internal state ------------------------------------------------------------
  
+   // Indicates whether the WebContents is being captured (e.g., for screenshots
 -- 
 1.9.1
 
 
-From 1fcb770d534894c3ff32ccf0041e0e23a7741061 Mon Sep 17 00:00:00 2001
+From fcb751bce7504752940d5c75a091ff5f1c86e555 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 22:06:37 -0400
-Subject: [PATCH 13/15] Ironframe - Add IronframeStatus api
+Subject: [PATCH 13/16] Ironframe - Add IronframeStatus api
 
 ---
  .../ui/toolbar/chrome_toolbar_model_delegate.cc    | 12 ++++++++++
@@ -8724,7 +8735,7 @@ index c9fc6e6..b30e934 100644
    scoped_refptr<net::X509Certificate> GetCertificate() const override;
  
 diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-index a219ea3..3c18c97 100644
+index 7ffa3e9..4baadfd 100644
 --- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
 +++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
 @@ -860,8 +860,20 @@ void LocationBarView::RefreshLocationIcon() {
@@ -8829,10 +8840,10 @@ index 4b823f6..93716bd 100644
    gfx::VectorIconId GetVectorIcon() const override;
    base::string16 GetEVCertName() const override;
 diff --git a/content/browser/ssl/ssl_policy.cc b/content/browser/ssl/ssl_policy.cc
-index ccb000a..4c762bb 100644
+index 5825834..09ac996 100644
 --- a/content/browser/ssl/ssl_policy.cc
 +++ b/content/browser/ssl/ssl_policy.cc
-@@ -179,14 +179,14 @@ void SSLPolicy::UpdateEntry(NavigationEntryImpl* entry,
+@@ -195,14 +195,14 @@ void SSLPolicy::UpdateEntry(NavigationEntryImpl* entry,
  
    InitializeEntryIfNeeded(entry);
  
@@ -8856,10 +8867,10 @@ index ccb000a..4c762bb 100644
  
    
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 770f21e..8c0aa32 100644
+index e09a8d6..c162723 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -3488,16 +3488,18 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
+@@ -3483,16 +3483,18 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
  void WebContentsImpl::OnValidIronframe() {
    RecordAction(base::UserMetricsAction("Ironframe.Valid"));
    ironframe_status_ = 1;
@@ -8887,10 +8898,10 @@ index 770f21e..8c0aa32 100644
 1.9.1
 
 
-From 7dea88849317959dc13e3db13aae5cbd92c8f860 Mon Sep 17 00:00:00 2001
+From 967ed3bada3f628772bad13271feeefb330880d6 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 3 Aug 2016 04:02:03 -0400
-Subject: [PATCH 14/15] Ironframe - Add origin text to location bar
+Subject: [PATCH 14/16] Ironframe - Add origin text to location bar
 
 ---
  chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc |  8 ++++++++
@@ -8901,7 +8912,7 @@ Subject: [PATCH 14/15] Ironframe - Add origin text to location bar
  components/toolbar/toolbar_model_impl.cc                   |  8 ++++++++
  components/toolbar/toolbar_model_impl.h                    |  2 +-
  content/browser/web_contents/web_contents_impl.cc          | 13 +++++++++++++
- content/browser/web_contents/web_contents_impl.h           |  4 ++++
+ content/browser/web_contents/web_contents_impl.h           |  6 +++---
  content/common/frame_messages.h                            |  2 +-
  content/public/browser/web_contents.h                      |  3 +++
  content/renderer/render_frame_impl.cc                      |  4 ++++
@@ -8912,7 +8923,7 @@ Subject: [PATCH 14/15] Ironframe - Add origin text to location bar
  third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp    |  6 ++++++
  third_party/WebKit/Source/web/FrameLoaderClientImpl.h      |  1 +
  third_party/WebKit/public/web/WebFrameClient.h             |  2 ++
- 19 files changed, 63 insertions(+), 6 deletions(-)
+ 19 files changed, 62 insertions(+), 9 deletions(-)
 
 diff --git a/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc b/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc
 index 9b33c5e..81f438b 100644
@@ -8946,7 +8957,7 @@ index b30e934..8577307 100644
    scoped_refptr<net::X509Certificate> GetCertificate() const override;
  
 diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-index 3c18c97..3e2e36a 100644
+index 4baadfd..daefa4b 100644
 --- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
 +++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
 @@ -567,7 +567,7 @@ void LocationBarView::Layout() {
@@ -9043,10 +9054,10 @@ index 93716bd..5ba4e10 100644
    int GetIcon() const override;
    gfx::VectorIconId GetVectorIcon() const override;
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 8c0aa32..5bc3ef8 100644
+index c162723..94120d2 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -697,6 +697,8 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
+@@ -692,6 +692,8 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
                          OnFirstVisuallyNonEmptyPaint)
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidLoadResourceFromMemoryCache,
                          OnDidLoadResourceFromMemoryCache)
@@ -9055,7 +9066,7 @@ index 8c0aa32..5bc3ef8 100644
      IPC_MESSAGE_HANDLER(FrameHostMsg_ValidIronframe,
                          OnValidIronframe)
      IPC_MESSAGE_HANDLER(FrameHostMsg_InvalidIronframe,
-@@ -3485,6 +3487,17 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
+@@ -3480,6 +3482,17 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
    }
  }
  
@@ -9074,7 +9085,7 @@ index 8c0aa32..5bc3ef8 100644
    RecordAction(base::UserMetricsAction("Ironframe.Valid"));
    ironframe_status_ = 1;
 diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
-index be8b9ef..a962147 100644
+index e11d779..48e8532 100644
 --- a/content/browser/web_contents/web_contents_impl.h
 +++ b/content/browser/web_contents/web_contents_impl.h
 @@ -292,6 +292,7 @@ class CONTENT_EXPORT WebContentsImpl
@@ -9085,7 +9096,7 @@ index be8b9ef..a962147 100644
    bool DisplayedInsecureContent() const override;
    void IncrementCapturerCount(const gfx::Size& capture_size) override;
    void DecrementCapturerCount() override;
-@@ -910,6 +911,7 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -919,6 +920,7 @@ class CONTENT_EXPORT WebContentsImpl
                                          const std::string& http_request,
                                          const std::string& mime_type,
                                          ResourceType resource_type);
@@ -9093,20 +9104,23 @@ index be8b9ef..a962147 100644
    void OnValidIronframe();
    void OnInvalidIronframe();
    void OnDidDisplayInsecureContent();
-@@ -1204,6 +1206,8 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -1213,10 +1215,8 @@ class CONTENT_EXPORT WebContentsImpl
  
    //   0 - no ironframe, 1 - valid ironframe, 2 - invalid ironframe
    int  ironframe_status_;
-+
 +  std::string ironframe_origin_;
-   
+ 
+-  // True if this is a secure page which displayed mixed content (loaded
+-  // over HTTP).
+-  
    // True if this is a secure page which displayed insecure content.
    bool displayed_insecure_content_;
+ 
 diff --git a/content/common/frame_messages.h b/content/common/frame_messages.h
-index 9509ebf..e2ec270 100644
+index d618fae..17dc9df 100644
 --- a/content/common/frame_messages.h
 +++ b/content/common/frame_messages.h
-@@ -1461,7 +1461,7 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
+@@ -1467,7 +1467,7 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
  IPC_MESSAGE_ROUTED1(FrameHostMsg_RouteMessageEvent,
                      FrameMsg_PostMessage_Params)
  
@@ -9116,10 +9130,10 @@ index 9509ebf..e2ec270 100644
  IPC_MESSAGE_ROUTED0(FrameHostMsg_InvalidIronframe)
  
 diff --git a/content/public/browser/web_contents.h b/content/public/browser/web_contents.h
-index 6994986..1cbb335 100644
+index a897f1cc..a3c6ea0 100644
 --- a/content/public/browser/web_contents.h
 +++ b/content/public/browser/web_contents.h
-@@ -369,6 +369,9 @@ class WebContents : public PageNavigator,
+@@ -368,6 +368,9 @@ class WebContents : public PageNavigator,
    virtual int IronframeStatus() const = 0;
  
    // True if this is a secure page which displayed insecure content.
@@ -9130,11 +9144,11 @@ index 6994986..1cbb335 100644
  
    // Internal state ------------------------------------------------------------
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index d8b99dc..60d051f 100644
+index a56cb79..81c3697 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
-@@ -4159,6 +4159,10 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
-       response.mimeType().utf8(), WebURLRequestToResourceType(request)));
+@@ -4190,6 +4190,10 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
+       WebURLRequestToResourceType(request)));
  }
  
 +void RenderFrameImpl::ironframeOrigin(const blink::WebCString& origin) {
@@ -9145,10 +9159,10 @@ index d8b99dc..60d051f 100644
    Send(new FrameHostMsg_ValidIronframe(routing_id_));
  }
 diff --git a/content/renderer/render_frame_impl.h b/content/renderer/render_frame_impl.h
-index c345fdc..e5a4b92 100644
+index 3f212cf..4352947 100644
 --- a/content/renderer/render_frame_impl.h
 +++ b/content/renderer/render_frame_impl.h
-@@ -573,6 +573,7 @@ class CONTENT_EXPORT RenderFrameImpl
+@@ -575,6 +575,7 @@ class CONTENT_EXPORT RenderFrameImpl
        const blink::WebURLResponse& response) override;
    void validIronframe() override;
    void invalidIronframe() override;
@@ -9157,10 +9171,10 @@ index c345fdc..e5a4b92 100644
    void didRunInsecureContent(const blink::WebSecurityOrigin& origin,
                               const blink::WebURL& target) override;
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 06b875b..0bc2e82 100644
+index 811016a..beb3770 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
-@@ -5812,6 +5812,7 @@ bool Document::hasFocus() const
+@@ -5811,6 +5811,7 @@ bool Document::hasFocus() const
  
  
  void Document::validIronframe(){
@@ -9169,7 +9183,7 @@ index 06b875b..0bc2e82 100644
      
      // Set attribute.
 diff --git a/third_party/WebKit/Source/core/loader/EmptyClients.h b/third_party/WebKit/Source/core/loader/EmptyClients.h
-index b3159db..e2654e2 100644
+index d1fe032..a1194b5 100644
 --- a/third_party/WebKit/Source/core/loader/EmptyClients.h
 +++ b/third_party/WebKit/Source/core/loader/EmptyClients.h
 @@ -241,6 +241,7 @@ public:
@@ -9238,18 +9252,17 @@ index 738aa9e..b7a7849 100644
 1.9.1
 
 
-From 45f6a02f9ae1d02c267e1da88c61da031fb7e992 Mon Sep 17 00:00:00 2001
+From cfce6a8baff539d93f71738be9d0b0fe142239fb Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 9 Aug 2016 03:44:25 -0400
-Subject: [PATCH 15/15] Ironframe - Remove commented out code
+Subject: [PATCH 15/16] Ironframe - Remove commented out code
 
 ---
  chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc |  2 --
  content/browser/ssl/ssl_policy.cc                          | 11 -----------
  content/browser/web_contents/web_contents_impl.cc          |  6 ------
- content/browser/web_contents/web_contents_impl.h           |  1 -
  content/public/browser/web_contents.h                      |  3 ---
- 5 files changed, 23 deletions(-)
+ 4 files changed, 22 deletions(-)
 
 diff --git a/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc b/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc
 index 81f438b..563c7248 100644
@@ -9265,10 +9278,10 @@ index 81f438b..563c7248 100644
  
  std::string
 diff --git a/content/browser/ssl/ssl_policy.cc b/content/browser/ssl/ssl_policy.cc
-index 4c762bb..9d60c36 100644
+index 09ac996..f94d0c6 100644
 --- a/content/browser/ssl/ssl_policy.cc
 +++ b/content/browser/ssl/ssl_policy.cc
-@@ -179,17 +179,6 @@ void SSLPolicy::UpdateEntry(NavigationEntryImpl* entry,
+@@ -195,17 +195,6 @@ void SSLPolicy::UpdateEntry(NavigationEntryImpl* entry,
  
    InitializeEntryIfNeeded(entry);
  
@@ -9287,10 +9300,10 @@ index 4c762bb..9d60c36 100644
      return;
  
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 5bc3ef8..93856d4 100644
+index 94120d2..b3a303e 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -3502,17 +3502,11 @@ void WebContentsImpl::OnValidIronframe() {
+@@ -3497,17 +3497,11 @@ void WebContentsImpl::OnValidIronframe() {
    RecordAction(base::UserMetricsAction("Ironframe.Valid"));
    ironframe_status_ = 1;
    this->DidChangeVisibleSSLState();
@@ -9308,25 +9321,13 @@ index 5bc3ef8..93856d4 100644
  }
  
  
-diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
-index a962147..e8ded8f 100644
---- a/content/browser/web_contents/web_contents_impl.h
-+++ b/content/browser/web_contents/web_contents_impl.h
-@@ -1206,7 +1206,6 @@ class CONTENT_EXPORT WebContentsImpl
- 
-   //   0 - no ironframe, 1 - valid ironframe, 2 - invalid ironframe
-   int  ironframe_status_;
--
-   std::string ironframe_origin_;
-   
-   // True if this is a secure page which displayed insecure content.
 diff --git a/content/public/browser/web_contents.h b/content/public/browser/web_contents.h
-index 1cbb335..6949e05 100644
+index a3c6ea0..324635b 100644
 --- a/content/public/browser/web_contents.h
 +++ b/content/public/browser/web_contents.h
-@@ -365,10 +365,7 @@ class WebContents : public PageNavigator,
+@@ -364,10 +364,7 @@ class WebContents : public PageNavigator,
+   // Returns the character encoding of the page.
    virtual const std::string& GetEncoding() const = 0;
- 
  
 -  // True if this is a secure page which displayed insecure content.
    virtual int IronframeStatus() const = 0;
@@ -9335,6 +9336,50 @@ index 1cbb335..6949e05 100644
    virtual std::string IronframeOrigin() const = 0;
  
    // True if this is a secure page which displayed insecure content.
+-- 
+1.9.1
+
+
+From bfec59d04759b3ba71196db660a301d2381ff6a6 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Sun, 14 Aug 2016 00:53:41 -0400
+Subject: [PATCH 16/16] Merge upstream master
+
+---
+ content/browser/web_contents/web_contents_impl.cc | 4 ----
+ content/browser/web_contents/web_contents_impl.h  | 4 ----
+ 2 files changed, 8 deletions(-)
+
+diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
+index b3a303e..93556d0 100644
+--- a/content/browser/web_contents/web_contents_impl.cc
++++ b/content/browser/web_contents/web_contents_impl.cc
+@@ -2517,10 +2517,6 @@ void WebContentsImpl::ResizeDueToAutoResize(
+     delegate_->ResizeDueToAutoResize(this, new_size);
+ }
+ 
+-bool WebContentsImpl::DisplayedInsecureContent() const {
+-  return displayed_insecure_content_;
+-}
+-
+ bool WebContentsImpl::DisplayedContentWithCertErrors() const {
+   return displayed_content_with_cert_errors_;
+ }
+diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
+index 48e8532..9f28437 100644
+--- a/content/browser/web_contents/web_contents_impl.h
++++ b/content/browser/web_contents/web_contents_impl.h
+@@ -410,10 +410,6 @@ class CONTENT_EXPORT WebContentsImpl
+   bool GetAllowOtherViews() override;
+ #endif
+ 
+-  // Returns true if this is a secure page which has displayed content
+-  // loaded over insecure HTTP.
+-  bool DisplayedInsecureContent() const;
+-
+   // Returns true if this page has displayed content loaded over HTTPS
+   // with certificate errors.
+   bool DisplayedContentWithCertErrors() const;
 -- 
 1.9.1
 
