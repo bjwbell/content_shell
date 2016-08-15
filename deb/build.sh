@@ -5,4 +5,4 @@ sudo apt-get install dh-buildinfo ninja-build libexif-dev chrpath yasm libopus-d
 bzr branch lp:~chromium-team/chromium-browser/trusty-working
 cd trusty-working
 export ORIG_VERSION="51.0.2704.106"
-bzr builddeb
+bzr builddeb --builder debuild -- -uc -us
