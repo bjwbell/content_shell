@@ -1,8 +1,0 @@
-#!/bin/sh -xe
-
-rm -rf out
-
-
-find . -name Makefile -execdir rm -f {} \;
-find . -name \*.pyc -execdir rm -f {} \;
-find . -name \*.mk -execdir rm -f {} \;
