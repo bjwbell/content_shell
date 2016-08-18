@@ -407,7 +407,7 @@ build-stamp: gyp_env := GYP_GENERATORS=ninja GYP_DEFINES="$(defines) $(browser_d
 build-stamp: BUILD_ARGS := -v -C $(DEB_TAR_SRCDIR)/out/$(BUILD_TYPE)
 build-stamp: debian/chromium-browser.sh
 	@set -eux
-	test ! -e $(SRC_DIR)/out/$(BUILD_TYPE)-chromium
+	test -e $(SRC_DIR)/out/$(BUILD_TYPE)-chromium
 	# Upstream changes often. Fail when they introduce a config flag we don't know about.
 	-diff --ignore-case --suppress-common-lines --unified=0 debian/known_gyp_flags <(sed -e "/: *'<(/{ s,.*'<(,,g; s,).*,,; p; }" -e d build/common.gypi | LC_ALL=C sort -u |grep -v '^\(win_\|mac_\|android_\|.san\|..san\|msvs_\|ios_\|goma_\|windows_\|wix_\|directx_\)') || echo This seems bad.
 
