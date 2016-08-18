@@ -416,22 +416,6 @@ build-stamp: debian/chromium-browser.sh
 	mv -v $(DEB_TAR_SRCDIR)/out/$(BUILD_TYPE) $(DEB_TAR_SRCDIR)/out/$(BUILD_TYPE)-chromium
 	touch $@
 
-build-stamp-ffmpeg-%: gyp_env := GYP_GENERATORS=ninja GYP_DEFINES="$(defines) $(ffmpeg_extra_defines) $(ffmpeg_defines)"
-build-stamp-ffmpeg-%: BUILD_ARGS := -v -C $(DEB_TAR_SRCDIR)/out/$(BUILD_TYPE)
-build-stamp-ffmpeg-%: TARGET := lib/libffmpeg.so
-build-stamp-ffmpeg-%:
-	@set -eux
-	### configure
-	test ! -e $(SRC_DIR)/out/$(BUILD_TYPE)-ffmpeg-$*
-	cd $(SRC_DIR) && $(gyp_env) $(CROSS_BUILD) build/gyp_chromium build/all.gyp $(gyp_params)
-
-	### build
-	$(NINJA) $(BUILD_ARGS) $(TARGET)
-	mkdir -p debian/tmp-$*/$(LIB_DIR)
-	mv -v $(DEB_TAR_SRCDIR)/out/$(BUILD_TYPE) $(DEB_TAR_SRCDIR)/out/$(BUILD_TYPE)-ffmpeg-$*
-	touch $@
-
-
 # These are (leading-slash-less) files that are created by upstream builder,
 # but intentionally not packaged.  The should match very specifically so we
 # know they only match things we should ignore. No false negatives, plz.
@@ -479,47 +463,7 @@ RENAMED_FILE += s,^usr/lib/chromium-browser/chrome_sandbox$$,usr/lib/chromium-br
 #  Executable name is different.
 RENAMED_FILE += s,^usr/lib/chromium-browser/chrome$$,usr/lib/chromium-browser/chromium-browser,
 
-
-###############################################################################################
-# Translations
-
-# New langs with enough coverage to land in official builds
-# (leave empty to accept all new lang)
-patch-translations: T := launchpad-translations
-patch-translations: GRIT_WHITELISTED_LANGS ?= ca@valencia eu gl ug gd
-patch-translations: TRANSLATIONS_TOOLS_BRANCH  := http://bazaar.launchpad.net/~chromium-team/chromium-browser/chromium-translations-tools.head
-patch-translations: TRANSLATIONS_EXPORT_BRANCH := http://bazaar.launchpad.net/~chromium-team/chromium-browser/chromium-translations-exports.head
-patch-translations: GRIT_TEMPLATES := chrome/app/chromium_strings.grd chrome/app/generated_resources.grd components/policy/resources/policy_templates.grd ui/strings/ui_strings.grd webkit/glue/resources/webkit_resources.grd 
-patch-translations: OTHER_GRIT_TEMPLATES := ui/strings/app_locale_settings.grd chrome/app/resources/locale_settings.grd chrome/app/resources/locale_settings_linux.grd 
-patch-translations: MAPPED_GRIT_TEMPLATES := --map-template-names ui/strings/ui_strings.grd=ui/strings/app_strings.grd 
-patch-translations: GRIT_CONVERTER_FLAGS := --create-patches translations-patches --import-gettext ../translations-export --export-grit $(T)/translations-grit --build-gyp-file build/common.gypi --other-grd-files $$(echo $(OTHER_GRIT_TEMPLATES) | tr ' ' ',') $(MAPPED_GRIT_TEMPLATES) 
-ifeq (1,$(WANT_ONLY_WHITELISTED_NEW_LANGS))
-patch-translations: GRIT_CONVERTER_FLAGS += --whitelisted-new-langs $$(echo $(GRIT_WHITELISTED_LANGS) | tr ' ' ',')
-endif
-patch-translations: PATCH_FILE := launchpad_translations.patch
-patch-translations:
-	@set -eux
-	ls $(GRIT_TEMPLATES)
-	ls $(OTHER_GRIT_TEMPLATES)
-	test "$(T)"
-	test -d $(T)
-	test -d $(T)/translations-tools || bzr export $(T)/translations-tools $(TRANSLATIONS_TOOLS_BRANCH)
-	test -d $(T)/translations-export || bzr export $(T)/translations-export $(TRANSLATIONS_EXPORT_BRANCH)
-	( cd $(DEB_TAR_SRCDIR) && $(T)/translations-tools/chromium2pot.py $(GRIT_CONVERTER_FLAGS) $$(ls $(GRIT_TEMPLATES)); )
-	quilt delete "$(PATCH_FILE)" || true
-	quilt new "$(PATCH_FILE)"
-	( cd $(T)/translations-grit && find * -type f ) |while read updatedfile; do \
-		quilt add -P "$(PATCH_FILE)" $(DEB_TAR_SRCDIR)/"$$updatedfile"; \
-		cp $(T)/translations-grit/"$$updatedfile" $(DEB_TAR_SRCDIR)/"$$updatedfile"; \
-	done
-	{ echo "Description: Contributed translations from Launchpad. "; echo; } |quilt header -r "$(PATCH_FILE)"
-	quilt refresh -pab --no-timestamps "$(PATCH_FILE)";
-	echo "Patch needs committing."
-	rm -rf "$(T)"
-
-
-
-.PHONY: binary binary-arch binary-indep build build-arch build-indep clean install install-arch install-indep patch get-packaged-orig-source gos override_dh_* local-install-* patch-translations compare-*
+.PHONY: binary binary-arch binary-indep build build-arch build-indep clean install install-arch install-indep patch get-packaged-orig-source gos override_dh_* local-install-* compare-*
 
 # needed for easy job control, e.g, kill %1
 SHELL := /bin/bash
@@ -527,4 +471,4 @@ SHELL := /bin/bash
 # This changes state for ALL rules in the makefile.
 .ONESHELL:
 
-.DEFAULT: build-stamp build-stamp-ffmpeg-extra
+.DEFAULT: build-stamp

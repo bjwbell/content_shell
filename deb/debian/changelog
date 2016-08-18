@@ -1,5 +1,5 @@
-chromium-browser (51.0.2704.106-0ubuntu1) UNRELEASED; urgency=medium
+ironframe (1.1.1.1-0ubuntu1) UNRELEASED; urgency=medium
 
-  * Upstream release 51.0.2704.106
+  * Upstream release 1.1.1.1
 
- -- Chad MILLER <chad.miller@canonical.com>  Fri, 15 Jul 2016 02:03:31 -0400
+ -- JW Bell <bjwbell@gmail.com>  Fri, 15 Aug 2016 02:03:31 -0400
