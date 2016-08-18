@@ -19,7 +19,7 @@ cd ../../../
 cd chrome-deb
 cp -r ../debian .
 cp -r out/Release out/Release-chromium
-debuild -us -uc
+debuild --no-lintian -us -uc
 
 
 
