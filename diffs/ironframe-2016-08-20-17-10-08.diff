@@ -330,7 +330,7 @@ index efa8ae5..324635b 100644
  
    // Indicates whether the WebContents is being captured (e.g., for screenshots
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 429c817..6944b32 100644
+index f86b82a..32d95bb 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4185,6 +4185,17 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
@@ -668,7 +668,7 @@ new file mode 100644
 index 0000000..6c950c8
 Binary files /dev/null and b/third_party/WebKit/LayoutTests/http/tests/ironframe/tile.gif differ
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index bab77ec..675cf75 100644
+index e528fef..6c5fdca 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -133,6 +133,7 @@
@@ -687,7 +687,7 @@ index bab77ec..675cf75 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2798,6 +2800,8 @@
+@@ -2799,6 +2801,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -696,7 +696,7 @@ index bab77ec..675cf75 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3792,6 +3796,7 @@
+@@ -3793,6 +3797,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -704,7 +704,7 @@ index bab77ec..675cf75 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3872,6 +3877,8 @@
+@@ -3873,6 +3878,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -714,7 +714,7 @@ index bab77ec..675cf75 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 758cfb9..eaa88a2 100644
+index f8d81f7..9de6a55 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -739,7 +739,7 @@ index 758cfb9..eaa88a2 100644
  #include "core/events/ScopedEventQueue.h"
  #include "core/events/VisualViewportResizeEvent.h"
  #include "core/events/VisualViewportScrollEvent.h"
-@@ -186,6 +189,7 @@
+@@ -187,6 +190,7 @@
  #include "core/layout/LayoutView.h"
  #include "core/layout/TextAutosizer.h"
  #include "core/layout/api/LayoutViewItem.h"
@@ -747,7 +747,7 @@ index 758cfb9..eaa88a2 100644
  #include "core/layout/compositing/PaintLayerCompositor.h"
  #include "core/loader/CookieJar.h"
  #include "core/loader/DocumentLoader.h"
-@@ -212,6 +216,9 @@
+@@ -213,6 +217,9 @@
  #include "core/svg/SVGScriptElement.h"
  #include "core/svg/SVGTitleElement.h"
  #include "core/svg/SVGUseElement.h"
@@ -757,7 +757,7 @@ index 758cfb9..eaa88a2 100644
  #include "core/timing/DOMWindowPerformance.h"
  #include "core/timing/Performance.h"
  #include "core/workers/SharedWorkerRepositoryClient.h"
-@@ -393,6 +400,8 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
+@@ -394,6 +401,8 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
      , m_domWindow(m_frame ? m_frame->localDOMWindow() : 0)
      , m_importsController(initializer.importsController())
      , m_contextFeatures(ContextFeatures::defaultSwitch())
@@ -766,7 +766,7 @@ index 758cfb9..eaa88a2 100644
      , m_wellFormed(false)
      , m_printing(false)
      , m_wasPrinting(false)
-@@ -3908,6 +3917,13 @@ void Document::enqueueAnimationFrameEvent(Event* event)
+@@ -3910,6 +3919,13 @@ void Document::enqueueAnimationFrameEvent(Event* event)
      ensureScriptedAnimationController().enqueueEvent(event);
  }
  
@@ -780,7 +780,7 @@ index 758cfb9..eaa88a2 100644
  void Document::enqueueUniqueAnimationFrameEvent(Event* event)
  {
      ensureScriptedAnimationController().enqueuePerFrameEvent(event);
-@@ -5800,6 +5816,145 @@ bool Document::hasFocus() const
+@@ -5802,6 +5818,145 @@ bool Document::hasFocus() const
      return page() && page()->focusController().isDocumentFocused(*this);
  }
  
@@ -926,7 +926,7 @@ index 758cfb9..eaa88a2 100644
  template<unsigned type>
  bool shouldInvalidateNodeListCachesForAttr(const HeapHashSet<WeakMember<const LiveNodeListBase>> nodeLists[], const QualifiedName& attrName)
  {
-@@ -6000,6 +6155,7 @@ DEFINE_TRACE(Document)
+@@ -6002,6 +6157,7 @@ DEFINE_TRACE(Document)
      visitor->trace(m_intersectionObserverData);
      visitor->trace(m_snapCoordinator);
      visitor->trace(m_resizeObserverController);
@@ -1242,7 +1242,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index 5013772..1b81708 100644
+index bdb6381..f3038ca 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -41,6 +41,7 @@
@@ -1253,7 +1253,7 @@ index 5013772..1b81708 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2599,6 +2600,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+@@ -2617,6 +2618,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
              // This was required for slimming paint v1 but is only temporarily
              // needed for slimming paint v2.
              view.compositor()->updateIfNeededRecursive();
