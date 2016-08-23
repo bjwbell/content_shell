@@ -1,5 +1,19 @@
 <html requestVisibility=1>
     <body>
         <img src="paypal.png" style="position:absolute;top:0;left:0">
+        <script>
+         var v = {};
+         function go() {
+             document.documentElement.addEventListener('requestedvisibility', function(e) {
+                 v = JSON.parse(e.message);
+                 console.log('requestedvisiblity: ', v.visible);
+             });
+         }
+
+         if(!document.requestVisibility){
+         } else {
+             window.onload=go;
+         }
+        </script>
     </body>
 </html>
