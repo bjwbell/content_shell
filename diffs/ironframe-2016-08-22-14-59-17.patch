@@ -1,7 +1,7 @@
-From fd5833d444c0b7391ec546f491317e81027ead8a Mon Sep 17 00:00:00 2001
+From e0dd5225d2acf54ff5f107cee54ebacad7322602 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 27 Jun 2016 21:20:47 -0400
-Subject: [PATCH 01/20] Ironframe - Add RequestVisibility
+Subject: [PATCH 01/26] Ironframe - Add RequestVisibility
 
 ---
  third_party/WebKit/Source/core/core.gypi           |   7 ++
@@ -29,7 +29,7 @@ Subject: [PATCH 01/20] Ironframe - Add RequestVisibility
  create mode 100644 third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
 
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index 5c41847..6529468 100644
+index 9221f7e..3e78957 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -134,6 +134,7 @@
@@ -48,7 +48,7 @@ index 5c41847..6529468 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2807,6 +2809,8 @@
+@@ -2809,6 +2811,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -57,7 +57,7 @@ index 5c41847..6529468 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3801,6 +3805,7 @@
+@@ -3803,6 +3807,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -65,7 +65,7 @@ index 5c41847..6529468 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3881,6 +3886,8 @@
+@@ -3883,6 +3888,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -576,7 +576,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index c3f496da..f3117a3 100644
+index bb4e1e1..55a7fcd 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -41,6 +41,7 @@
@@ -604,12 +604,12 @@ index c3f496da..f3117a3 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index dc466c5..b85da38e 100644
+index 8c08ccf..9a1391d 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1282,6 +1282,9 @@ public:
-         HTMLBodyElementOnSelectionChangeAttribute = 1508,
-         ForeignFetchInterception = 1509,
+@@ -1288,6 +1288,9 @@ public:
+         RadioNameMatchingASCIICaseless = 1514,
+         RadioNameMatchingCaseFolding = 1515,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1600,
 +
@@ -618,7 +618,7 @@ index dc466c5..b85da38e 100644
          // numbers of any item, and don't reuse removed slots.
          // Also, run update_use_counter_feature_enum.py in chromium/src/tools/metrics/histograms/
 diff --git a/third_party/WebKit/Source/core/layout/LayoutView.cpp b/third_party/WebKit/Source/core/layout/LayoutView.cpp
-index 0020318..6f2a127 100644
+index b8bd622..5662710 100644
 --- a/third_party/WebKit/Source/core/layout/LayoutView.cpp
 +++ b/third_party/WebKit/Source/core/layout/LayoutView.cpp
 @@ -24,7 +24,9 @@
@@ -835,10 +835,10 @@ index ef5f4744..940a723 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 90ce3afc1e3751bbc92abdb4d8a3290edef3a665 Mon Sep 17 00:00:00 2001
+From 8df19dcbccee89963768577be3dfd0955b910ce7 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 03:58:00 -0400
-Subject: [PATCH 02/20] Ironframe - Add Layout test
+Subject: [PATCH 02/26] Ironframe - Add Layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt    |  35 +++++
@@ -7276,10 +7276,10 @@ HcmV?d00001
 2.10.0.rc0.17.gd63263a
 
 
-From c02f39b3de61e41ccd9cf0dd9b63260de186cf0d Mon Sep 17 00:00:00 2001
+From 068336ca052b080016b3880ecba2c39fe641cbb4 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 04:12:21 -0400
-Subject: [PATCH 03/20] Ironframe - Fix layout test
+Subject: [PATCH 03/26] Ironframe - Fix layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt          |  2 +-
@@ -7357,10 +7357,10 @@ index b79dcbd..53ad2ec 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 86e503a459310d6b2e77ab9070b9831744890824 Mon Sep 17 00:00:00 2001
+From 324d24afd4526c3a1aee71903ff2f52d2ae6b676 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 06:53:57 -0400
-Subject: [PATCH 04/20] IronFrame - Fix nits in layout test
+Subject: [PATCH 04/26] IronFrame - Fix nits in layout test
 
 ---
  .../http/tests/ironframe/ironframe.html            | 49 +++++++++++-----------
@@ -7477,10 +7477,10 @@ index cb9bcb0..5d2f5b0f 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 94a89bbb8272e3b833808b1833bbc4fc63bd6ee0 Mon Sep 17 00:00:00 2001
+From 5107b3a3f1972ff3f13d41981ff57f49103208f5 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:04:37 -0400
-Subject: [PATCH 05/20] IronFrame - Remove unused files from layout test
+Subject: [PATCH 05/26] IronFrame - Remove unused files from layout test
 
 ---
  .../ironframe/resources/ironframe-expected.txt     |   1 -
@@ -7665,10 +7665,10 @@ index 9e4f0f1..0000000
 2.10.0.rc0.17.gd63263a
 
 
-From 3f12f2e3f3745f4959c917de002a72abc97b1477 Mon Sep 17 00:00:00 2001
+From bf947297d9c34554134a844105e9533a3917e3fc Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:14:24 -0400
-Subject: [PATCH 06/20] IronFrame - Fix nits in layout test
+Subject: [PATCH 06/26] IronFrame - Fix nits in layout test
 
 ---
  .../http/tests/ironframe/ironframe.html            | 104 ++++++++--------
@@ -7935,10 +7935,10 @@ index cb09a11..41b1a6f 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 12704ceb008aa73468eb0d040cc0b77f9c6cd53e Mon Sep 17 00:00:00 2001
+From 5ce0d229a23827d50a85251c1b232213ce4ab0b4 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 09:21:04 -0400
-Subject: [PATCH 07/20] IronFrame - Use testharness.js in layout test
+Subject: [PATCH 07/26] IronFrame - Use testharness.js in layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt    |  35 --------
@@ -8176,10 +8176,10 @@ index 41b1a6f..6445755 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 4a64225c491afca0dc3cb54334b05bd86fddf21f Mon Sep 17 00:00:00 2001
+From 01ff1bf186e66b0c76c79c085f722ac049ed9ef0 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 8 Jul 2016 20:05:03 -0400
-Subject: [PATCH 08/20] IronFrame - Fix regression with RequestVisibility
+Subject: [PATCH 08/26] IronFrame - Fix regression with RequestVisibility
  compositing reason
 
 ---
@@ -8235,10 +8235,10 @@ index abe5f50..c176a29 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 2ae1841dc4a6fceef01d23aa2621807b513c1441 Mon Sep 17 00:00:00 2001
+From cc256f3ab4d5139fa8406fc590dfb05f2b3256f0 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 19 Jul 2016 23:23:39 -0400
-Subject: [PATCH 09/20] Ironframe - Set EventTypeName in constructor
+Subject: [PATCH 09/26] Ironframe - Set EventTypeName in constructor
 
 ---
  third_party/WebKit/Source/core/dom/Document.cpp                    | 1 -
@@ -8274,10 +8274,10 @@ index 5f17327..c32b661 100644
 2.10.0.rc0.17.gd63263a
 
 
-From ebca3549d952b6939c3a8e9a99c3959088604441 Mon Sep 17 00:00:00 2001
+From 25f88aba3af0cae362711670c98cf1fa767378d6 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 29 Jul 2016 14:25:22 -0400
-Subject: [PATCH 10/20] IronFrame - Avoid duplicate events
+Subject: [PATCH 10/26] IronFrame - Avoid duplicate events
 
 ---
  third_party/WebKit/Source/core/dom/Document.cpp | 10 +++++++++-
@@ -8308,10 +8308,10 @@ index 49950a6..16b210d 100644
 2.10.0.rc0.17.gd63263a
 
 
-From aa6dcee30ccd21705a4e4fc79f6912aba99e0f48 Mon Sep 17 00:00:00 2001
+From 0c8787ad1a7bce7e0c92255038a3f8ab159958aa Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 07:43:24 -0400
-Subject: [PATCH 11/20] Ironframe - First pass on adding ironframe to the
+Subject: [PATCH 11/26] Ironframe - First pass on adding ironframe to the
  location_bar
 
 ---
@@ -8395,7 +8395,7 @@ index 5868a5d..809d794 100644
  IPC_MESSAGE_ROUTED0(FrameHostMsg_DidDisplayInsecureContent)
  
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index f86b82a..227ec97 100644
+index 7c13c18..7ee3189 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4185,6 +4185,13 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
@@ -8557,10 +8557,10 @@ index ebde5da..738aa9e 100644
 2.10.0.rc0.17.gd63263a
 
 
-From b8af961962009009c892ce2ea7c45e9b546ac6b1 Mon Sep 17 00:00:00 2001
+From c3d5bcb3e31bf5a4e72896aed6ec31e94acfb8c8 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 18:29:14 -0400
-Subject: [PATCH 12/20] Ironframe - Working version of valid/InvalidIronframe()
+Subject: [PATCH 12/26] Ironframe - Working version of valid/InvalidIronframe()
  functions
 
 ---
@@ -8682,10 +8682,10 @@ index efa8ae5..a897f1cc 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 4661b8ca67912c1ff86bc460202d482ce2c03a79 Mon Sep 17 00:00:00 2001
+From 855c1b126338845e7b8876231b1ed30a408f523a Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 22:06:37 -0400
-Subject: [PATCH 13/20] Ironframe - Add IronframeStatus api
+Subject: [PATCH 13/26] Ironframe - Add IronframeStatus api
 
 ---
  .../ui/toolbar/chrome_toolbar_model_delegate.cc    | 47 ++++++++++++++++++++++
@@ -8943,10 +8943,10 @@ index 59590f1..f8c3cda 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 1850c7375bda8635dc0a340f77ebf847e0f7fc16 Mon Sep 17 00:00:00 2001
+From 7306a41781e2f71605270c63c1680ede1de072da Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 3 Aug 2016 04:02:03 -0400
-Subject: [PATCH 14/20] Ironframe - Add origin text to location bar
+Subject: [PATCH 14/26] Ironframe - Add origin text to location bar
 
 ---
  chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc |  8 ++++++++
@@ -9189,7 +9189,7 @@ index a897f1cc..a3c6ea0 100644
  
    // Internal state ------------------------------------------------------------
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 227ec97..32d95bb 100644
+index 7ee3189..e99dd22 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4185,6 +4185,10 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
@@ -9297,10 +9297,10 @@ index 738aa9e..b7a7849 100644
 2.10.0.rc0.17.gd63263a
 
 
-From bda6f29e57016e95073c2c47812c25fda15c2526 Mon Sep 17 00:00:00 2001
+From f6f253de16b312ea9d13c7450f279eb94918ae2c Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 9 Aug 2016 03:44:25 -0400
-Subject: [PATCH 15/20] Ironframe - Remove commented out code
+Subject: [PATCH 15/26] Ironframe - Remove commented out code
 
 ---
  chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc |  2 --
@@ -9385,10 +9385,10 @@ index a3c6ea0..324635b 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 034ba6945a019af498041e7204063601aaed9371 Mon Sep 17 00:00:00 2001
+From 64409f104ef53ea3e16d78355b76d0bbc5caa630 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sun, 14 Aug 2016 00:53:41 -0400
-Subject: [PATCH 16/20] Merge upstream master
+Subject: [PATCH 16/26] Merge upstream master
 
 ---
  content/browser/web_contents/web_contents_impl.cc | 4 ----
@@ -9429,10 +9429,10 @@ index 2fa9e16..ed0927e 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 5b48b6dea7018e12bc11428b960c1f07602aaddf Mon Sep 17 00:00:00 2001
+From 3c0064f274736b1be7990ff6c0f19908ef7656d9 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sun, 14 Aug 2016 15:31:14 -0400
-Subject: [PATCH 17/20] Ironframe - Cleanup location bar code
+Subject: [PATCH 17/26] Ironframe - Cleanup location bar code
 
 ---
  chrome/browser/ui/views/location_bar/location_bar_view.cc | 12 +++++++-----
@@ -9493,10 +9493,10 @@ index daefa4b..80bf549 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 23a4d765f4c2aeca847dd8ce239e6e78f1e04a4b Mon Sep 17 00:00:00 2001
+From 5406f5f9c44fb81a7a03b0de799268afee2d8983 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sat, 20 Aug 2016 02:28:14 -0400
-Subject: [PATCH 18/20] Ironframe - Fix upstream merge
+Subject: [PATCH 18/26] Ironframe - Fix upstream merge
 
 ---
  .../ui/toolbar/chrome_toolbar_model_delegate.cc    | 35 ----------------------
@@ -9565,10 +9565,10 @@ index 8577307..711c6f4 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 9288795bed2d01470ed7a87ae1aba773355b2ae0 Mon Sep 17 00:00:00 2001
+From be01f8127fbba38e66884e9ed0a7dcca4394f05b Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sat, 20 Aug 2016 13:53:56 -0400
-Subject: [PATCH 19/20] Ironframe - Fix build
+Subject: [PATCH 19/26] Ironframe - Fix build
 
 ---
  components/toolbar/toolbar_model.h          | 4 ----
@@ -9611,10 +9611,10 @@ index 5fcac02..6cc8255 100644
 2.10.0.rc0.17.gd63263a
 
 
-From ca9e497648331511a34d7b0a717385a868107cd2 Mon Sep 17 00:00:00 2001
+From 72106b29b67913d5ef886d76513502118e759bc1 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 00:04:57 -0400
-Subject: [PATCH 20/20] Ironframe - Remove unused graphics layer crossroot
+Subject: [PATCH 20/26] Ironframe - Remove unused graphics layer crossroot
  parent
 
 ---
@@ -9678,6 +9678,312 @@ index 940a723..832767e 100644
      const Vector<GraphicsLayer*>& children() const { return m_children; }
      // Returns true if the child list changed.
      bool setChildren(const GraphicsLayerVector&);
+-- 
+2.10.0.rc0.17.gd63263a
+
+
+From f7354dd6eb1a19f070018a34efb3d99cf2de6b95 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Tue, 23 Aug 2016 03:28:24 -0400
+Subject: [PATCH 21/26] Ironframe - Improve code formatting
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 35 +++++++++++++------------
+ 1 file changed, 18 insertions(+), 17 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 9de6a55..824d383 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5866,49 +5866,50 @@ void Document::requestVisibilityImpl(){
+ 
+     IntRect bounds = this->documentElement()->boundsInViewport();
+     IntRect origBounds = bounds;
+-
+     testWindow = this->domWindow();
+     float sx, sy;
+-    sx=sy=0;
+-    bool moreElements=true;
++    sx = sy = 0;
++    bool moreElements = true;
+     Element *testElement = this->documentElement();
+     Document *testDocument = this;
+ 
+     bool do_move = true;
+-    bool hostile=false;
++    bool hostile = false;
+     while(moreElements){
+         if(testDocument->documentElement()==testElement){
+-            testElement=testDocument->domWindow()->frameElement();
+-            testDocument=&testElement->document();
++            testElement = testDocument->domWindow()->frameElement();
++            testDocument = &testElement->document();
+             sx+=testWindow->scrollX();
+             sy+=testWindow->scrollY();
+-            testWindow=testWindow->parent();
++            testWindow = testWindow->parent();
+         } else {
+-            testElement=testElement->parentElement();
++            testElement = testElement->parentElement();
+         }
+         // HACK!! Remove use of childrenClipRect
+         IntRect child = IntRect(testElement->layoutObject()->enclosingLayer()->clipper().childrenClipRect());
+-        if(testElement->tagName()=="foreignObject"){
+-            hostile=true;
++        if(testElement->tagName() == "foreignObject"){
++            hostile = true;
+         }
+-        if(testElement->tagName()=="IFRAME") {
++        if(testElement->tagName() == "IFRAME") {
+             IntRect ifrBounds = testElement->boundsInViewport();
+             child.setWidth(fmin(ifrBounds.size().width(), child.size().width()));
+             child.setHeight(fmin(ifrBounds.size().height(), child.size().height()));
+         }
+         bounds.intersect(child);
+         if(testElement == this->domWindow()->top()->document()->documentElement()) {
+-            moreElements=false;
++            moreElements = false;
+         }
+     }
++
+     // intersect with visible viewport.  XXX stop using IntRect, start using FloatRect
+     FrameView *mainFrameView = this->page()->deprecatedLocalMainFrame()->view();
+     LayoutRect mainViewRect = mainFrameView->layoutView()->viewRect();
++
+     IntRect mainViewIntRect = IntRect(mainViewRect);
+     bounds.intersect(mainViewIntRect);
+ 
+     FloatRect mainViewFloatRect = FloatRect(mainViewRect);
+-    if(!bounds.size().width() || !bounds.size().height()) do_move=false;
++    if(!bounds.size().width() || !bounds.size().height()) do_move = false;
+     // XXX for each registered visibility req, look for collisions with us, if so block the raise
+     VisibilityDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
+ 
+@@ -5918,17 +5919,17 @@ void Document::requestVisibilityImpl(){
+             // XXX DMK better would be to run bounds.subtract but then there'd have to *be* a bounds.subtract method.
+             //         Also, subtraction is a not quite so defined as intersection.  Largest contiguous from 0,0?
+             //         Largest contiguous from any corner?  God forbid, pile-o-rects?  Let's just run for the hills for now
+-            hostile=true;
++            hostile = true;
+             //return;  // there is a rather fun attack if you try this
+         }
+     }
+ 
+     if(hostile){
+-        do_move=false;
++        do_move = false;
+         bounds.setWidth(0);
+         bounds.setHeight(0);
+     }
+-    if(this->documentElement()->hasAttribute("visibilityOnly")) { do_move=false; } // XXX DMK expand on this, there are uses
++    if(this->documentElement()->hasAttribute("visibilityOnly")) { do_move = false; } // XXX DMK expand on this, there are uses
+     if (do_move) {
+         FloatRect fbounds = bounds;
+         this->set_requestVisibilityRect(&fbounds);
+@@ -5939,7 +5940,7 @@ void Document::requestVisibilityImpl(){
+         iframeGraphicsLayer->setMasksToBounds(true);
+         iframeGraphicsLayer->setOpacity(1.0);
+         IntSize offset = IntSize(bounds.x()-origBounds.x()-topDocument().domWindow()->scrollX(), bounds.y()-origBounds.y()-topDocument().domWindow()->scrollY());
+-        iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);// const IntSize & offset,ShouldSetNeedsDisplay shouldSetNeedsDisplay)
++        iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);
+     }
+     // report.  sx and sy are
+     bounds.setWidth(fmax(bounds.size().width() - sx, 0));
+-- 
+2.10.0.rc0.17.gd63263a
+
+
+From 8f0d671a606fd1959314e1576957c7885ecb53d9 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Tue, 23 Aug 2016 03:30:19 -0400
+Subject: [PATCH 22/26] Ironframe - Comment out buggy scroll handling
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 824d383..079c817 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5905,8 +5905,9 @@ void Document::requestVisibilityImpl(){
+     FrameView *mainFrameView = this->page()->deprecatedLocalMainFrame()->view();
+     LayoutRect mainViewRect = mainFrameView->layoutView()->viewRect();
+ 
+-    IntRect mainViewIntRect = IntRect(mainViewRect);
+-    bounds.intersect(mainViewIntRect);
++    // TODO: Buggy interaction with scrolling.
++    // IntRect mainViewIntRect = IntRect(mainViewRect);
++    // bounds.intersect(mainViewIntRect);
+ 
+     FloatRect mainViewFloatRect = FloatRect(mainViewRect);
+     if(!bounds.size().width() || !bounds.size().height()) do_move = false;
+-- 
+2.10.0.rc0.17.gd63263a
+
+
+From c82d2b794b324db96de411f3d860ce92c5f981db Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Tue, 23 Aug 2016 15:57:42 -0400
+Subject: [PATCH 23/26] Ironframe - Remove commented out code
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 079c817..4eaa398 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5821,16 +5821,11 @@ bool Document::hasFocus() const
+ 
+ void Document::validIronframe(){
+     m_frame->loader().client()->ironframeOrigin(this->origin().ascii());
+-    m_frame->loader().client()->validIronframe();
+-    
+-    // Set attribute.
+-    //this->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
++    m_frame->loader().client()->validIronframe();    
+ }
+ 
+ void Document::invalidIronframe(){
+     m_frame->loader().client()->invalidIronframe();
+-    // Set attribute.
+-    //this->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
+ }
+ 
+ 
+-- 
+2.10.0.rc0.17.gd63263a
+
+
+From 33f1325cd6f93713ac2afdeb8dc5e2fccf2dc195 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Tue, 23 Aug 2016 16:52:23 -0400
+Subject: [PATCH 24/26] Ironframe - Add dummy scroll for LayoutTest to receive
+ initial event
+
+---
+ third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html   | 5 +++--
+ .../LayoutTests/http/tests/ironframe/resources/protected3.html       | 2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html b/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
+index 1bc6cdc..79978b4 100644
+--- a/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
++++ b/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
+@@ -16,11 +16,12 @@
+              assert_equals(document.getElementById("result").innerHTML, "PASS", "Scroll incorrect");
+          });
+          t.done();
+-     }, 2000);
++     }, 3000);
+     </script>
+     <script>
+      function scrollWindow() {
+-         setTimeout(function(){window.scrollTo(0, 100);}, 1000);
++         setTimeout(function(){window.scrollTo(0, 1);}, 1000);
++         setTimeout(function(){window.scrollTo(0, 100);}, 2000);
+      }
+      window.addEventListener("load", scrollWindow, false);
+     </script>
+diff --git a/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html b/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
+index 9824401..361fc37 100644
+--- a/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
++++ b/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
+@@ -30,7 +30,7 @@
+                  width0 = v.visible.width;
+                  height0 = v.visible.height;
+              } else if (width0 != v.visible.width || height0 != v.visible.height) {
+-                 if (v.visible.width != 300 || v.visible.height != 92) {
++                 if (v.visible.width != 300 || v.visible.height != 91) {
+                      window.top.document.getElementById("result").innerHTML = "FAIL";
+                  } else {
+                      window.top.document.getElementById("result").innerHTML = "PASS";
+-- 
+2.10.0.rc0.17.gd63263a
+
+
+From 0297e80d8e7b406ef64d441ca1a1d93c2bff0b60 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Tue, 23 Aug 2016 18:18:54 -0400
+Subject: [PATCH 25/26] Ironframe - Fix scrolling with ironframe layouttest
+
+---
+ .../http/tests/ironframe/resources/protected3.html            |  2 +-
+ third_party/WebKit/Source/core/dom/Document.cpp               | 11 +++++++----
+ 2 files changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html b/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
+index 361fc37..9824401 100644
+--- a/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
++++ b/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
+@@ -30,7 +30,7 @@
+                  width0 = v.visible.width;
+                  height0 = v.visible.height;
+              } else if (width0 != v.visible.width || height0 != v.visible.height) {
+-                 if (v.visible.width != 300 || v.visible.height != 91) {
++                 if (v.visible.width != 300 || v.visible.height != 92) {
+                      window.top.document.getElementById("result").innerHTML = "FAIL";
+                  } else {
+                      window.top.document.getElementById("result").innerHTML = "PASS";
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 4eaa398..9ab8882 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5900,9 +5900,8 @@ void Document::requestVisibilityImpl(){
+     FrameView *mainFrameView = this->page()->deprecatedLocalMainFrame()->view();
+     LayoutRect mainViewRect = mainFrameView->layoutView()->viewRect();
+ 
+-    // TODO: Buggy interaction with scrolling.
+-    // IntRect mainViewIntRect = IntRect(mainViewRect);
+-    // bounds.intersect(mainViewIntRect);
++    IntRect mainViewIntRect = IntRect(mainViewRect);
++    bounds.intersect(mainViewIntRect);
+ 
+     FloatRect mainViewFloatRect = FloatRect(mainViewRect);
+     if(!bounds.size().width() || !bounds.size().height()) do_move = false;
+@@ -5930,7 +5929,11 @@ void Document::requestVisibilityImpl(){
+         FloatRect fbounds = bounds;
+         this->set_requestVisibilityRect(&fbounds);
+         rootGraphicsLayer->addChild(iframeGraphicsLayer);
+-        iframeGraphicsLayer->setPosition(FloatPoint(bounds.x(), bounds.y()));
++
++        // TODO: Use bounds not origBounds:
++        // bounds.intersect(mainViewIntRect) has buggy interaction with scrolling.
++        iframeGraphicsLayer->setPosition(FloatPoint(origBounds.x(), origBounds.y()));
++
+         iframeGraphicsLayer->setSize(FloatSize(bounds.size().width(), bounds.size().height()));
+         iframeGraphicsLayer->setBackgroundColor(Color::black);
+         iframeGraphicsLayer->setMasksToBounds(true);
+-- 
+2.10.0.rc0.17.gd63263a
+
+
+From 6edd814524f8903c1a0ca4c172acbc233c81baa0 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Tue, 23 Aug 2016 20:18:16 -0400
+Subject: [PATCH 26/26] Ironframe - Add comment on duplicate events and page
+ reload interaction
+
+---
+ third_party/WebKit/Source/core/dom/Document.cpp | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
+index 9ab8882..42cea0d 100644
+--- a/third_party/WebKit/Source/core/dom/Document.cpp
++++ b/third_party/WebKit/Source/core/dom/Document.cpp
+@@ -5946,6 +5946,9 @@ void Document::requestVisibilityImpl(){
+     bounds.setHeight(fmax(bounds.size().height()- sy, 0));
+     //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
+     String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
++
++    // TODO: With static local, on page reload if the new
++    // event matches the previous event then it's not reported.
+     DEFINE_STATIC_LOCAL(String, prev_event, ());
+     bool duplicate = false;
+     if (s == prev_event) {
 -- 
 2.10.0.rc0.17.gd63263a
 
