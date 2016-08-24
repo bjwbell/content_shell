@@ -330,7 +330,7 @@ index efa8ae5..324635b 100644
  
    // Indicates whether the WebContents is being captured (e.g., for screenshots
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index f86b82a..32d95bb 100644
+index 7c13c18..e99dd22 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4185,6 +4185,17 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
@@ -367,10 +367,10 @@ index a2b0c2e..4352947 100644
                               const blink::WebURL& target) override;
 diff --git a/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html b/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
 new file mode 100644
-index 0000000..1bc6cdc
+index 0000000..79978b4
 --- /dev/null
 +++ b/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
-@@ -0,0 +1,66 @@
+@@ -0,0 +1,67 @@
 +<!DOCTYPE html>
 +<script src="/resources/testharness.js"></script>
 +<script src="/resources/testharnessreport.js"></script>
@@ -389,11 +389,12 @@ index 0000000..1bc6cdc
 +             assert_equals(document.getElementById("result").innerHTML, "PASS", "Scroll incorrect");
 +         });
 +         t.done();
-+     }, 2000);
++     }, 3000);
 +    </script>
 +    <script>
 +     function scrollWindow() {
-+         setTimeout(function(){window.scrollTo(0, 100);}, 1000);
++         setTimeout(function(){window.scrollTo(0, 1);}, 1000);
++         setTimeout(function(){window.scrollTo(0, 100);}, 2000);
 +     }
 +     window.addEventListener("load", scrollWindow, false);
 +    </script>
@@ -668,7 +669,7 @@ new file mode 100644
 index 0000000..6c950c8
 Binary files /dev/null and b/third_party/WebKit/LayoutTests/http/tests/ironframe/tile.gif differ
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index 5c41847..6529468 100644
+index 9221f7e..3e78957 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -134,6 +134,7 @@
@@ -687,7 +688,7 @@ index 5c41847..6529468 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2807,6 +2809,8 @@
+@@ -2809,6 +2811,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -696,7 +697,7 @@ index 5c41847..6529468 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3801,6 +3805,7 @@
+@@ -3803,6 +3807,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -704,7 +705,7 @@ index 5c41847..6529468 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3881,6 +3886,8 @@
+@@ -3883,6 +3888,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -714,7 +715,7 @@ index 5c41847..6529468 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index f8d81f7..9de6a55 100644
+index f8d81f7..42cea0d 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -780,23 +781,18 @@ index f8d81f7..9de6a55 100644
  void Document::enqueueUniqueAnimationFrameEvent(Event* event)
  {
      ensureScriptedAnimationController().enqueuePerFrameEvent(event);
-@@ -5802,6 +5818,145 @@ bool Document::hasFocus() const
+@@ -5802,6 +5818,148 @@ bool Document::hasFocus() const
      return page() && page()->focusController().isDocumentFocused(*this);
  }
  
 +
 +void Document::validIronframe(){
 +    m_frame->loader().client()->ironframeOrigin(this->origin().ascii());
-+    m_frame->loader().client()->validIronframe();
-+    
-+    // Set attribute.
-+    //this->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
++    m_frame->loader().client()->validIronframe();    
 +}
 +
 +void Document::invalidIronframe(){
 +    m_frame->loader().client()->invalidIronframe();
-+    // Set attribute.
-+    //this->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
 +}
 +
 +
@@ -832,49 +828,50 @@ index f8d81f7..9de6a55 100644
 +
 +    IntRect bounds = this->documentElement()->boundsInViewport();
 +    IntRect origBounds = bounds;
-+
 +    testWindow = this->domWindow();
 +    float sx, sy;
-+    sx=sy=0;
-+    bool moreElements=true;
++    sx = sy = 0;
++    bool moreElements = true;
 +    Element *testElement = this->documentElement();
 +    Document *testDocument = this;
 +
 +    bool do_move = true;
-+    bool hostile=false;
++    bool hostile = false;
 +    while(moreElements){
 +        if(testDocument->documentElement()==testElement){
-+            testElement=testDocument->domWindow()->frameElement();
-+            testDocument=&testElement->document();
++            testElement = testDocument->domWindow()->frameElement();
++            testDocument = &testElement->document();
 +            sx+=testWindow->scrollX();
 +            sy+=testWindow->scrollY();
-+            testWindow=testWindow->parent();
++            testWindow = testWindow->parent();
 +        } else {
-+            testElement=testElement->parentElement();
++            testElement = testElement->parentElement();
 +        }
 +        // HACK!! Remove use of childrenClipRect
 +        IntRect child = IntRect(testElement->layoutObject()->enclosingLayer()->clipper().childrenClipRect());
-+        if(testElement->tagName()=="foreignObject"){
-+            hostile=true;
++        if(testElement->tagName() == "foreignObject"){
++            hostile = true;
 +        }
-+        if(testElement->tagName()=="IFRAME") {
++        if(testElement->tagName() == "IFRAME") {
 +            IntRect ifrBounds = testElement->boundsInViewport();
 +            child.setWidth(fmin(ifrBounds.size().width(), child.size().width()));
 +            child.setHeight(fmin(ifrBounds.size().height(), child.size().height()));
 +        }
 +        bounds.intersect(child);
 +        if(testElement == this->domWindow()->top()->document()->documentElement()) {
-+            moreElements=false;
++            moreElements = false;
 +        }
 +    }
++
 +    // intersect with visible viewport.  XXX stop using IntRect, start using FloatRect
 +    FrameView *mainFrameView = this->page()->deprecatedLocalMainFrame()->view();
 +    LayoutRect mainViewRect = mainFrameView->layoutView()->viewRect();
++
 +    IntRect mainViewIntRect = IntRect(mainViewRect);
 +    bounds.intersect(mainViewIntRect);
 +
 +    FloatRect mainViewFloatRect = FloatRect(mainViewRect);
-+    if(!bounds.size().width() || !bounds.size().height()) do_move=false;
++    if(!bounds.size().width() || !bounds.size().height()) do_move = false;
 +    // XXX for each registered visibility req, look for collisions with us, if so block the raise
 +    VisibilityDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
 +
@@ -884,34 +881,41 @@ index f8d81f7..9de6a55 100644
 +            // XXX DMK better would be to run bounds.subtract but then there'd have to *be* a bounds.subtract method.
 +            //         Also, subtraction is a not quite so defined as intersection.  Largest contiguous from 0,0?
 +            //         Largest contiguous from any corner?  God forbid, pile-o-rects?  Let's just run for the hills for now
-+            hostile=true;
++            hostile = true;
 +            //return;  // there is a rather fun attack if you try this
 +        }
 +    }
 +
 +    if(hostile){
-+        do_move=false;
++        do_move = false;
 +        bounds.setWidth(0);
 +        bounds.setHeight(0);
 +    }
-+    if(this->documentElement()->hasAttribute("visibilityOnly")) { do_move=false; } // XXX DMK expand on this, there are uses
++    if(this->documentElement()->hasAttribute("visibilityOnly")) { do_move = false; } // XXX DMK expand on this, there are uses
 +    if (do_move) {
 +        FloatRect fbounds = bounds;
 +        this->set_requestVisibilityRect(&fbounds);
 +        rootGraphicsLayer->addChild(iframeGraphicsLayer);
-+        iframeGraphicsLayer->setPosition(FloatPoint(bounds.x(), bounds.y()));
++
++        // TODO: Use bounds not origBounds:
++        // bounds.intersect(mainViewIntRect) has buggy interaction with scrolling.
++        iframeGraphicsLayer->setPosition(FloatPoint(origBounds.x(), origBounds.y()));
++
 +        iframeGraphicsLayer->setSize(FloatSize(bounds.size().width(), bounds.size().height()));
 +        iframeGraphicsLayer->setBackgroundColor(Color::black);
 +        iframeGraphicsLayer->setMasksToBounds(true);
 +        iframeGraphicsLayer->setOpacity(1.0);
 +        IntSize offset = IntSize(bounds.x()-origBounds.x()-topDocument().domWindow()->scrollX(), bounds.y()-origBounds.y()-topDocument().domWindow()->scrollY());
-+        iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);// const IntSize & offset,ShouldSetNeedsDisplay shouldSetNeedsDisplay)
++        iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);
 +    }
 +    // report.  sx and sy are
 +    bounds.setWidth(fmax(bounds.size().width() - sx, 0));
 +    bounds.setHeight(fmax(bounds.size().height()- sy, 0));
 +    //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
 +    String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
++
++    // TODO: With static local, on page reload if the new
++    // event matches the previous event then it's not reported.
 +    DEFINE_STATIC_LOCAL(String, prev_event, ());
 +    bool duplicate = false;
 +    if (s == prev_event) {
@@ -926,7 +930,7 @@ index f8d81f7..9de6a55 100644
  template<unsigned type>
  bool shouldInvalidateNodeListCachesForAttr(const HeapHashSet<WeakMember<const LiveNodeListBase>> nodeLists[], const QualifiedName& attrName)
  {
-@@ -6002,6 +6157,7 @@ DEFINE_TRACE(Document)
+@@ -6002,6 +6160,7 @@ DEFINE_TRACE(Document)
      visitor->trace(m_intersectionObserverData);
      visitor->trace(m_snapCoordinator);
      visitor->trace(m_resizeObserverController);
@@ -1242,7 +1246,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index c3f496da..f3117a3 100644
+index bb4e1e1..55a7fcd 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -41,6 +41,7 @@
@@ -1270,12 +1274,12 @@ index c3f496da..f3117a3 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index dc466c5..b85da38e 100644
+index 8c08ccf..9a1391d 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1282,6 +1282,9 @@ public:
-         HTMLBodyElementOnSelectionChangeAttribute = 1508,
-         ForeignFetchInterception = 1509,
+@@ -1288,6 +1288,9 @@ public:
+         RadioNameMatchingASCIICaseless = 1514,
+         RadioNameMatchingCaseFolding = 1515,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1600,
 +
@@ -1284,7 +1288,7 @@ index dc466c5..b85da38e 100644
          // numbers of any item, and don't reuse removed slots.
          // Also, run update_use_counter_feature_enum.py in chromium/src/tools/metrics/histograms/
 diff --git a/third_party/WebKit/Source/core/layout/LayoutView.cpp b/third_party/WebKit/Source/core/layout/LayoutView.cpp
-index 0020318..6f2a127 100644
+index b8bd622..5662710 100644
 --- a/third_party/WebKit/Source/core/layout/LayoutView.cpp
 +++ b/third_party/WebKit/Source/core/layout/LayoutView.cpp
 @@ -24,7 +24,9 @@
