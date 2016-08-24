@@ -1,7 +1,5 @@
 // observer.js
 
-function logImpression() { console.log("intersection observer"); }
-
 function isVisible(boundingClientRect, intersectionRect) {
   return ((intersectionRect.width * intersectionRect.height) /
           (boundingClientRect.width * boundingClientRect.height) >= 0.5);
