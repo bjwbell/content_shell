@@ -1,5 +1,5 @@
 <html requestVisibility=1>
-    <body>
+    <body id="iframe3">
         <script>
          var enabled=false;
          if(parent.frameElement.id!="unprotfr"){
@@ -49,6 +49,35 @@
              });
          }
          if(enabled) { window.onload=go; }
+        </script>
+
+                <script>
+         var v = {};
+
+         function isVisible(boundingClientRect, intersectionRect) {
+             return ((intersectionRect.width * intersectionRect.height) /
+                 (boundingClientRect.width * boundingClientRect.height) >= 0.5);
+         }
+
+         function processChanges(changes) {
+             changes.forEach(function(changeRecord) {
+                 console.log("intersection observer - changeRecord:", changeRecord); 
+                 console.log("intersection observer - isVisible:", isVisible(changeRecord.boundingClientRect, changeRecord.intersectionRect));
+             });
+         }
+
+         if(!document.requestVisibility){
+         } else {
+             function logImpression() { console.log("intersection observer"); }
+
+             var observer = new IntersectionObserver(
+                 processChanges,
+                 { threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] } 
+             );
+
+             var observerId = document.querySelector('#iframe3');
+             observer.observe(observerId);
+         }
         </script>
     </body>
 </html>
