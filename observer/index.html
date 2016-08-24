@@ -3,8 +3,9 @@
         
     </head>
     <body>
-    <input onchange="doblur(this)"    type="checkbox">Blur</input><br/>
-    <iframe id="iframe1" src="iframe1.html" style="height:270;width:333;"></iframe>
+        <input onchange="doblur(this)"    type="checkbox">Blur</input>
+        <input onchange="dotransparent(this)"    type="checkbox">Transparent</input><br/>
+    <iframe id="iframe1" src="iframe1.html" style="height:270;width:333"></iframe>
     <br/>
     <br/>
     <br/>
@@ -151,6 +152,10 @@
        function doblur(e){
            if(e.checked) { iframe1.style.webkitFilter="blur(10px)"; }
            else          { iframe1.style.webkitFilter=""; }
+       }
+       function dotransparent(e){
+           if(e.checked) { iframe1.style.opacity="0.1"; }
+           else          { iframe1.style.opacity="1.0"; }
        }
 
       </script>
