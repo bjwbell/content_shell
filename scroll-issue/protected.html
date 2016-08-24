@@ -16,18 +16,12 @@
              });
          }
 
-         if(!document.requestVisibility){
-         } else {
-             function logImpression() { console.log("intersection observer"); }
-
-             var observer = new IntersectionObserver(
-                 processChanges,
-                 { threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] } 
-             );
-
-             var observerId = document.querySelector('#protected3');
-             observer.observe(observerId);
-         }
+         var observer = new IntersectionObserver(
+             processChanges,
+             { threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] }
+         );
+         var observerId = document.querySelector('#protected3');
+         observer.observe(observerId);
         </script>
     </body>
 </html>
