@@ -1,1353 +1,7 @@
-From ba14a633e23451662959d7e9c58ca73d07208430 Mon Sep 17 00:00:00 2001
-From: lgarron <lgarron@chromium.org>
-Date: Wed, 24 Aug 2016 23:58:38 -0700
-Subject: [PATCH 01/40] Fix a comment in the GridLayout explanation (refer to
- column set rather than colum).
-
-BUG=
-
-Review-Url: https://codereview.chromium.org/2140103002
-Cr-Commit-Position: refs/heads/master@{#414347}
----
- ui/views/layout/grid_layout.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/ui/views/layout/grid_layout.h b/ui/views/layout/grid_layout.h
-index 856fb6f..c82f3a8 100644
---- a/ui/views/layout/grid_layout.h
-+++ b/ui/views/layout/grid_layout.h
-@@ -18,7 +18,7 @@
- // define the structure of the Grid first, then add the Views.
- // The following creates a trivial grid with two columns separated by
- // a column with padding:
--// ColumnSet* columns = layout->AddColumnSet(0); // Give this column an
-+// ColumnSet* columns = layout->AddColumnSet(0); // Give this column set an
- //                                               // identifier of 0.
- // columns->AddColumn(FILL, // Views are horizontally resized to fill column.
- //                    FILL, // Views starting in this column are vertically
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From 3d97de469a486debcb8956de8f7ed679fa862cbf Mon Sep 17 00:00:00 2001
-From: rkc <rkc@chromium.org>
-Date: Thu, 25 Aug 2016 00:06:00 -0700
-Subject: [PATCH 02/40] Add ARC++ specific fields to launch data for specific
- apps.
-
-On devices that have ARC++ available or enabled, certain internal apps need
-to be able to get this information. Currently these are limited to the
-GetHelp and the demo app.
-
-These are fields we'd like to eventually just expose to all apps but currently
-security is not comfortable with that yet, so for now, we'll set these flags
-only for the apps that currently need it.
-
-Reviews requested,
-xiyuan@ - General review.
-asargent@ - //apps and extension parts
-lhchavez@ - ARC++ parts
-sky@ - //chrome/browser/ui
-
-R=asargent@chromium.org, lhchavez@chromium.org, sky@chromium.org, xiyuan@chromium.org
-BUG=640330
-
-Review-Url: https://codereview.chromium.org/2272813003
-Cr-Commit-Position: refs/heads/master@{#414348}
----
- apps/launcher.cc                                   | 24 +++++++++++++++-------
- apps/launcher.h                                    | 15 +++++++++-----
- .../apps/app_launch_for_metro_restart_win.cc       |  3 +--
- .../chromeos/login/demo_mode/demo_app_launcher.cc  |  2 +-
- chrome/browser/ui/chrome_pages.cc                  |  9 ++++++--
- chrome/browser/ui/extensions/app_launch_params.cc  | 24 ++++++++++++++++++++--
- chrome/browser/ui/extensions/app_launch_params.h   |  7 ++++++-
- chrome/browser/ui/extensions/application_launch.cc | 13 +++++-------
- components/arc/arc_bridge_service.cc               |  5 +++++
- components/arc/arc_bridge_service.h                |  3 +++
- .../browser/api/app_runtime/app_runtime_api.cc     | 13 ++++++------
- .../browser/api/app_runtime/app_runtime_api.h      |  3 ++-
- extensions/common/api/app_runtime.idl              | 13 ++++++++++++
- extensions/shell/browser/shell_extension_system.cc |  5 ++---
- 14 files changed, 100 insertions(+), 39 deletions(-)
-
-diff --git a/apps/launcher.cc b/apps/launcher.cc
-index 6904f0f..1ac5aef 100644
---- a/apps/launcher.cc
-+++ b/apps/launcher.cc
-@@ -12,6 +12,7 @@
- #include "base/files/file_path.h"
- #include "base/files/file_util.h"
- #include "base/logging.h"
-+#include "base/memory/ptr_util.h"
- #include "base/memory/ref_counted.h"
- #include "base/strings/string_util.h"
- #include "base/strings/utf_string_conversions.h"
-@@ -48,6 +49,7 @@ namespace app_runtime = extensions::api::app_runtime;
- 
- using content::BrowserThread;
- using extensions::AppRuntimeEventRouter;
-+using extensions::api::app_runtime::PlayStoreStatus;
- using extensions::app_file_handler_util::CreateFileEntry;
- using extensions::app_file_handler_util::FileHandlerCanHandleEntry;
- using extensions::app_file_handler_util::FileHandlerForId;
-@@ -203,8 +205,12 @@ class PlatformAppPathLauncher
-     if (!app)
-       return;
- 
-+    std::unique_ptr<app_runtime::LaunchData> launch_data =
-+        base::MakeUnique<app_runtime::LaunchData>();
-+    launch_data->action_data = std::move(action_data_);
-+
-     AppRuntimeEventRouter::DispatchOnLaunchedEvent(
--        profile_, app, launch_source_, std::move(action_data_));
-+        profile_, app, launch_source_, std::move(launch_data));
-   }
- 
-   void OnAreDirectoriesCollected(
-@@ -352,10 +358,11 @@ class PlatformAppPathLauncher
- }  // namespace
- 
- void LaunchPlatformAppWithCommandLine(Profile* profile,
--                                      const Extension* app,
-+                                      const extensions::Extension* app,
-                                       const base::CommandLine& command_line,
-                                       const base::FilePath& current_directory,
--                                      extensions::AppLaunchSource source) {
-+                                      extensions::AppLaunchSource source,
-+                                      PlayStoreStatus play_store_status) {
-   // An app with "kiosk_only" should not be installed and launched
-   // outside of ChromeOS kiosk mode in the first place. This is a defensive
-   // check in case this scenario does occur.
-@@ -386,8 +393,12 @@ void LaunchPlatformAppWithCommandLine(Profile* profile,
-   // causes problems on the bots.
-   if (args.empty() || (command_line.HasSwitch(switches::kTestType) &&
-                        args[0] == about_blank_url)) {
--    AppRuntimeEventRouter::DispatchOnLaunchedEvent(
--        profile, app, source, std::unique_ptr<app_runtime::ActionData>());
-+    std::unique_ptr<app_runtime::LaunchData> launch_data =
-+        base::MakeUnique<app_runtime::LaunchData>();
-+    if (play_store_status != PlayStoreStatus::PLAY_STORE_STATUS_UNKNOWN)
-+      launch_data->play_store_status = play_store_status;
-+    AppRuntimeEventRouter::DispatchOnLaunchedEvent(profile, app, source,
-+                                                   std::move(launch_data));
-     return;
-   }
- 
-@@ -454,8 +465,7 @@ void RestartPlatformApp(Profile* profile, const Extension* app) {
- 
-   if (listening_to_launch && had_windows) {
-     AppRuntimeEventRouter::DispatchOnLaunchedEvent(
--        profile, app, extensions::SOURCE_RESTART,
--        std::unique_ptr<app_runtime::ActionData>());
-+        profile, app, extensions::SOURCE_RESTART, nullptr);
-   }
- }
- 
-diff --git a/apps/launcher.h b/apps/launcher.h
-index 3a23411..6efa792 100644
---- a/apps/launcher.h
-+++ b/apps/launcher.h
-@@ -9,6 +9,7 @@
- #include <string>
- #include <vector>
- 
-+#include "extensions/common/api/app_runtime.h"
- #include "extensions/common/constants.h"
- 
- class GURL;
-@@ -35,11 +36,15 @@ namespace apps {
- // |command_line| means there is no launch data. If non-empty,
- // |current_directory| is used to expand any relative paths on the command line.
- // |source| is one of the enumerated values which trace how the app is launched.
--void LaunchPlatformAppWithCommandLine(Profile* profile,
--                                      const extensions::Extension* app,
--                                      const base::CommandLine& command_line,
--                                      const base::FilePath& current_directory,
--                                      extensions::AppLaunchSource source);
-+void LaunchPlatformAppWithCommandLine(
-+    Profile* profile,
-+    const extensions::Extension* app,
-+    const base::CommandLine& command_line,
-+    const base::FilePath& current_directory,
-+    extensions::AppLaunchSource source,
-+    extensions::api::app_runtime::PlayStoreStatus play_store_status =
-+        extensions::api::app_runtime::PlayStoreStatus::
-+            PLAY_STORE_STATUS_UNKNOWN);
- 
- // Launches the platform app |app| by issuing an onLaunched event with the
- // contents of |file_path| available through the launch data.
-diff --git a/chrome/browser/apps/app_launch_for_metro_restart_win.cc b/chrome/browser/apps/app_launch_for_metro_restart_win.cc
-index 3fedd2a..b8d5e14 100644
---- a/chrome/browser/apps/app_launch_for_metro_restart_win.cc
-+++ b/chrome/browser/apps/app_launch_for_metro_restart_win.cc
-@@ -44,8 +44,7 @@ void LaunchAppWithId(Profile* profile,
-     return;
- 
-   AppRuntimeEventRouter::DispatchOnLaunchedEvent(
--      profile, extension, extensions::SOURCE_RESTART,
--      std::unique_ptr<extensions::api::app_runtime::ActionData>());
-+      profile, extension, extensions::SOURCE_RESTART, nullptr);
- }
- 
- }  // namespace
-diff --git a/chrome/browser/chromeos/login/demo_mode/demo_app_launcher.cc b/chrome/browser/chromeos/login/demo_mode/demo_app_launcher.cc
-index 5c9c45d..57c9553 100644
---- a/chrome/browser/chromeos/login/demo_mode/demo_app_launcher.cc
-+++ b/chrome/browser/chromeos/login/demo_mode/demo_app_launcher.cc
-@@ -96,7 +96,7 @@ void DemoAppLauncher::OnProfileLoaded(Profile* profile) {
- 
-   OpenApplication(
-       AppLaunchParams(profile, extension, extensions::LAUNCH_CONTAINER_WINDOW,
--                      NEW_WINDOW, extensions::SOURCE_CHROME_INTERNAL));
-+                      NEW_WINDOW, extensions::SOURCE_CHROME_INTERNAL, true));
-   KioskAppManager::Get()->InitSession(profile, extension_id);
- 
-   user_manager::UserManager::Get()->SessionStarted();
-diff --git a/chrome/browser/ui/chrome_pages.cc b/chrome/browser/ui/chrome_pages.cc
-index 3ed57f8..05ba0bc 100644
---- a/chrome/browser/ui/chrome_pages.cc
-+++ b/chrome/browser/ui/chrome_pages.cc
-@@ -12,6 +12,7 @@
- #include "base/strings/stringprintf.h"
- #include "build/build_config.h"
- #include "chrome/browser/download/download_shelf.h"
-+#include "chrome/browser/extensions/launch_util.h"
- #include "chrome/browser/profiles/profile.h"
- #include "chrome/browser/profiles/profile_manager.h"
- #include "chrome/browser/ui/browser.h"
-@@ -32,6 +33,7 @@
- #include "components/signin/core/common/profile_management_switches.h"
- #include "content/public/browser/user_metrics.h"
- #include "content/public/browser/web_contents.h"
-+#include "extensions/browser/extension_prefs.h"
- #include "extensions/common/constants.h"
- #include "google_apis/gaia/gaia_urls.h"
- #include "net/base/url_util.h"
-@@ -102,8 +104,11 @@ void ShowHelpImpl(Browser* browser, Profile* profile, HelpSource source) {
-     default:
-       NOTREACHED() << "Unhandled help source" << source;
-   }
--  OpenApplication(CreateAppLaunchParamsUserContainer(
--      profile, extension, NEW_FOREGROUND_TAB, app_launch_source));
-+  OpenApplication(
-+      AppLaunchParams(profile, extension,
-+                      extensions::GetLaunchContainer(
-+                          extensions::ExtensionPrefs::Get(profile), extension),
-+                      NEW_FOREGROUND_TAB, source, true));
- #else
-   GURL url;
-   switch (source) {
-diff --git a/chrome/browser/ui/extensions/app_launch_params.cc b/chrome/browser/ui/extensions/app_launch_params.cc
-index 271d87a..46ad142 100644
---- a/chrome/browser/ui/extensions/app_launch_params.cc
-+++ b/chrome/browser/ui/extensions/app_launch_params.cc
-@@ -4,6 +4,7 @@
- 
- #include "chrome/browser/ui/extensions/app_launch_params.h"
- 
-+#include "base/memory/ptr_util.h"
- #include "chrome/browser/extensions/launch_util.h"
- #include "chrome/browser/profiles/profile.h"
- #include "extensions/browser/extension_prefs.h"
-@@ -11,19 +12,38 @@
- #include "extensions/common/extension.h"
- #include "ui/base/window_open_disposition.h"
- 
-+#if defined(OS_CHROMEOS)
-+#include "chrome/browser/chromeos/arc/arc_auth_service.h"
-+#include "components/arc/arc_bridge_service.h"
-+#endif
-+
- using extensions::ExtensionPrefs;
-+using extensions::api::app_runtime::PlayStoreStatus;
- 
- AppLaunchParams::AppLaunchParams(Profile* profile,
-                                  const extensions::Extension* extension,
-                                  extensions::LaunchContainer container,
-                                  WindowOpenDisposition disposition,
--                                 extensions::AppLaunchSource source)
-+                                 extensions::AppLaunchSource source,
-+                                 bool set_playstore_status)
-     : profile(profile),
-       extension_id(extension ? extension->id() : std::string()),
-       container(container),
-       disposition(disposition),
-       command_line(base::CommandLine::NO_PROGRAM),
--      source(source) {}
-+      source(source),
-+      play_store_status(PlayStoreStatus::PLAY_STORE_STATUS_UNKNOWN) {
-+#if defined(OS_CHROMEOS)
-+  if (set_playstore_status) {
-+    if (arc::ArcAuthService::IsAllowedForProfile(profile)) {
-+      play_store_status = PlayStoreStatus::PLAY_STORE_STATUS_ENABLED;
-+    } else if (arc::ArcBridgeService::GetAvailable(
-+                   base::CommandLine::ForCurrentProcess())) {
-+      play_store_status = PlayStoreStatus::PLAY_STORE_STATUS_AVAILABLE;
-+    }  // else, default to PLAY_STORE_STATUS_UNKNOWN.
-+  }
-+#endif
-+}
- 
- AppLaunchParams::AppLaunchParams(const AppLaunchParams& other) = default;
- 
-diff --git a/chrome/browser/ui/extensions/app_launch_params.h b/chrome/browser/ui/extensions/app_launch_params.h
-index 0aeabba..492855a 100644
---- a/chrome/browser/ui/extensions/app_launch_params.h
-+++ b/chrome/browser/ui/extensions/app_launch_params.h
-@@ -10,6 +10,7 @@
- #include "base/command_line.h"
- #include "base/files/file_path.h"
- #include "chrome/common/extensions/extension_constants.h"
-+#include "extensions/common/api/app_runtime.h"
- #include "extensions/common/constants.h"
- #include "ui/base/window_open_disposition.h"
- #include "ui/gfx/geometry/rect.h"
-@@ -26,7 +27,8 @@ struct AppLaunchParams {
-                   const extensions::Extension* extension,
-                   extensions::LaunchContainer container,
-                   WindowOpenDisposition disposition,
--                  extensions::AppLaunchSource source);
-+                  extensions::AppLaunchSource source,
-+                  bool set_playstore_status = false);
- 
-   AppLaunchParams(const AppLaunchParams& other);
- 
-@@ -62,6 +64,9 @@ struct AppLaunchParams {
-   // Record where the app is launched from for tracking purpose.
-   // Different app may have their own enumeration of sources.
-   extensions::AppLaunchSource source;
-+
-+  // Status of ARC++ on this device.
-+  extensions::api::app_runtime::PlayStoreStatus play_store_status;
- };
- 
- // Helper to create AppLaunchParams using extensions::GetLaunchContainer with
-diff --git a/chrome/browser/ui/extensions/application_launch.cc b/chrome/browser/ui/extensions/application_launch.cc
-index c37d34c..9a98e55 100644
---- a/chrome/browser/ui/extensions/application_launch.cc
-+++ b/chrome/browser/ui/extensions/application_launch.cc
-@@ -299,18 +299,15 @@ WebContents* OpenEnabledApplication(const AppLaunchParams& params) {
-   const Extension* extension = GetExtension(params);
-   if (!extension)
-     return NULL;
--  Profile* profile = params.profile;
- 
-   WebContents* tab = NULL;
--  ExtensionPrefs* prefs = ExtensionPrefs::Get(profile);
-+  ExtensionPrefs* prefs = ExtensionPrefs::Get(params.profile);
-   prefs->SetActiveBit(extension->id(), true);
- 
-   if (CanLaunchViaEvent(extension)) {
--    apps::LaunchPlatformAppWithCommandLine(profile,
--                                           extension,
--                                           params.command_line,
--                                           params.current_directory,
--                                           params.source);
-+    apps::LaunchPlatformAppWithCommandLine(
-+        params.profile, extension, params.command_line,
-+        params.current_directory, params.source, params.play_store_status);
-     return NULL;
-   }
- 
-@@ -326,7 +323,7 @@ WebContents* OpenEnabledApplication(const AppLaunchParams& params) {
- 
-     // Record the launch time in the site engagement service. A recent bookmark
-     // app launch will provide an engagement boost to the origin.
--    SiteEngagementService* service = SiteEngagementService::Get(profile);
-+    SiteEngagementService* service = SiteEngagementService::Get(params.profile);
-     if (service)
-       service->SetLastShortcutLaunchTime(url);
-   }
-diff --git a/components/arc/arc_bridge_service.cc b/components/arc/arc_bridge_service.cc
-index 221bffd..5d942067 100644
---- a/components/arc/arc_bridge_service.cc
-+++ b/components/arc/arc_bridge_service.cc
-@@ -53,6 +53,11 @@ bool ArcBridgeService::GetEnabled(const base::CommandLine* command_line) {
-           base::FeatureList::IsEnabled(kArcEnabledFeature));
- }
- 
-+// static
-+bool ArcBridgeService::GetAvailable(const base::CommandLine* command_line) {
-+  return command_line->HasSwitch(chromeos::switches::kArcAvailable);
-+}
-+
- void ArcBridgeService::AddObserver(Observer* observer) {
-   DCHECK(CalledOnValidThread());
-   observer_list_.AddObserver(observer);
-diff --git a/components/arc/arc_bridge_service.h b/components/arc/arc_bridge_service.h
-index d313b64..4d1eb4d 100644
---- a/components/arc/arc_bridge_service.h
-+++ b/components/arc/arc_bridge_service.h
-@@ -67,6 +67,9 @@ class ArcBridgeService {
-   // switch.
-   static bool GetEnabled(const base::CommandLine* command_line);
- 
-+  // Return true if ARC is available on the current board.
-+  static bool GetAvailable(const base::CommandLine* command_line);
-+
-   // HandleStartup() should be called upon profile startup.  This will only
-   // launch an instance if the instance is enabled.
-   // This can only be called on the thread that this class was created on.
-diff --git a/extensions/browser/api/app_runtime/app_runtime_api.cc b/extensions/browser/api/app_runtime/app_runtime_api.cc
-index f1d1065..c3f5df2 100644
---- a/extensions/browser/api/app_runtime/app_runtime_api.cc
-+++ b/extensions/browser/api/app_runtime/app_runtime_api.cc
-@@ -8,6 +8,7 @@
- 
- #include <utility>
- 
-+#include "base/memory/ptr_util.h"
- #include "base/metrics/histogram.h"
- #include "base/time/time.h"
- #include "base/values.h"
-@@ -138,18 +139,16 @@ void AppRuntimeEventRouter::DispatchOnLaunchedEvent(
-     BrowserContext* context,
-     const Extension* extension,
-     extensions::AppLaunchSource source,
--    std::unique_ptr<app_runtime::ActionData> action_data) {
--  app_runtime::LaunchData launch_data;
--
-+    std::unique_ptr<app_runtime::LaunchData> launch_data) {
-+  if (!launch_data)
-+    launch_data = base::MakeUnique<app_runtime::LaunchData>();
-   app_runtime::LaunchSource source_enum = GetLaunchSourceEnum(source);
-   if (extensions::FeatureSwitch::trace_app_source()->IsEnabled()) {
--    launch_data.source = source_enum;
-+    launch_data->source = source_enum;
-   }
- 
--  launch_data.action_data = std::move(action_data);
--
-   DispatchOnLaunchedEventImpl(extension->id(), source_enum,
--                              launch_data.ToValue(), context);
-+                              launch_data->ToValue(), context);
- }
- 
- // static
-diff --git a/extensions/browser/api/app_runtime/app_runtime_api.h b/extensions/browser/api/app_runtime/app_runtime_api.h
-index 99a55de..35ef3ed 100644
---- a/extensions/browser/api/app_runtime/app_runtime_api.h
-+++ b/extensions/browser/api/app_runtime/app_runtime_api.h
-@@ -27,6 +27,7 @@ namespace extensions {
- namespace api {
- namespace app_runtime {
- struct ActionData;
-+struct LaunchData;
- }
- }
- 
-@@ -47,7 +48,7 @@ class AppRuntimeEventRouter {
-       content::BrowserContext* context,
-       const Extension* extension,
-       AppLaunchSource source,
--      std::unique_ptr<api::app_runtime::ActionData> action_data);
-+      std::unique_ptr<api::app_runtime::LaunchData> launch_data);
- 
-   // Dispatches the onRestarted event to the given app, providing a list of
-   // restored file entries from the previous run.
-diff --git a/extensions/common/api/app_runtime.idl b/extensions/common/api/app_runtime.idl
-index bd3f78f..51cd739 100644
---- a/extensions/common/api/app_runtime.idl
-+++ b/extensions/common/api/app_runtime.idl
-@@ -47,6 +47,16 @@ namespace app.runtime {
-     new_note
-   };
- 
-+  // Status of the play store.
-+  [nodoc] enum PlayStoreStatus {
-+    // Indicates that the play store is enabled. It also implies available.
-+    enabled,
-+    // Indicates that the play store is available but not enabled.
-+    available,
-+    // Indicates that the play store status is unknown.
-+    unknown
-+  };
-+
-   // Optional data that includes action-specific launch information.
-   dictionary ActionData {
-     ActionType actionType;
-@@ -90,6 +100,9 @@ namespace app.runtime {
-     // launched with. This is null if the app was not launched with a specific
-     // action intent.
-     ActionData? actionData;
-+
-+    // Internal fields used to indicate ARC++ status on the device.
-+    [nodoc] PlayStoreStatus? playStoreStatus;
-   };
- 
-   // This object specifies details and operations to perform on the embedding
-diff --git a/extensions/shell/browser/shell_extension_system.cc b/extensions/shell/browser/shell_extension_system.cc
-index 13b2646..5656032 100644
---- a/extensions/shell/browser/shell_extension_system.cc
-+++ b/extensions/shell/browser/shell_extension_system.cc
-@@ -96,9 +96,8 @@ void ShellExtensionSystem::LaunchApp(const ExtensionId& extension_id) {
-   const Extension* extension = ExtensionRegistry::Get(browser_context_)
-                                    ->enabled_extensions()
-                                    .GetByID(extension_id);
--  AppRuntimeEventRouter::DispatchOnLaunchedEvent(
--      browser_context_, extension, SOURCE_UNTRACKED,
--      std::unique_ptr<api::app_runtime::ActionData>());
-+  AppRuntimeEventRouter::DispatchOnLaunchedEvent(browser_context_, extension,
-+                                                 SOURCE_UNTRACKED, nullptr);
- }
- 
- void ShellExtensionSystem::Shutdown() {
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From f04e619a56c036526512eec982029e8e0cf095e1 Mon Sep 17 00:00:00 2001
-From: tkent <tkent@chromium.org>
-Date: Thu, 25 Aug 2016 00:29:37 -0700
-Subject: [PATCH 03/40] Remove NeedToDispatchSelectEvent argument of
- HTMLTextFormControlElement::select().
-
-A callsite with NotDispatchSelectEvent is updated so that it calls the
-four-argument version of setSelectedRange().
-
-This CL has no behavior changes.
-
-BUG=640861
-
-Review-Url: https://codereview.chromium.org/2274413003
-Cr-Commit-Position: refs/heads/master@{#414349}
----
- third_party/WebKit/Source/core/html/HTMLInputElement.cpp           | 2 +-
- third_party/WebKit/Source/core/html/HTMLTextFormControlElement.cpp | 4 ++--
- third_party/WebKit/Source/core/html/HTMLTextFormControlElement.h   | 2 +-
- third_party/WebKit/Source/core/html/forms/TextFieldInputType.cpp   | 2 +-
- 4 files changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/third_party/WebKit/Source/core/html/HTMLInputElement.cpp b/third_party/WebKit/Source/core/html/HTMLInputElement.cpp
-index 7e77c07..baea251 100644
---- a/third_party/WebKit/Source/core/html/HTMLInputElement.cpp
-+++ b/third_party/WebKit/Source/core/html/HTMLInputElement.cpp
-@@ -328,7 +328,7 @@ void HTMLInputElement::updateFocusAppearance(SelectionBehaviorOnFocus selectionB
-     if (isTextField()) {
-         switch (selectionBehavior) {
-         case SelectionBehaviorOnFocus::Reset:
--            select(DispatchSelectEvent);
-+            select();
-             break;
-         case SelectionBehaviorOnFocus::Restore:
-             restoreCachedSelection();
-diff --git a/third_party/WebKit/Source/core/html/HTMLTextFormControlElement.cpp b/third_party/WebKit/Source/core/html/HTMLTextFormControlElement.cpp
-index f65dd4c..240801e 100644
---- a/third_party/WebKit/Source/core/html/HTMLTextFormControlElement.cpp
-+++ b/third_party/WebKit/Source/core/html/HTMLTextFormControlElement.cpp
-@@ -187,9 +187,9 @@ void HTMLTextFormControlElement::setSelectionDirection(const String& direction)
-     setSelectionRangeForBinding(selectionStart(), selectionEnd(), direction);
- }
- 
--void HTMLTextFormControlElement::select(NeedToDispatchSelectEvent eventBehaviour)
-+void HTMLTextFormControlElement::select()
- {
--    setSelectionRange(0, std::numeric_limits<int>::max(), SelectionHasNoDirection, eventBehaviour);
-+    setSelectionRange(0, std::numeric_limits<int>::max(), SelectionHasNoDirection, DispatchSelectEvent);
-     focus();
- }
- 
-diff --git a/third_party/WebKit/Source/core/html/HTMLTextFormControlElement.h b/third_party/WebKit/Source/core/html/HTMLTextFormControlElement.h
-index b4e03df..9ebd2854 100644
---- a/third_party/WebKit/Source/core/html/HTMLTextFormControlElement.h
-+++ b/third_party/WebKit/Source/core/html/HTMLTextFormControlElement.h
-@@ -67,7 +67,7 @@ public:
-     void setSelectionStart(int);
-     void setSelectionEnd(int);
-     void setSelectionDirection(const String&);
--    void select(NeedToDispatchSelectEvent = DispatchSelectEvent);
-+    void select();
-     virtual void setRangeText(const String& replacement, ExceptionState&);
-     virtual void setRangeText(const String& replacement, unsigned start, unsigned end, const String& selectionMode, ExceptionState&);
-     // Web-exposed setSelectionRange() function. This translates "none"
-diff --git a/third_party/WebKit/Source/core/html/forms/TextFieldInputType.cpp b/third_party/WebKit/Source/core/html/forms/TextFieldInputType.cpp
-index f3c8f55..b2257e0 100644
---- a/third_party/WebKit/Source/core/html/forms/TextFieldInputType.cpp
-+++ b/third_party/WebKit/Source/core/html/forms/TextFieldInputType.cpp
-@@ -538,7 +538,7 @@ void TextFieldInputType::updateView()
- void TextFieldInputType::focusAndSelectSpinButtonOwner()
- {
-     element().focus();
--    element().select(NotDispatchSelectEvent);
-+    element().setSelectionRange(0, std::numeric_limits<int>::max(), SelectionHasNoDirection, NotDispatchSelectEvent);
- }
- 
- bool TextFieldInputType::shouldSpinButtonRespondToMouseEvents()
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From 55c657b60fc7cd327e1a8586897d5ed8fd4665aa Mon Sep 17 00:00:00 2001
-From: dvadym <dvadym@chromium.org>
-Date: Thu, 25 Aug 2016 00:36:23 -0700
-Subject: [PATCH 04/40] Turning on change password form support in Password
- Manageron Android by default.
-
-On https://codereview.chromium.org/2256653002/ it was implemented last fix to UI of change passowrd forms on Android. Since it seems no other significant problems are present from launching change password support on Android, this CL turns on change password support by default, without flag. The flag is not removed yet, just in case, if some problems will be found. It's going to be quite big CL for removing a flag and cleaning all places which depend on it, it will be done in a month, when it will be clear that everything is ok.
-
-BUG=564674
-
-Review-Url: https://codereview.chromium.org/2274913002
-Cr-Commit-Position: refs/heads/master@{#414350}
----
- chrome/browser/password_manager/chrome_password_manager_client.cc | 5 -----
- 1 file changed, 5 deletions(-)
-
-diff --git a/chrome/browser/password_manager/chrome_password_manager_client.cc b/chrome/browser/password_manager/chrome_password_manager_client.cc
-index 7962b97..9c80ec3 100644
---- a/chrome/browser/password_manager/chrome_password_manager_client.cc
-+++ b/chrome/browser/password_manager/chrome_password_manager_client.cc
-@@ -555,12 +555,7 @@ void ChromePasswordManagerClient::GenerationAvailableForForm(
- }
- 
- bool ChromePasswordManagerClient::IsUpdatePasswordUIEnabled() const {
--#if BUILDFLAG(ANDROID_JAVA_UI)
--  return base::FeatureList::IsEnabled(
--      password_manager::features::kEnablePasswordChangeSupport);
--#else
-   return true;
--#endif
- }
- 
- const GURL& ChromePasswordManagerClient::GetMainFrameURL() const {
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From ffd6f574540628307c652b24895e32c903ebf3c2 Mon Sep 17 00:00:00 2001
-From: haraken <haraken@chromium.org>
-Date: Thu, 25 Aug 2016 00:47:42 -0700
-Subject: [PATCH 05/40] Revert of Add ARC++ specific fields to launch data for
- specific apps. (patchset #7 id:120001 of
- https://codereview.chromium.org/2272813003/ )
-
-Reason for revert:
-This broke compilation of ChromeOS:
-
-https://build.chromium.org/p/chromium.chrome/builders/Google%20Chrome%20ChromeOS/builds/22483
-
-Original issue's description:
-> Add ARC++ specific fields to launch data for specific apps.
->
-> On devices that have ARC++ available or enabled, certain internal apps need
-> to be able to get this information. Currently these are limited to the
-> GetHelp and the demo app.
->
-> These are fields we'd like to eventually just expose to all apps but currently
-> security is not comfortable with that yet, so for now, we'll set these flags
-> only for the apps that currently need it.
->
-> Reviews requested,
-> xiyuan@ - General review.
-> asargent@ - //apps and extension parts
-> lhchavez@ - ARC++ parts
-> sky@ - //chrome/browser/ui
->
-> R=asargent@chromium.org, lhchavez@chromium.org, sky@chromium.org, xiyuan@chromium.org
-> BUG=640330
->
-> Committed: https://crrev.com/3d97de469a486debcb8956de8f7ed679fa862cbf
-> Cr-Commit-Position: refs/heads/master@{#414348}
-
-TBR=asargent@chromium.org,lhchavez@chromium.org,sky@chromium.org,xiyuan@chromium.org,rkc@chromium.org
-# Skipping CQ checks because original CL landed less than 1 days ago.
-NOPRESUBMIT=true
-NOTREECHECKS=true
-NOTRY=true
-BUG=640330
-
-Review-Url: https://codereview.chromium.org/2276293002
-Cr-Commit-Position: refs/heads/master@{#414351}
----
- apps/launcher.cc                                   | 24 +++++++---------------
- apps/launcher.h                                    | 15 +++++---------
- .../apps/app_launch_for_metro_restart_win.cc       |  3 ++-
- .../chromeos/login/demo_mode/demo_app_launcher.cc  |  2 +-
- chrome/browser/ui/chrome_pages.cc                  |  9 ++------
- chrome/browser/ui/extensions/app_launch_params.cc  | 24 ++--------------------
- chrome/browser/ui/extensions/app_launch_params.h   |  7 +------
- chrome/browser/ui/extensions/application_launch.cc | 13 +++++++-----
- components/arc/arc_bridge_service.cc               |  5 -----
- components/arc/arc_bridge_service.h                |  3 ---
- .../browser/api/app_runtime/app_runtime_api.cc     | 13 ++++++------
- .../browser/api/app_runtime/app_runtime_api.h      |  3 +--
- extensions/common/api/app_runtime.idl              | 13 ------------
- extensions/shell/browser/shell_extension_system.cc |  5 +++--
- 14 files changed, 39 insertions(+), 100 deletions(-)
-
-diff --git a/apps/launcher.cc b/apps/launcher.cc
-index 1ac5aef..6904f0f 100644
---- a/apps/launcher.cc
-+++ b/apps/launcher.cc
-@@ -12,7 +12,6 @@
- #include "base/files/file_path.h"
- #include "base/files/file_util.h"
- #include "base/logging.h"
--#include "base/memory/ptr_util.h"
- #include "base/memory/ref_counted.h"
- #include "base/strings/string_util.h"
- #include "base/strings/utf_string_conversions.h"
-@@ -49,7 +48,6 @@ namespace app_runtime = extensions::api::app_runtime;
- 
- using content::BrowserThread;
- using extensions::AppRuntimeEventRouter;
--using extensions::api::app_runtime::PlayStoreStatus;
- using extensions::app_file_handler_util::CreateFileEntry;
- using extensions::app_file_handler_util::FileHandlerCanHandleEntry;
- using extensions::app_file_handler_util::FileHandlerForId;
-@@ -205,12 +203,8 @@ class PlatformAppPathLauncher
-     if (!app)
-       return;
- 
--    std::unique_ptr<app_runtime::LaunchData> launch_data =
--        base::MakeUnique<app_runtime::LaunchData>();
--    launch_data->action_data = std::move(action_data_);
--
-     AppRuntimeEventRouter::DispatchOnLaunchedEvent(
--        profile_, app, launch_source_, std::move(launch_data));
-+        profile_, app, launch_source_, std::move(action_data_));
-   }
- 
-   void OnAreDirectoriesCollected(
-@@ -358,11 +352,10 @@ class PlatformAppPathLauncher
- }  // namespace
- 
- void LaunchPlatformAppWithCommandLine(Profile* profile,
--                                      const extensions::Extension* app,
-+                                      const Extension* app,
-                                       const base::CommandLine& command_line,
-                                       const base::FilePath& current_directory,
--                                      extensions::AppLaunchSource source,
--                                      PlayStoreStatus play_store_status) {
-+                                      extensions::AppLaunchSource source) {
-   // An app with "kiosk_only" should not be installed and launched
-   // outside of ChromeOS kiosk mode in the first place. This is a defensive
-   // check in case this scenario does occur.
-@@ -393,12 +386,8 @@ void LaunchPlatformAppWithCommandLine(Profile* profile,
-   // causes problems on the bots.
-   if (args.empty() || (command_line.HasSwitch(switches::kTestType) &&
-                        args[0] == about_blank_url)) {
--    std::unique_ptr<app_runtime::LaunchData> launch_data =
--        base::MakeUnique<app_runtime::LaunchData>();
--    if (play_store_status != PlayStoreStatus::PLAY_STORE_STATUS_UNKNOWN)
--      launch_data->play_store_status = play_store_status;
--    AppRuntimeEventRouter::DispatchOnLaunchedEvent(profile, app, source,
--                                                   std::move(launch_data));
-+    AppRuntimeEventRouter::DispatchOnLaunchedEvent(
-+        profile, app, source, std::unique_ptr<app_runtime::ActionData>());
-     return;
-   }
- 
-@@ -465,7 +454,8 @@ void RestartPlatformApp(Profile* profile, const Extension* app) {
- 
-   if (listening_to_launch && had_windows) {
-     AppRuntimeEventRouter::DispatchOnLaunchedEvent(
--        profile, app, extensions::SOURCE_RESTART, nullptr);
-+        profile, app, extensions::SOURCE_RESTART,
-+        std::unique_ptr<app_runtime::ActionData>());
-   }
- }
- 
-diff --git a/apps/launcher.h b/apps/launcher.h
-index 6efa792..3a23411 100644
---- a/apps/launcher.h
-+++ b/apps/launcher.h
-@@ -9,7 +9,6 @@
- #include <string>
- #include <vector>
- 
--#include "extensions/common/api/app_runtime.h"
- #include "extensions/common/constants.h"
- 
- class GURL;
-@@ -36,15 +35,11 @@ namespace apps {
- // |command_line| means there is no launch data. If non-empty,
- // |current_directory| is used to expand any relative paths on the command line.
- // |source| is one of the enumerated values which trace how the app is launched.
--void LaunchPlatformAppWithCommandLine(
--    Profile* profile,
--    const extensions::Extension* app,
--    const base::CommandLine& command_line,
--    const base::FilePath& current_directory,
--    extensions::AppLaunchSource source,
--    extensions::api::app_runtime::PlayStoreStatus play_store_status =
--        extensions::api::app_runtime::PlayStoreStatus::
--            PLAY_STORE_STATUS_UNKNOWN);
-+void LaunchPlatformAppWithCommandLine(Profile* profile,
-+                                      const extensions::Extension* app,
-+                                      const base::CommandLine& command_line,
-+                                      const base::FilePath& current_directory,
-+                                      extensions::AppLaunchSource source);
- 
- // Launches the platform app |app| by issuing an onLaunched event with the
- // contents of |file_path| available through the launch data.
-diff --git a/chrome/browser/apps/app_launch_for_metro_restart_win.cc b/chrome/browser/apps/app_launch_for_metro_restart_win.cc
-index b8d5e14..3fedd2a 100644
---- a/chrome/browser/apps/app_launch_for_metro_restart_win.cc
-+++ b/chrome/browser/apps/app_launch_for_metro_restart_win.cc
-@@ -44,7 +44,8 @@ void LaunchAppWithId(Profile* profile,
-     return;
- 
-   AppRuntimeEventRouter::DispatchOnLaunchedEvent(
--      profile, extension, extensions::SOURCE_RESTART, nullptr);
-+      profile, extension, extensions::SOURCE_RESTART,
-+      std::unique_ptr<extensions::api::app_runtime::ActionData>());
- }
- 
- }  // namespace
-diff --git a/chrome/browser/chromeos/login/demo_mode/demo_app_launcher.cc b/chrome/browser/chromeos/login/demo_mode/demo_app_launcher.cc
-index 57c9553..5c9c45d 100644
---- a/chrome/browser/chromeos/login/demo_mode/demo_app_launcher.cc
-+++ b/chrome/browser/chromeos/login/demo_mode/demo_app_launcher.cc
-@@ -96,7 +96,7 @@ void DemoAppLauncher::OnProfileLoaded(Profile* profile) {
- 
-   OpenApplication(
-       AppLaunchParams(profile, extension, extensions::LAUNCH_CONTAINER_WINDOW,
--                      NEW_WINDOW, extensions::SOURCE_CHROME_INTERNAL, true));
-+                      NEW_WINDOW, extensions::SOURCE_CHROME_INTERNAL));
-   KioskAppManager::Get()->InitSession(profile, extension_id);
- 
-   user_manager::UserManager::Get()->SessionStarted();
-diff --git a/chrome/browser/ui/chrome_pages.cc b/chrome/browser/ui/chrome_pages.cc
-index 05ba0bc..3ed57f8 100644
---- a/chrome/browser/ui/chrome_pages.cc
-+++ b/chrome/browser/ui/chrome_pages.cc
-@@ -12,7 +12,6 @@
- #include "base/strings/stringprintf.h"
- #include "build/build_config.h"
- #include "chrome/browser/download/download_shelf.h"
--#include "chrome/browser/extensions/launch_util.h"
- #include "chrome/browser/profiles/profile.h"
- #include "chrome/browser/profiles/profile_manager.h"
- #include "chrome/browser/ui/browser.h"
-@@ -33,7 +32,6 @@
- #include "components/signin/core/common/profile_management_switches.h"
- #include "content/public/browser/user_metrics.h"
- #include "content/public/browser/web_contents.h"
--#include "extensions/browser/extension_prefs.h"
- #include "extensions/common/constants.h"
- #include "google_apis/gaia/gaia_urls.h"
- #include "net/base/url_util.h"
-@@ -104,11 +102,8 @@ void ShowHelpImpl(Browser* browser, Profile* profile, HelpSource source) {
-     default:
-       NOTREACHED() << "Unhandled help source" << source;
-   }
--  OpenApplication(
--      AppLaunchParams(profile, extension,
--                      extensions::GetLaunchContainer(
--                          extensions::ExtensionPrefs::Get(profile), extension),
--                      NEW_FOREGROUND_TAB, source, true));
-+  OpenApplication(CreateAppLaunchParamsUserContainer(
-+      profile, extension, NEW_FOREGROUND_TAB, app_launch_source));
- #else
-   GURL url;
-   switch (source) {
-diff --git a/chrome/browser/ui/extensions/app_launch_params.cc b/chrome/browser/ui/extensions/app_launch_params.cc
-index 46ad142..271d87a 100644
---- a/chrome/browser/ui/extensions/app_launch_params.cc
-+++ b/chrome/browser/ui/extensions/app_launch_params.cc
-@@ -4,7 +4,6 @@
- 
- #include "chrome/browser/ui/extensions/app_launch_params.h"
- 
--#include "base/memory/ptr_util.h"
- #include "chrome/browser/extensions/launch_util.h"
- #include "chrome/browser/profiles/profile.h"
- #include "extensions/browser/extension_prefs.h"
-@@ -12,38 +11,19 @@
- #include "extensions/common/extension.h"
- #include "ui/base/window_open_disposition.h"
- 
--#if defined(OS_CHROMEOS)
--#include "chrome/browser/chromeos/arc/arc_auth_service.h"
--#include "components/arc/arc_bridge_service.h"
--#endif
--
- using extensions::ExtensionPrefs;
--using extensions::api::app_runtime::PlayStoreStatus;
- 
- AppLaunchParams::AppLaunchParams(Profile* profile,
-                                  const extensions::Extension* extension,
-                                  extensions::LaunchContainer container,
-                                  WindowOpenDisposition disposition,
--                                 extensions::AppLaunchSource source,
--                                 bool set_playstore_status)
-+                                 extensions::AppLaunchSource source)
-     : profile(profile),
-       extension_id(extension ? extension->id() : std::string()),
-       container(container),
-       disposition(disposition),
-       command_line(base::CommandLine::NO_PROGRAM),
--      source(source),
--      play_store_status(PlayStoreStatus::PLAY_STORE_STATUS_UNKNOWN) {
--#if defined(OS_CHROMEOS)
--  if (set_playstore_status) {
--    if (arc::ArcAuthService::IsAllowedForProfile(profile)) {
--      play_store_status = PlayStoreStatus::PLAY_STORE_STATUS_ENABLED;
--    } else if (arc::ArcBridgeService::GetAvailable(
--                   base::CommandLine::ForCurrentProcess())) {
--      play_store_status = PlayStoreStatus::PLAY_STORE_STATUS_AVAILABLE;
--    }  // else, default to PLAY_STORE_STATUS_UNKNOWN.
--  }
--#endif
--}
-+      source(source) {}
- 
- AppLaunchParams::AppLaunchParams(const AppLaunchParams& other) = default;
- 
-diff --git a/chrome/browser/ui/extensions/app_launch_params.h b/chrome/browser/ui/extensions/app_launch_params.h
-index 492855a..0aeabba 100644
---- a/chrome/browser/ui/extensions/app_launch_params.h
-+++ b/chrome/browser/ui/extensions/app_launch_params.h
-@@ -10,7 +10,6 @@
- #include "base/command_line.h"
- #include "base/files/file_path.h"
- #include "chrome/common/extensions/extension_constants.h"
--#include "extensions/common/api/app_runtime.h"
- #include "extensions/common/constants.h"
- #include "ui/base/window_open_disposition.h"
- #include "ui/gfx/geometry/rect.h"
-@@ -27,8 +26,7 @@ struct AppLaunchParams {
-                   const extensions::Extension* extension,
-                   extensions::LaunchContainer container,
-                   WindowOpenDisposition disposition,
--                  extensions::AppLaunchSource source,
--                  bool set_playstore_status = false);
-+                  extensions::AppLaunchSource source);
- 
-   AppLaunchParams(const AppLaunchParams& other);
- 
-@@ -64,9 +62,6 @@ struct AppLaunchParams {
-   // Record where the app is launched from for tracking purpose.
-   // Different app may have their own enumeration of sources.
-   extensions::AppLaunchSource source;
--
--  // Status of ARC++ on this device.
--  extensions::api::app_runtime::PlayStoreStatus play_store_status;
- };
- 
- // Helper to create AppLaunchParams using extensions::GetLaunchContainer with
-diff --git a/chrome/browser/ui/extensions/application_launch.cc b/chrome/browser/ui/extensions/application_launch.cc
-index 9a98e55..c37d34c 100644
---- a/chrome/browser/ui/extensions/application_launch.cc
-+++ b/chrome/browser/ui/extensions/application_launch.cc
-@@ -299,15 +299,18 @@ WebContents* OpenEnabledApplication(const AppLaunchParams& params) {
-   const Extension* extension = GetExtension(params);
-   if (!extension)
-     return NULL;
-+  Profile* profile = params.profile;
- 
-   WebContents* tab = NULL;
--  ExtensionPrefs* prefs = ExtensionPrefs::Get(params.profile);
-+  ExtensionPrefs* prefs = ExtensionPrefs::Get(profile);
-   prefs->SetActiveBit(extension->id(), true);
- 
-   if (CanLaunchViaEvent(extension)) {
--    apps::LaunchPlatformAppWithCommandLine(
--        params.profile, extension, params.command_line,
--        params.current_directory, params.source, params.play_store_status);
-+    apps::LaunchPlatformAppWithCommandLine(profile,
-+                                           extension,
-+                                           params.command_line,
-+                                           params.current_directory,
-+                                           params.source);
-     return NULL;
-   }
- 
-@@ -323,7 +326,7 @@ WebContents* OpenEnabledApplication(const AppLaunchParams& params) {
- 
-     // Record the launch time in the site engagement service. A recent bookmark
-     // app launch will provide an engagement boost to the origin.
--    SiteEngagementService* service = SiteEngagementService::Get(params.profile);
-+    SiteEngagementService* service = SiteEngagementService::Get(profile);
-     if (service)
-       service->SetLastShortcutLaunchTime(url);
-   }
-diff --git a/components/arc/arc_bridge_service.cc b/components/arc/arc_bridge_service.cc
-index 5d942067..221bffd 100644
---- a/components/arc/arc_bridge_service.cc
-+++ b/components/arc/arc_bridge_service.cc
-@@ -53,11 +53,6 @@ bool ArcBridgeService::GetEnabled(const base::CommandLine* command_line) {
-           base::FeatureList::IsEnabled(kArcEnabledFeature));
- }
- 
--// static
--bool ArcBridgeService::GetAvailable(const base::CommandLine* command_line) {
--  return command_line->HasSwitch(chromeos::switches::kArcAvailable);
--}
--
- void ArcBridgeService::AddObserver(Observer* observer) {
-   DCHECK(CalledOnValidThread());
-   observer_list_.AddObserver(observer);
-diff --git a/components/arc/arc_bridge_service.h b/components/arc/arc_bridge_service.h
-index 4d1eb4d..d313b64 100644
---- a/components/arc/arc_bridge_service.h
-+++ b/components/arc/arc_bridge_service.h
-@@ -67,9 +67,6 @@ class ArcBridgeService {
-   // switch.
-   static bool GetEnabled(const base::CommandLine* command_line);
- 
--  // Return true if ARC is available on the current board.
--  static bool GetAvailable(const base::CommandLine* command_line);
--
-   // HandleStartup() should be called upon profile startup.  This will only
-   // launch an instance if the instance is enabled.
-   // This can only be called on the thread that this class was created on.
-diff --git a/extensions/browser/api/app_runtime/app_runtime_api.cc b/extensions/browser/api/app_runtime/app_runtime_api.cc
-index c3f5df2..f1d1065 100644
---- a/extensions/browser/api/app_runtime/app_runtime_api.cc
-+++ b/extensions/browser/api/app_runtime/app_runtime_api.cc
-@@ -8,7 +8,6 @@
- 
- #include <utility>
- 
--#include "base/memory/ptr_util.h"
- #include "base/metrics/histogram.h"
- #include "base/time/time.h"
- #include "base/values.h"
-@@ -139,16 +138,18 @@ void AppRuntimeEventRouter::DispatchOnLaunchedEvent(
-     BrowserContext* context,
-     const Extension* extension,
-     extensions::AppLaunchSource source,
--    std::unique_ptr<app_runtime::LaunchData> launch_data) {
--  if (!launch_data)
--    launch_data = base::MakeUnique<app_runtime::LaunchData>();
-+    std::unique_ptr<app_runtime::ActionData> action_data) {
-+  app_runtime::LaunchData launch_data;
-+
-   app_runtime::LaunchSource source_enum = GetLaunchSourceEnum(source);
-   if (extensions::FeatureSwitch::trace_app_source()->IsEnabled()) {
--    launch_data->source = source_enum;
-+    launch_data.source = source_enum;
-   }
- 
-+  launch_data.action_data = std::move(action_data);
-+
-   DispatchOnLaunchedEventImpl(extension->id(), source_enum,
--                              launch_data->ToValue(), context);
-+                              launch_data.ToValue(), context);
- }
- 
- // static
-diff --git a/extensions/browser/api/app_runtime/app_runtime_api.h b/extensions/browser/api/app_runtime/app_runtime_api.h
-index 35ef3ed..99a55de 100644
---- a/extensions/browser/api/app_runtime/app_runtime_api.h
-+++ b/extensions/browser/api/app_runtime/app_runtime_api.h
-@@ -27,7 +27,6 @@ namespace extensions {
- namespace api {
- namespace app_runtime {
- struct ActionData;
--struct LaunchData;
- }
- }
- 
-@@ -48,7 +47,7 @@ class AppRuntimeEventRouter {
-       content::BrowserContext* context,
-       const Extension* extension,
-       AppLaunchSource source,
--      std::unique_ptr<api::app_runtime::LaunchData> launch_data);
-+      std::unique_ptr<api::app_runtime::ActionData> action_data);
- 
-   // Dispatches the onRestarted event to the given app, providing a list of
-   // restored file entries from the previous run.
-diff --git a/extensions/common/api/app_runtime.idl b/extensions/common/api/app_runtime.idl
-index 51cd739..bd3f78f 100644
---- a/extensions/common/api/app_runtime.idl
-+++ b/extensions/common/api/app_runtime.idl
-@@ -47,16 +47,6 @@ namespace app.runtime {
-     new_note
-   };
- 
--  // Status of the play store.
--  [nodoc] enum PlayStoreStatus {
--    // Indicates that the play store is enabled. It also implies available.
--    enabled,
--    // Indicates that the play store is available but not enabled.
--    available,
--    // Indicates that the play store status is unknown.
--    unknown
--  };
--
-   // Optional data that includes action-specific launch information.
-   dictionary ActionData {
-     ActionType actionType;
-@@ -100,9 +90,6 @@ namespace app.runtime {
-     // launched with. This is null if the app was not launched with a specific
-     // action intent.
-     ActionData? actionData;
--
--    // Internal fields used to indicate ARC++ status on the device.
--    [nodoc] PlayStoreStatus? playStoreStatus;
-   };
- 
-   // This object specifies details and operations to perform on the embedding
-diff --git a/extensions/shell/browser/shell_extension_system.cc b/extensions/shell/browser/shell_extension_system.cc
-index 5656032..13b2646 100644
---- a/extensions/shell/browser/shell_extension_system.cc
-+++ b/extensions/shell/browser/shell_extension_system.cc
-@@ -96,8 +96,9 @@ void ShellExtensionSystem::LaunchApp(const ExtensionId& extension_id) {
-   const Extension* extension = ExtensionRegistry::Get(browser_context_)
-                                    ->enabled_extensions()
-                                    .GetByID(extension_id);
--  AppRuntimeEventRouter::DispatchOnLaunchedEvent(browser_context_, extension,
--                                                 SOURCE_UNTRACKED, nullptr);
-+  AppRuntimeEventRouter::DispatchOnLaunchedEvent(
-+      browser_context_, extension, SOURCE_UNTRACKED,
-+      std::unique_ptr<api::app_runtime::ActionData>());
- }
- 
- void ShellExtensionSystem::Shutdown() {
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From feb7d4750f1f8321e80e58e662a33244a0f304d2 Mon Sep 17 00:00:00 2001
-From: grt <grt@chromium.org>
-Date: Thu, 25 Aug 2016 00:50:54 -0700
-Subject: [PATCH 06/40] Remove Pepper Flash from FILES.cfg since it is no
- longer bundled.
-
-BUG=624086,640876
-TBR=brucedawson@chromium.org
-
-Review-Url: https://codereview.chromium.org/2278843002
-Cr-Commit-Position: refs/heads/master@{#414352}
----
- chrome/tools/build/win/FILES.cfg | 9 ---------
- 1 file changed, 9 deletions(-)
-
-diff --git a/chrome/tools/build/win/FILES.cfg b/chrome/tools/build/win/FILES.cfg
-index 6155eb8..2798530 100644
---- a/chrome/tools/build/win/FILES.cfg
-+++ b/chrome/tools/build/win/FILES.cfg
-@@ -332,15 +332,6 @@ FILES = [
-     'buildtype': ['dev', 'official'],
-     'archive': 'pnacl.zip',
-   },
--  # Flash Player files:
--  {
--    'filename': 'PepperFlash/pepflashplayer.dll',
--    'buildtype': ['official'],
--  },
--  {
--    'filename': 'PepperFlash/manifest.json',
--    'buildtype': ['official'],
--  },
-   # Widevine CDM files:
-   {
-     'filename': 'WidevineCdm/manifest.json',
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From cb207921aefb769585e8c4ddb47efcbb92f21a02 Mon Sep 17 00:00:00 2001
-From: vasilii <vasilii@chromium.org>
-Date: Thu, 25 Aug 2016 00:55:56 -0700
-Subject: [PATCH 07/40] Filter duplicates in the account chooser.
-
-https://codereview.chromium.org/2110993003 implemented the filtering for empty usernames.
-
-BUG=400674
-
-Review-Url: https://codereview.chromium.org/2277793002
-Cr-Commit-Position: refs/heads/master@{#414353}
----
- .../browser/credential_manager_impl_unittest.cc    | 54 +++++++++++++++++++++-
- .../credential_manager_pending_request_task.cc     | 50 ++++++++++++++------
- 2 files changed, 89 insertions(+), 15 deletions(-)
-
-diff --git a/components/password_manager/content/browser/credential_manager_impl_unittest.cc b/components/password_manager/content/browser/credential_manager_impl_unittest.cc
-index f6c0ee6..c733a8b 100644
---- a/components/password_manager/content/browser/credential_manager_impl_unittest.cc
-+++ b/components/password_manager/content/browser/credential_manager_impl_unittest.cc
-@@ -40,6 +40,8 @@ using content::BrowserContext;
- using content::WebContents;
- 
- using testing::_;
-+using testing::Pointee;
-+using testing::UnorderedElementsAre;
- 
- namespace password_manager {
- 
-@@ -97,7 +99,7 @@ class MockPasswordManagerClient : public StubPasswordManagerClient {
-       ScopedVector<autofill::PasswordForm> local_forms,
-       ScopedVector<autofill::PasswordForm> federated_forms,
-       const GURL& origin,
--      const CredentialsCallback& callback) {
-+      const CredentialsCallback& callback) override {
-     EXPECT_FALSE(local_forms.empty() && federated_forms.empty());
-     const autofill::PasswordForm* form =
-         local_forms.empty() ? federated_forms[0] : local_forms[0];
-@@ -695,11 +697,14 @@ TEST_F(CredentialManagerImplTest,
- }
- 
- TEST_F(CredentialManagerImplTest,
--       CredentialManagerOnRequestCredentialWithEmptyAndNonUsernames) {
-+       CredentialManagerOnRequestCredentialWithEmptyAndNonemptyUsernames) {
-   store_->AddLogin(form_);
-   autofill::PasswordForm empty = form_;
-   empty.username_value.clear();
-   store_->AddLogin(empty);
-+  autofill::PasswordForm duplicate = form_;
-+  duplicate.username_element = base::ASCIIToUTF16("different_username_element");
-+  store_->AddLogin(duplicate);
- 
-   std::vector<GURL> federations;
-   ExpectZeroClickSignInSuccess(false, true, federations,
-@@ -707,6 +712,51 @@ TEST_F(CredentialManagerImplTest,
- }
- 
- TEST_F(CredentialManagerImplTest,
-+       CredentialManagerOnRequestCredentialWithDuplicates) {
-+  // Add 7 credentials. Two buckets of duplicates and one empty username. There
-+  // should be just two in the account chooser.
-+  form_.preferred = true;
-+  form_.username_element = base::ASCIIToUTF16("username_element");
-+  store_->AddLogin(form_);
-+  autofill::PasswordForm empty = form_;
-+  empty.username_value.clear();
-+  store_->AddLogin(empty);
-+  autofill::PasswordForm duplicate = form_;
-+  duplicate.username_element = base::ASCIIToUTF16("username_element1");
-+  duplicate.is_public_suffix_match = true;
-+  store_->AddLogin(duplicate);
-+  duplicate = form_;
-+  duplicate.username_element = base::ASCIIToUTF16("username_element2");
-+  duplicate.preferred = false;
-+  store_->AddLogin(duplicate);
-+
-+  origin_path_form_.preferred = true;
-+  store_->AddLogin(origin_path_form_);
-+  duplicate = origin_path_form_;
-+  duplicate.username_element = base::ASCIIToUTF16("username_element3");
-+  duplicate.is_public_suffix_match = true;
-+  store_->AddLogin(duplicate);
-+  duplicate = origin_path_form_;
-+  duplicate.username_element = base::ASCIIToUTF16("username_element4");
-+  duplicate.preferred = false;
-+  store_->AddLogin(duplicate);
-+
-+  EXPECT_CALL(*client_, PromptUserToChooseCredentialsPtr(
-+                            UnorderedElementsAre(Pointee(form_),
-+                                                 Pointee(origin_path_form_)),
-+                            testing::IsEmpty(), _, _));
-+
-+  bool called = false;
-+  mojom::CredentialManagerError error;
-+  base::Optional<CredentialInfo> credential;
-+  std::vector<GURL> federations;
-+  CallGet(false, true, federations,
-+          base::Bind(&GetCredentialCallback, &called, &error, &credential));
-+
-+  RunAllPendingTasks();
-+}
-+
-+TEST_F(CredentialManagerImplTest,
-        CredentialManagerOnRequestCredentialWithCrossOriginPasswordStore) {
-   store_->AddLogin(cross_origin_form_);
- 
-diff --git a/components/password_manager/core/browser/credential_manager_pending_request_task.cc b/components/password_manager/core/browser/credential_manager_pending_request_task.cc
-index 96a5ed2..172a51c 100644
---- a/components/password_manager/core/browser/credential_manager_pending_request_task.cc
-+++ b/components/password_manager/core/browser/credential_manager_pending_request_task.cc
-@@ -5,6 +5,7 @@
- #include "components/password_manager/core/browser/credential_manager_pending_request_task.h"
- 
- #include <algorithm>
-+#include <map>
- #include <utility>
- 
- #include "base/memory/ptr_util.h"
-@@ -24,27 +25,45 @@ namespace {
- 
- // Send a UMA histogram about if |local_results| has empty or duplicate
- // usernames.
--void ReportAccountChooserMetrics(
--    const ScopedVector<autofill::PasswordForm>& local_results,
--    bool had_empty_username) {
--  std::vector<base::string16> usernames;
--  for (const auto* form : local_results)
--    usernames.push_back(form->username_value);
--  std::sort(usernames.begin(), usernames.end());
--  bool has_duplicates =
--      std::adjacent_find(usernames.begin(), usernames.end()) != usernames.end();
-+void ReportAccountChooserMetrics(bool had_duplicates, bool had_empty_username) {
-   metrics_util::AccountChooserUsabilityMetric metric;
--  if (had_empty_username && has_duplicates)
-+  if (had_empty_username && had_duplicates)
-     metric = metrics_util::ACCOUNT_CHOOSER_EMPTY_USERNAME_AND_DUPLICATES;
-   else if (had_empty_username)
-     metric = metrics_util::ACCOUNT_CHOOSER_EMPTY_USERNAME;
--  else if (has_duplicates)
-+  else if (had_duplicates)
-     metric = metrics_util::ACCOUNT_CHOOSER_DUPLICATES;
-   else
-     metric = metrics_util::ACCOUNT_CHOOSER_LOOKS_OK;
-   metrics_util::LogAccountChooserUsability(metric);
- }
- 
-+// Returns true iff |form1| is better suitable for showing in the account
-+// chooser than |form2|. Inspired by PasswordFormManager::ScoreResult.
-+bool IsBetterMatch(const autofill::PasswordForm& form1,
-+                   const autofill::PasswordForm& form2) {
-+  if (!form1.is_public_suffix_match && form2.is_public_suffix_match)
-+    return true;
-+  if (form1.preferred && !form2.preferred)
-+    return true;
-+  return form1.date_created > form2.date_created;
-+}
-+
-+// Remove duplicates in |forms| before displaying them in the account chooser.
-+void FilterDuplicates(ScopedVector<autofill::PasswordForm>* forms) {
-+  std::map<base::string16, std::unique_ptr<autofill::PasswordForm>> credentials;
-+  for (auto& form : *forms) {
-+    auto it = credentials.find(form->username_value);
-+    if (it == credentials.end() || IsBetterMatch(*form, *it->second)) {
-+      credentials[form->username_value] = base::WrapUnique(form);
-+      form = nullptr;
-+    }
-+  }
-+  forms->clear();
-+  for (auto& form_pair : credentials)
-+    forms->push_back(std::move(form_pair.second));
-+}
-+
- }  // namespace
- 
- CredentialManagerPendingRequestTask::CredentialManagerPendingRequestTask(
-@@ -126,6 +145,10 @@ void CredentialManagerPendingRequestTask::OnGetPasswordStoreResults(
-   const bool has_empty_username = (begin_empty != local_results.end());
-   local_results.erase(begin_empty, local_results.end());
- 
-+  const size_t local_results_size = local_results.size();
-+  FilterDuplicates(&local_results);
-+  const bool has_duplicates = (local_results_size != local_results.size());
-+
-   if ((local_results.empty() && federated_results.empty())) {
-     delegate_->SendCredential(send_callback_, CredentialInfo());
-     return;
-@@ -157,9 +180,10 @@ void CredentialManagerPendingRequestTask::OnGetPasswordStoreResults(
-   // or if the user chooses not to return a credential, and the credential the
-   // user chooses if they pick one.
-   std::unique_ptr<autofill::PasswordForm> potential_autosignin_form(
--      new autofill::PasswordForm(*local_results[0]));
-+      can_use_autosignin ? new autofill::PasswordForm(*local_results[0])
-+                         : nullptr);
-   if (!zero_click_only_)
--    ReportAccountChooserMetrics(local_results, has_empty_username);
-+    ReportAccountChooserMetrics(has_duplicates, has_empty_username);
-   if (zero_click_only_ ||
-       !delegate_->client()->PromptUserToChooseCredentials(
-           std::move(local_results), std::move(federated_results), origin_,
--- 
-2.10.0.rc0.17.gd63263a
-
-
 From 710673efb7f154150ff3687676659f086cef6acb Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 27 Jun 2016 21:20:47 -0400
-Subject: [PATCH 08/40] Ironframe - Add RequestVisibility
+Subject: [PATCH 01/33] Ironframe - Add RequestVisibility
 
 ---
  third_party/WebKit/Source/core/core.gypi           |   7 ++
@@ -2184,7 +838,7 @@ index ef5f4744..940a723 100644
 From 04dc0a4f79ba2e6978639bf19e89815a273db7ff Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 03:58:00 -0400
-Subject: [PATCH 09/40] Ironframe - Add Layout test
+Subject: [PATCH 02/33] Ironframe - Add Layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt    |  35 +++++
@@ -8625,7 +7279,7 @@ HcmV?d00001
 From 0c839d3d436083e197470f4ff06b511156fab0ed Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 04:12:21 -0400
-Subject: [PATCH 10/40] Ironframe - Fix layout test
+Subject: [PATCH 03/33] Ironframe - Fix layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt          |  2 +-
@@ -8706,7 +7360,7 @@ index b79dcbd..53ad2ec 100644
 From 242f34add74c425747019053e8c3a956ecda3aef Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 06:53:57 -0400
-Subject: [PATCH 11/40] IronFrame - Fix nits in layout test
+Subject: [PATCH 04/33] IronFrame - Fix nits in layout test
 
 ---
  .../http/tests/ironframe/ironframe.html            | 49 +++++++++++-----------
@@ -8826,7 +7480,7 @@ index cb9bcb0..5d2f5b0f 100644
 From a9daa3f71a8a88d9bd3373287665c07964824f32 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:04:37 -0400
-Subject: [PATCH 12/40] IronFrame - Remove unused files from layout test
+Subject: [PATCH 05/33] IronFrame - Remove unused files from layout test
 
 ---
  .../ironframe/resources/ironframe-expected.txt     |   1 -
@@ -9014,7 +7668,7 @@ index 9e4f0f1..0000000
 From 6a7f58e8586b2949e3cd4e62fd8424b4b404d456 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:14:24 -0400
-Subject: [PATCH 13/40] IronFrame - Fix nits in layout test
+Subject: [PATCH 06/33] IronFrame - Fix nits in layout test
 
 ---
  .../http/tests/ironframe/ironframe.html            | 104 ++++++++--------
@@ -9284,7 +7938,7 @@ index cb09a11..41b1a6f 100644
 From f5e04013c27ee4ee2b80374d33bfacf675543101 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 09:21:04 -0400
-Subject: [PATCH 14/40] IronFrame - Use testharness.js in layout test
+Subject: [PATCH 07/33] IronFrame - Use testharness.js in layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt    |  35 --------
@@ -9525,7 +8179,7 @@ index 41b1a6f..6445755 100644
 From 7ec111d1e8bf763f61581a1d7e5ade4dfca703ee Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 8 Jul 2016 20:05:03 -0400
-Subject: [PATCH 15/40] IronFrame - Fix regression with RequestVisibility
+Subject: [PATCH 08/33] IronFrame - Fix regression with RequestVisibility
  compositing reason
 
 ---
@@ -9584,7 +8238,7 @@ index abe5f50..c176a29 100644
 From fa3e653d580f549e889c4dad9c123c79e331ee83 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 19 Jul 2016 23:23:39 -0400
-Subject: [PATCH 16/40] Ironframe - Set EventTypeName in constructor
+Subject: [PATCH 09/33] Ironframe - Set EventTypeName in constructor
 
 ---
  third_party/WebKit/Source/core/dom/Document.cpp                    | 1 -
@@ -9623,7 +8277,7 @@ index 5f17327..c32b661 100644
 From c58ac748b0d7271f8a0ff6fa39060e3e06d9870e Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 29 Jul 2016 14:25:22 -0400
-Subject: [PATCH 17/40] IronFrame - Avoid duplicate events
+Subject: [PATCH 10/33] IronFrame - Avoid duplicate events
 
 ---
  third_party/WebKit/Source/core/dom/Document.cpp | 10 +++++++++-
@@ -9657,7 +8311,7 @@ index 0a6d8c3..961d062 100644
 From fb84c75372b760c210863d27e5bf01c7324e1b33 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 07:43:24 -0400
-Subject: [PATCH 18/40] Ironframe - First pass on adding ironframe to the
+Subject: [PATCH 11/33] Ironframe - First pass on adding ironframe to the
  location_bar
 
 ---
@@ -9906,7 +8560,7 @@ index bc63148..c0e8169 100644
 From 03507887d8134a66837957929ec35a5c3428de82 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 18:29:14 -0400
-Subject: [PATCH 19/40] Ironframe - Working version of valid/InvalidIronframe()
+Subject: [PATCH 12/33] Ironframe - Working version of valid/InvalidIronframe()
  functions
 
 ---
@@ -10031,7 +8685,7 @@ index efa8ae5..a897f1cc 100644
 From a6d8160dba1b8b86537ea08ff313a02774e504ad Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 22:06:37 -0400
-Subject: [PATCH 20/40] Ironframe - Add IronframeStatus api
+Subject: [PATCH 13/33] Ironframe - Add IronframeStatus api
 
 ---
  .../ui/toolbar/chrome_toolbar_model_delegate.cc    | 47 ++++++++++++++++++++++
@@ -10292,7 +8946,7 @@ index d511e98..760ca96 100644
 From 78c49882726b5b31f8ab9bdf67bfe283e02ef16d Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 3 Aug 2016 04:02:03 -0400
-Subject: [PATCH 21/40] Ironframe - Add origin text to location bar
+Subject: [PATCH 14/33] Ironframe - Add origin text to location bar
 
 ---
  chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc |  8 ++++++++
@@ -10646,7 +9300,7 @@ index c0e8169..285dae6 100644
 From 7339343869e904c78f084d078ac6c199e68732b3 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 9 Aug 2016 03:44:25 -0400
-Subject: [PATCH 22/40] Ironframe - Remove commented out code
+Subject: [PATCH 15/33] Ironframe - Remove commented out code
 
 ---
  chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc |  2 --
@@ -10734,7 +9388,7 @@ index a3c6ea0..324635b 100644
 From 1673265cbb9a5088794ece31846cd77f7cf6f07e Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sun, 14 Aug 2016 00:53:41 -0400
-Subject: [PATCH 23/40] Merge upstream master
+Subject: [PATCH 16/33] Merge upstream master
 
 ---
  content/browser/web_contents/web_contents_impl.cc | 4 ----
@@ -10778,7 +9432,7 @@ index 0fbb3d1..3b31082 100644
 From 574c3e7ef971b8a7561833277d991ee61c944f67 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sun, 14 Aug 2016 15:31:14 -0400
-Subject: [PATCH 24/40] Ironframe - Cleanup location bar code
+Subject: [PATCH 17/33] Ironframe - Cleanup location bar code
 
 ---
  chrome/browser/ui/views/location_bar/location_bar_view.cc | 12 +++++++-----
@@ -10842,7 +9496,7 @@ index daefa4b..80bf549 100644
 From 78fd8dbbc4181f3417172cd44ccdfa4195563e59 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sat, 20 Aug 2016 02:28:14 -0400
-Subject: [PATCH 25/40] Ironframe - Fix upstream merge
+Subject: [PATCH 18/33] Ironframe - Fix upstream merge
 
 ---
  .../ui/toolbar/chrome_toolbar_model_delegate.cc    | 35 ----------------------
@@ -10914,7 +9568,7 @@ index 8577307..711c6f4 100644
 From d06f717c9e9e93724d2c17918453c2c9a20c2908 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sat, 20 Aug 2016 13:53:56 -0400
-Subject: [PATCH 26/40] Ironframe - Fix build
+Subject: [PATCH 19/33] Ironframe - Fix build
 
 ---
  components/toolbar/toolbar_model.h          | 4 ----
@@ -10960,7 +9614,7 @@ index 5fcac02..6cc8255 100644
 From 4e546a16bfb296a032b805b33c96b034303663b3 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 00:04:57 -0400
-Subject: [PATCH 27/40] Ironframe - Remove unused graphics layer crossroot
+Subject: [PATCH 20/33] Ironframe - Remove unused graphics layer crossroot
  parent
 
 ---
@@ -11031,7 +9685,7 @@ index 940a723..832767e 100644
 From 771ec6ea79bbdf6d0f5c0e65d94c7bd52e2617f8 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 03:28:24 -0400
-Subject: [PATCH 28/40] Ironframe - Improve code formatting
+Subject: [PATCH 21/33] Ironframe - Improve code formatting
 
 ---
  third_party/WebKit/Source/core/dom/Document.cpp | 35 +++++++++++++------------
@@ -11142,7 +9796,7 @@ index 6091fb3..d1d5173 100644
 From 5b610892465eefdc5d13755c7eeef6c91b7d861c Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 03:30:19 -0400
-Subject: [PATCH 29/40] Ironframe - Comment out buggy scroll handling
+Subject: [PATCH 22/33] Ironframe - Comment out buggy scroll handling
 
 ---
  third_party/WebKit/Source/core/dom/Document.cpp | 5 +++--
@@ -11171,7 +9825,7 @@ index d1d5173..3125f9c 100644
 From fe080700ddabb6efef14ee97f41f9f9936965328 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 15:57:42 -0400
-Subject: [PATCH 30/40] Ironframe - Remove commented out code
+Subject: [PATCH 23/33] Ironframe - Remove commented out code
 
 ---
  third_party/WebKit/Source/core/dom/Document.cpp | 7 +------
@@ -11206,7 +9860,7 @@ index 3125f9c..b290157 100644
 From b922f2c394236ee998332cb722d800c185bfbb3e Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 16:52:23 -0400
-Subject: [PATCH 31/40] Ironframe - Add dummy scroll for LayoutTest to receive
+Subject: [PATCH 24/33] Ironframe - Add dummy scroll for LayoutTest to receive
  initial event
 
 ---
@@ -11253,7 +9907,7 @@ index 9824401..361fc37 100644
 From dfa2cd29dfcb1defb937aab858fb98b21fa0dcdf Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 18:18:54 -0400
-Subject: [PATCH 32/40] Ironframe - Fix scrolling with ironframe layouttest
+Subject: [PATCH 25/33] Ironframe - Fix scrolling with ironframe layouttest
 
 ---
  .../http/tests/ironframe/resources/protected3.html            |  2 +-
@@ -11309,7 +9963,7 @@ index b290157..2314b58 100644
 From ee7a7e3efeec9d853b0049c6f67aad5add31f000 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 20:18:16 -0400
-Subject: [PATCH 33/40] Ironframe - Add comment on duplicate events and page
+Subject: [PATCH 26/33] Ironframe - Add comment on duplicate events and page
  reload interaction
 
 ---
@@ -11337,7 +9991,7 @@ index 2314b58..9c7f75b 100644
 From 9e2f51dd1f46ac72419d715fabad444648d11c8c Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 24 Aug 2016 05:08:40 -0400
-Subject: [PATCH 34/40] Ironframe - Cleanup whitespace
+Subject: [PATCH 27/33] Ironframe - Cleanup whitespace
 
 ---
  chrome/browser/ui/views/location_bar/location_bar_view.cc | 4 ++--
@@ -11441,7 +10095,7 @@ index 8474df5..dfc19b7 100644
 From 7f3a744ab88c97e24001d65468541b5f8ddaaee2 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 24 Aug 2016 05:18:31 -0400
-Subject: [PATCH 35/40] Ironframe - Restore DisplayedInsecureContent func
+Subject: [PATCH 28/33] Ironframe - Restore DisplayedInsecureContent func
 
 ---
  content/browser/web_contents/web_contents_impl.cc | 4 ++++
@@ -11510,7 +10164,7 @@ index 324635b..44f8712 100644
 From 24b3d9c583942e86ac03b2f6e925b5ded5700cbf Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 24 Aug 2016 05:23:05 -0400
-Subject: [PATCH 36/40] Ironframe - Fix code comment
+Subject: [PATCH 29/33] Ironframe - Fix code comment
 
 ---
  content/browser/web_contents/web_contents_impl.h | 2 +-
@@ -11536,7 +10190,7 @@ index a5adce7..d7ad6d1 100644
 From 8d48c56be511678ffdf1eee297761c6d05bfa336 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 24 Aug 2016 05:26:28 -0400
-Subject: [PATCH 37/40] Ironframe - Remove DisplayedInsecureContent func
+Subject: [PATCH 30/33] Ironframe - Remove DisplayedInsecureContent func
 
 ---
  content/public/browser/web_contents.h | 4 ----
@@ -11564,7 +10218,7 @@ index 44f8712..11e7504 100644
 From 8798d17714880ea963f91da955227b0176324977 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 24 Aug 2016 05:28:15 -0400
-Subject: [PATCH 38/40] Ironframe - Remove DisplayedInsecureContent
+Subject: [PATCH 31/33] Ironframe - Remove DisplayedInsecureContent
 
 ---
  content/browser/web_contents/web_contents_impl.h | 1 -
@@ -11589,7 +10243,7 @@ index d7ad6d1..1b99706 100644
 From 70f4950896b5dcfcb2b3c28b8ae092f38cca9e65 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 24 Aug 2016 05:33:03 -0400
-Subject: [PATCH 39/40] Ironframe - Remove graphics layer crossroot parent
+Subject: [PATCH 32/33] Ironframe - Remove graphics layer crossroot parent
 
 ---
  third_party/WebKit/Source/platform/graphics/GraphicsLayer.h | 2 --
@@ -11622,7 +10276,7 @@ index 832767e..ef5f4744 100644
 From 06448e878e753835af821c9850bfc5917cbdec32 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 24 Aug 2016 05:44:24 -0400
-Subject: [PATCH 40/40] Ironframe - Remove duplicate DisplayedInsecureContent
+Subject: [PATCH 33/33] Ironframe - Remove duplicate DisplayedInsecureContent
 
 ---
  content/browser/web_contents/web_contents_impl.cc | 4 ----
