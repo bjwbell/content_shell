@@ -176,7 +176,7 @@ index 6cc3914..176e47d 100644
    gfx::VectorIconId GetVectorIcon() const override;
    base::string16 GetEVCertName() const override;
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index e9b2d5f..0840b28 100644
+index 51f3bba..4f7065e 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -692,6 +692,12 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
@@ -203,7 +203,7 @@ index e9b2d5f..0840b28 100644
  void WebContentsImpl::IncrementCapturerCount(const gfx::Size& capture_size) {
    DCHECK(!is_being_destroyed_);
    ++capturer_count_;
-@@ -3468,6 +3478,27 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
+@@ -3475,6 +3485,27 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
    }
  }
  
@@ -232,7 +232,7 @@ index e9b2d5f..0840b28 100644
    RecordAction(base::UserMetricsAction("SSL.DisplayedInsecureContent"));
    displayed_insecure_content_ = true;
 diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
-index a094b30..6464989 100644
+index 3d4a437..1b99706 100644
 --- a/content/browser/web_contents/web_contents_impl.h
 +++ b/content/browser/web_contents/web_contents_impl.h
 @@ -291,6 +291,8 @@ class CONTENT_EXPORT WebContentsImpl
@@ -244,7 +244,7 @@ index a094b30..6464989 100644
    void IncrementCapturerCount(const gfx::Size& capture_size) override;
    void DecrementCapturerCount() override;
    int GetCapturerCount() const override;
-@@ -918,6 +920,9 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -920,6 +922,9 @@ class CONTENT_EXPORT WebContentsImpl
                                          const std::string& http_request,
                                          const std::string& mime_type,
                                          ResourceType resource_type);
@@ -254,7 +254,7 @@ index a094b30..6464989 100644
    void OnDidDisplayInsecureContent();
    void OnDidRunInsecureContent(const GURL& security_origin,
                                 const GURL& target_url);
-@@ -1208,6 +1213,10 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -1210,6 +1215,10 @@ class CONTENT_EXPORT WebContentsImpl
    // The canonicalized character encoding.
    std::string canonical_encoding_;
  
@@ -295,7 +295,7 @@ index efa8ae5..11e7504 100644
  
    // Indicates whether the WebContents is being captured (e.g., for screenshots
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 7c13c18..3b646d2 100644
+index 82610d7..5473580 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4185,6 +4185,18 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
@@ -318,10 +318,10 @@ index 7c13c18..3b646d2 100644
    Send(new FrameHostMsg_DidDisplayInsecureContent(routing_id_));
  }
 diff --git a/content/renderer/render_frame_impl.h b/content/renderer/render_frame_impl.h
-index a2b0c2e..4352947 100644
+index 2916939..a086c81 100644
 --- a/content/renderer/render_frame_impl.h
 +++ b/content/renderer/render_frame_impl.h
-@@ -573,6 +573,9 @@ class CONTENT_EXPORT RenderFrameImpl
+@@ -570,6 +570,9 @@ class CONTENT_EXPORT RenderFrameImpl
    void didLoadResourceFromMemoryCache(
        const blink::WebURLRequest& request,
        const blink::WebURLResponse& response) override;
@@ -635,7 +635,7 @@ new file mode 100644
 index 0000000..6c950c8
 Binary files /dev/null and b/third_party/WebKit/LayoutTests/http/tests/ironframe/tile.gif differ
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index 9221f7e..3e78957 100644
+index 65902ce..8d7d116 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -134,6 +134,7 @@
@@ -646,7 +646,7 @@ index 9221f7e..3e78957 100644
              'events/Event.idl',
              'events/EventTarget.idl',
              'events/FocusEvent.idl',
-@@ -476,6 +477,7 @@
+@@ -477,6 +478,7 @@
              'events/CustomEvent.idl',
              'events/DragEvent.idl',
              'events/ErrorEvent.idl',
@@ -654,7 +654,7 @@ index 9221f7e..3e78957 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2809,6 +2811,8 @@
+@@ -2814,6 +2816,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -663,7 +663,7 @@ index 9221f7e..3e78957 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3803,6 +3807,7 @@
+@@ -3808,6 +3812,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -671,7 +671,7 @@ index 9221f7e..3e78957 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3883,6 +3888,8 @@
+@@ -3888,6 +3893,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -681,7 +681,7 @@ index 9221f7e..3e78957 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index f8d81f7..177fe9e 100644
+index 8cbb3d7..9147147 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -904,7 +904,7 @@ index f8d81f7..177fe9e 100644
      TreeScope::trace(visitor);
      ContainerNode::trace(visitor);
 diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
-index a987a54..543dc99 100644
+index 2639e95..0adf3ed 100644
 --- a/third_party/WebKit/Source/core/dom/Document.h
 +++ b/third_party/WebKit/Source/core/dom/Document.h
 @@ -177,6 +177,7 @@ struct AnnotatedRegionValue;
@@ -972,10 +972,10 @@ index 8598cce..c3eb26d 100644
      [NewObject, DoNotTestNewObject, CustomElementCallbacks, RaisesException] Element createElementNS(DOMString? namespaceURI, DOMString qualifiedName);
      [NewObject] DocumentFragment createDocumentFragment();
 diff --git a/third_party/WebKit/Source/core/events/EventTypeNames.in b/third_party/WebKit/Source/core/events/EventTypeNames.in
-index 4614264..ad23dcc 100644
+index 55d5268..048b2d7 100644
 --- a/third_party/WebKit/Source/core/events/EventTypeNames.in
 +++ b/third_party/WebKit/Source/core/events/EventTypeNames.in
-@@ -187,6 +187,7 @@ removesourcebuffer
+@@ -188,6 +188,7 @@ removesourcebuffer
  removestream
  removetrack
  repeatEvent
@@ -1211,7 +1211,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index bb4e1e1..55a7fcd 100644
+index 7f981ede..3695eed 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -41,6 +41,7 @@
@@ -1239,12 +1239,12 @@ index bb4e1e1..55a7fcd 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index 8c08ccf..9a1391d 100644
+index 6359435..687b4f9 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1288,6 +1288,9 @@ public:
-         RadioNameMatchingASCIICaseless = 1514,
-         RadioNameMatchingCaseFolding = 1515,
+@@ -1290,6 +1290,9 @@ public:
+         InputSelectionGettersThrow = 1517,
+         DocumentCreateEventVRDisplayEvent = 1518,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1600,
 +
@@ -1294,10 +1294,10 @@ index a4a6bed..420dde2 100644
      return reasons;
  }
 diff --git a/third_party/WebKit/Source/core/loader/EmptyClients.h b/third_party/WebKit/Source/core/loader/EmptyClients.h
-index 1be9baa..0cbc31a 100644
+index d5715a0..dcd80e2 100644
 --- a/third_party/WebKit/Source/core/loader/EmptyClients.h
 +++ b/third_party/WebKit/Source/core/loader/EmptyClients.h
-@@ -241,6 +241,9 @@ public:
+@@ -240,6 +240,9 @@ public:
      void transitionToCommittedForNewPage() override {}
  
      bool navigateBackForward(int offset) const override { return false; }
@@ -1308,10 +1308,10 @@ index 1be9baa..0cbc31a 100644
      void didRunInsecureContent(SecurityOrigin*, const KURL&) override {}
      void didDetectXSS(const KURL&, bool) override {}
 diff --git a/third_party/WebKit/Source/core/loader/FrameLoaderClient.h b/third_party/WebKit/Source/core/loader/FrameLoaderClient.h
-index 65da964..ddc17c9 100644
+index 0dd606b..dfc19b7 100644
 --- a/third_party/WebKit/Source/core/loader/FrameLoaderClient.h
 +++ b/third_party/WebKit/Source/core/loader/FrameLoaderClient.h
-@@ -127,6 +127,10 @@ public:
+@@ -126,6 +126,10 @@ public:
      // is now possible.
      virtual void didAccessInitialDocument() { }
  
@@ -1454,10 +1454,10 @@ index 48e61ea..c176a29 100644
  const uint64_t CompositingReasonComboSquashableReasons =
      CompositingReasonOverlap
 diff --git a/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp b/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp
-index 517be6b..afb3ba9 100644
+index d854625..6a11a4c9 100644
 --- a/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp
 +++ b/third_party/WebKit/Source/web/FrameLoaderClientImpl.cpp
-@@ -658,6 +658,24 @@ void FrameLoaderClientImpl::didAccessInitialDocument()
+@@ -638,6 +638,24 @@ void FrameLoaderClientImpl::didAccessInitialDocument()
          m_webFrame->client()->didAccessInitialDocument();
  }
  
@@ -1483,10 +1483,10 @@ index 517be6b..afb3ba9 100644
  {
      if (m_webFrame->client())
 diff --git a/third_party/WebKit/Source/web/FrameLoaderClientImpl.h b/third_party/WebKit/Source/web/FrameLoaderClientImpl.h
-index 86d726f..593f071 100644
+index 52d4cf7..55fba0a 100644
 --- a/third_party/WebKit/Source/web/FrameLoaderClientImpl.h
 +++ b/third_party/WebKit/Source/web/FrameLoaderClientImpl.h
-@@ -112,6 +112,9 @@ public:
+@@ -110,6 +110,9 @@ public:
      void loadURLExternally(const ResourceRequest&, NavigationPolicy, const String& suggestedName, bool shouldReplaceCurrentEntry) override;
      bool navigateBackForward(int offset) const override;
      void didAccessInitialDocument() override;
@@ -1497,10 +1497,10 @@ index 86d726f..593f071 100644
      void didRunInsecureContent(SecurityOrigin*, const KURL& insecureURL) override;
      void didDetectXSS(const KURL&, bool didBlockEntirePage) override;
 diff --git a/third_party/WebKit/public/web/WebFrameClient.h b/third_party/WebKit/public/web/WebFrameClient.h
-index ebde5da..b7a7849 100644
+index bc63148..285dae6 100644
 --- a/third_party/WebKit/public/web/WebFrameClient.h
 +++ b/third_party/WebKit/public/web/WebFrameClient.h
-@@ -479,6 +479,10 @@ public:
+@@ -468,6 +468,10 @@ public:
      virtual void didLoadResourceFromMemoryCache(
          const WebURLRequest&, const WebURLResponse&) { }
  
