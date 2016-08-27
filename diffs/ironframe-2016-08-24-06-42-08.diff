@@ -295,7 +295,7 @@ index efa8ae5..11e7504 100644
  
    // Indicates whether the WebContents is being captured (e.g., for screenshots
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 82610d7..5473580 100644
+index 95165ff..7817dd5 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4185,6 +4185,18 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
@@ -635,7 +635,7 @@ new file mode 100644
 index 0000000..6c950c8
 Binary files /dev/null and b/third_party/WebKit/LayoutTests/http/tests/ironframe/tile.gif differ
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index 65902ce..8d7d116 100644
+index 76a7f9d..14a6014 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -134,6 +134,7 @@
@@ -654,7 +654,7 @@ index 65902ce..8d7d116 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2814,6 +2816,8 @@
+@@ -2811,6 +2813,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -663,7 +663,7 @@ index 65902ce..8d7d116 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3808,6 +3812,7 @@
+@@ -3805,6 +3809,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -671,7 +671,7 @@ index 65902ce..8d7d116 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3888,6 +3893,8 @@
+@@ -3885,6 +3890,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -681,7 +681,7 @@ index 65902ce..8d7d116 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 8cbb3d7..9147147 100644
+index c3cbd26..328347e 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -692,7 +692,7 @@ index 8cbb3d7..9147147 100644
  
  #include "bindings/core/v8/DOMDataStore.h"
  #include "bindings/core/v8/ExceptionMessages.h"
-@@ -122,11 +123,13 @@
+@@ -121,11 +122,13 @@
  #include "core/editing/serializers/Serialization.h"
  #include "core/editing/spellcheck/SpellChecker.h"
  #include "core/events/BeforeUnloadEvent.h"
@@ -706,7 +706,7 @@ index 8cbb3d7..9147147 100644
  #include "core/events/ScopedEventQueue.h"
  #include "core/events/VisualViewportResizeEvent.h"
  #include "core/events/VisualViewportScrollEvent.h"
-@@ -187,6 +190,7 @@
+@@ -186,6 +189,7 @@
  #include "core/layout/LayoutView.h"
  #include "core/layout/TextAutosizer.h"
  #include "core/layout/api/LayoutViewItem.h"
@@ -714,7 +714,7 @@ index 8cbb3d7..9147147 100644
  #include "core/layout/compositing/PaintLayerCompositor.h"
  #include "core/loader/CookieJar.h"
  #include "core/loader/DocumentLoader.h"
-@@ -213,6 +217,9 @@
+@@ -212,6 +216,9 @@
  #include "core/svg/SVGScriptElement.h"
  #include "core/svg/SVGTitleElement.h"
  #include "core/svg/SVGUseElement.h"
@@ -724,7 +724,7 @@ index 8cbb3d7..9147147 100644
  #include "core/timing/DOMWindowPerformance.h"
  #include "core/timing/Performance.h"
  #include "core/workers/SharedWorkerRepositoryClient.h"
-@@ -394,6 +401,8 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
+@@ -393,6 +400,8 @@ Document::Document(const DocumentInit& initializer, DocumentClassFlags documentC
      , m_domWindow(m_frame ? m_frame->localDOMWindow() : 0)
      , m_importsController(initializer.importsController())
      , m_contextFeatures(ContextFeatures::defaultSwitch())
@@ -733,7 +733,7 @@ index 8cbb3d7..9147147 100644
      , m_wellFormed(false)
      , m_printing(false)
      , m_wasPrinting(false)
-@@ -3910,6 +3919,13 @@ void Document::enqueueAnimationFrameEvent(Event* event)
+@@ -3916,6 +3925,13 @@ void Document::enqueueAnimationFrameEvent(Event* event)
      ensureScriptedAnimationController().enqueueEvent(event);
  }
  
@@ -747,7 +747,7 @@ index 8cbb3d7..9147147 100644
  void Document::enqueueUniqueAnimationFrameEvent(Event* event)
  {
      ensureScriptedAnimationController().enqueuePerFrameEvent(event);
-@@ -5802,6 +5818,147 @@ bool Document::hasFocus() const
+@@ -5808,6 +5824,147 @@ bool Document::hasFocus() const
      return page() && page()->focusController().isDocumentFocused(*this);
  }
  
@@ -895,7 +895,7 @@ index 8cbb3d7..9147147 100644
  template<unsigned type>
  bool shouldInvalidateNodeListCachesForAttr(const HeapHashSet<WeakMember<const LiveNodeListBase>> nodeLists[], const QualifiedName& attrName)
  {
-@@ -6002,6 +6159,7 @@ DEFINE_TRACE(Document)
+@@ -6008,6 +6165,7 @@ DEFINE_TRACE(Document)
      visitor->trace(m_intersectionObserverData);
      visitor->trace(m_snapCoordinator);
      visitor->trace(m_resizeObserverController);
@@ -904,10 +904,10 @@ index 8cbb3d7..9147147 100644
      TreeScope::trace(visitor);
      ContainerNode::trace(visitor);
 diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
-index 2639e95..0adf3ed 100644
+index d641d20..e03f9fd 100644
 --- a/third_party/WebKit/Source/core/dom/Document.h
 +++ b/third_party/WebKit/Source/core/dom/Document.h
-@@ -177,6 +177,7 @@ struct AnnotatedRegionValue;
+@@ -176,6 +176,7 @@ struct AnnotatedRegionValue;
  struct FocusParams;
  struct IconURL;
  
@@ -915,7 +915,7 @@ index 2639e95..0adf3ed 100644
  using MouseEventWithHitTestResults = EventWithHitTestResults<PlatformMouseEvent>;
  using ExceptionCode = int;
  
-@@ -711,6 +712,8 @@ public:
+@@ -715,6 +716,8 @@ public:
      ResizeObserverController* resizeObserverController() const { return m_resizeObserverController; }
      ResizeObserverController& ensureResizeObserverController();
  
@@ -924,7 +924,7 @@ index 2639e95..0adf3ed 100644
      void updateViewportDescription();
  
      // Returns the owning element in the parent document. Returns nullptr if
-@@ -926,6 +929,7 @@ public:
+@@ -930,6 +933,7 @@ public:
      void enqueueMediaQueryChangeListeners(HeapVector<Member<MediaQueryListListener>>&);
      void enqueueVisualViewportScrollEvent();
      void enqueueVisualViewportResizeEvent();
@@ -932,7 +932,7 @@ index 2639e95..0adf3ed 100644
  
      void dispatchEventsForPrinting();
  
-@@ -1095,6 +1099,12 @@ public:
+@@ -1094,6 +1098,12 @@ public:
  
      bool isInMainFrame() const;
  
@@ -945,7 +945,7 @@ index 2639e95..0adf3ed 100644
  protected:
      Document(const DocumentInit&, DocumentClassFlags = DefaultDocumentClass);
  
-@@ -1207,6 +1217,9 @@ private:
+@@ -1206,6 +1216,9 @@ private:
      Member<DocumentParser> m_parser;
      Member<ContextFeatures> m_contextFeatures;
  
@@ -1211,7 +1211,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index 7f981ede..3695eed 100644
+index 303f0fd..35ed84b 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -41,6 +41,7 @@
@@ -1222,7 +1222,7 @@ index 7f981ede..3695eed 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2622,6 +2623,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+@@ -2609,6 +2610,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
              // This was required for slimming paint v1 but is only temporarily
              // needed for slimming paint v2.
              view.compositor()->updateIfNeededRecursive();
@@ -1239,12 +1239,12 @@ index 7f981ede..3695eed 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index 6359435..687b4f9 100644
+index d81e597..9e1690f 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1290,6 +1290,9 @@ public:
-         InputSelectionGettersThrow = 1517,
-         DocumentCreateEventVRDisplayEvent = 1518,
+@@ -1304,6 +1304,9 @@ public:
+         UsbDeviceIsochronousTransferOut = 1533,
+         UsbDeviceReset = 1534,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1600,
 +
