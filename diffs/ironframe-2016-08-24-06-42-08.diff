@@ -295,7 +295,7 @@ index efa8ae5..11e7504 100644
  
    // Indicates whether the WebContents is being captured (e.g., for screenshots
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 7f25d68..4e90a13 100644
+index b83427f..12e6e78 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4172,6 +4172,18 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
@@ -635,7 +635,7 @@ new file mode 100644
 index 0000000..6c950c8
 Binary files /dev/null and b/third_party/WebKit/LayoutTests/http/tests/ironframe/tile.gif differ
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index 506adb8..4c21e53 100644
+index cf8c960..bb714e9 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -134,6 +134,7 @@
@@ -654,7 +654,7 @@ index 506adb8..4c21e53 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2820,6 +2822,8 @@
+@@ -2821,6 +2823,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -663,7 +663,7 @@ index 506adb8..4c21e53 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3814,6 +3818,7 @@
+@@ -3815,6 +3819,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -671,7 +671,7 @@ index 506adb8..4c21e53 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3894,6 +3899,8 @@
+@@ -3895,6 +3900,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -681,7 +681,7 @@ index 506adb8..4c21e53 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 3bdb2da..6a38881 100644
+index 4f5b548..9960499 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
