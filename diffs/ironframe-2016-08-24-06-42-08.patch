@@ -1,4 +1,4 @@
-From 9c0931ac12455d6978fc5d8ef90da06f975edfad Mon Sep 17 00:00:00 2001
+From 2393ee5fc2684592e73a51e82bc917d31d249eda Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 27 Jun 2016 21:20:47 -0400
 Subject: [PATCH 01/33] Ironframe - Add RequestVisibility
@@ -29,7 +29,7 @@ Subject: [PATCH 01/33] Ironframe - Add RequestVisibility
  create mode 100644 third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
 
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index 506adb8..4c21e53 100644
+index cf8c960..bb714e9 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -134,6 +134,7 @@
@@ -48,7 +48,7 @@ index 506adb8..4c21e53 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2820,6 +2822,8 @@
+@@ -2821,6 +2823,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -57,7 +57,7 @@ index 506adb8..4c21e53 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3814,6 +3818,7 @@
+@@ -3815,6 +3819,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -65,7 +65,7 @@ index 506adb8..4c21e53 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3894,6 +3899,8 @@
+@@ -3895,6 +3900,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -75,7 +75,7 @@ index 506adb8..4c21e53 100644
              '<(blink_core_output_dir)/events/EventInit.h',
              '<(blink_core_output_dir)/events/EventListenerOptions.cpp',
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 3bdb2da..4063f7e 100644
+index 4f5b548..7c6eada 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -835,7 +835,7 @@ index ef5f4744..940a723 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 95b42034082e2e0ad9f1d079a022a0d49aeedbb0 Mon Sep 17 00:00:00 2001
+From feaa28fa7859d1baa0c8c80d88966dbf8c9f0ad5 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 03:58:00 -0400
 Subject: [PATCH 02/33] Ironframe - Add Layout test
@@ -7276,7 +7276,7 @@ HcmV?d00001
 2.10.0.rc0.17.gd63263a
 
 
-From 3cdc4a6377abc5ef7220984bdbf9f088a041d074 Mon Sep 17 00:00:00 2001
+From f6d1f2e30afa554a86975303e871725628f62021 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 04:12:21 -0400
 Subject: [PATCH 03/33] Ironframe - Fix layout test
@@ -7357,7 +7357,7 @@ index b79dcbd..53ad2ec 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 499969dd49f599ee7f26dd650a50c8483796c441 Mon Sep 17 00:00:00 2001
+From a3b9ffe66da9c0f47de3ef62430eea6b63326cd3 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 06:53:57 -0400
 Subject: [PATCH 04/33] IronFrame - Fix nits in layout test
@@ -7477,7 +7477,7 @@ index cb9bcb0..5d2f5b0f 100644
 2.10.0.rc0.17.gd63263a
 
 
-From c38fcfb848eada33e56a8d3d3958739db18989b5 Mon Sep 17 00:00:00 2001
+From d8664875b2192818bb10c2af456d0fee296292d4 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:04:37 -0400
 Subject: [PATCH 05/33] IronFrame - Remove unused files from layout test
@@ -7665,7 +7665,7 @@ index 9e4f0f1..0000000
 2.10.0.rc0.17.gd63263a
 
 
-From d164c6dc9e80338af86b40ca2783be2d1ef26da7 Mon Sep 17 00:00:00 2001
+From a4c878f7f7500b4fbb0d2a93c6f195b1ea59eba9 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:14:24 -0400
 Subject: [PATCH 06/33] IronFrame - Fix nits in layout test
@@ -7935,7 +7935,7 @@ index cb09a11..41b1a6f 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 68011e3b68a41e6e34a89af4a0f2c7bc2f0fe1ca Mon Sep 17 00:00:00 2001
+From c4d03c37b0c737eea33c94f9803ecfa84a633128 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 09:21:04 -0400
 Subject: [PATCH 07/33] IronFrame - Use testharness.js in layout test
@@ -8176,7 +8176,7 @@ index 41b1a6f..6445755 100644
 2.10.0.rc0.17.gd63263a
 
 
-From c87834542e0b8c35c7e13b28c1810e5b0cea3705 Mon Sep 17 00:00:00 2001
+From 77f0b151b1bdcd1bdc7aab946ac330ed7feb8e38 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 8 Jul 2016 20:05:03 -0400
 Subject: [PATCH 08/33] IronFrame - Fix regression with RequestVisibility
@@ -8235,7 +8235,7 @@ index abe5f50..c176a29 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 4dcee7d7aef69edf12dc9dbfc7cde705b14dbc14 Mon Sep 17 00:00:00 2001
+From b43022d0df869bd53e8ad51d291e2c9664130a8f Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 19 Jul 2016 23:23:39 -0400
 Subject: [PATCH 09/33] Ironframe - Set EventTypeName in constructor
@@ -8246,7 +8246,7 @@ Subject: [PATCH 09/33] Ironframe - Set EventTypeName in constructor
  2 files changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 4063f7e..78c350e 100644
+index 7c6eada..ccd73c3 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -3932,7 +3932,6 @@ void Document::enqueueAnimationFrameEvent(Event* event)
@@ -8274,7 +8274,7 @@ index 5f17327..c32b661 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 919b6a5c632b4c803a43d26875c415b2f47a0fd5 Mon Sep 17 00:00:00 2001
+From 91d75b71f82d2b830327efae87cd6d4623d2a04b Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 29 Jul 2016 14:25:22 -0400
 Subject: [PATCH 10/33] IronFrame - Avoid duplicate events
@@ -8284,7 +8284,7 @@ Subject: [PATCH 10/33] IronFrame - Avoid duplicate events
  1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 78c350e..7ef9871 100644
+index ccd73c3..9a6d2705 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -5940,7 +5940,15 @@ void Document::requestVisibilityImpl(){
@@ -8308,7 +8308,7 @@ index 78c350e..7ef9871 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 0d1fcfb15b8560d30d77374cafb5b594bfbfde3a Mon Sep 17 00:00:00 2001
+From 0587b901d2d933dd982020ff29dc49c3e0441e4b Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 07:43:24 -0400
 Subject: [PATCH 11/33] Ironframe - First pass on adding ironframe to the
@@ -8395,7 +8395,7 @@ index 5868a5d..809d794 100644
  IPC_MESSAGE_ROUTED0(FrameHostMsg_DidDisplayInsecureContent)
  
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 7f25d68..8eb342f 100644
+index b83427f..a61e354 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4172,6 +4172,13 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
@@ -8426,7 +8426,7 @@ index c39992f..02939aa 100644
    void didRunInsecureContent(const blink::WebSecurityOrigin& origin,
                               const blink::WebURL& target) override;
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 7ef9871..42de4de 100644
+index 9a6d2705..4387e09 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -5828,6 +5828,21 @@ bool Document::hasFocus() const
@@ -8557,7 +8557,7 @@ index 523b2d7..732a3a5 100644
 2.10.0.rc0.17.gd63263a
 
 
-From e5c75ba10380cec660d1274bf19cc1cc0ad6b4ec Mon Sep 17 00:00:00 2001
+From 6070d695cdfa1f948916f7729e0b4328e0fb8a03 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 18:29:14 -0400
 Subject: [PATCH 12/33] Ironframe - Working version of valid/InvalidIronframe()
@@ -8682,7 +8682,7 @@ index efa8ae5..a897f1cc 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 555f967553781e08a6b6ae27aadad588f44e38f5 Mon Sep 17 00:00:00 2001
+From 11a4bf5fabd978d21c42697b353c968cd0ed7dc9 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 22:06:37 -0400
 Subject: [PATCH 13/33] Ironframe - Add IronframeStatus api
@@ -8943,7 +8943,7 @@ index d511e98..760ca96 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 140eb4110113abb66bb940f259ef885b5a5dd87b Mon Sep 17 00:00:00 2001
+From 3b5281523bb12b5d21a138499eb2ab7a5545d3ea Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 3 Aug 2016 04:02:03 -0400
 Subject: [PATCH 14/33] Ironframe - Add origin text to location bar
@@ -9189,7 +9189,7 @@ index a897f1cc..a3c6ea0 100644
  
    // Internal state ------------------------------------------------------------
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 8eb342f..7baa938 100644
+index a61e354..dcb1d2a 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4172,6 +4172,10 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
@@ -9216,7 +9216,7 @@ index 02939aa..0d3bb8f 100644
    void didRunInsecureContent(const blink::WebSecurityOrigin& origin,
                               const blink::WebURL& target) override;
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 42de4de..180b496 100644
+index 4387e09..fc4dbe5 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -5830,6 +5830,7 @@ bool Document::hasFocus() const
@@ -9297,7 +9297,7 @@ index 732a3a5..d888dd1 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 17653eff60c497f9a42ab9bb6a9b86faa8434162 Mon Sep 17 00:00:00 2001
+From 9df86c7a10b913aebd36f188bd2e3224b972c03b Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 9 Aug 2016 03:44:25 -0400
 Subject: [PATCH 15/33] Ironframe - Remove commented out code
@@ -9385,7 +9385,7 @@ index a3c6ea0..324635b 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 92955b4688a1aac0cc0263556be309cf2b5305eb Mon Sep 17 00:00:00 2001
+From 1bb3726aebaed78459e491e0acf27de922f8a634 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sun, 14 Aug 2016 00:53:41 -0400
 Subject: [PATCH 16/33] Merge upstream master
@@ -9429,7 +9429,7 @@ index 0fbb3d1..3b31082 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 033ed10f27d870bdd42783b8c36e700121aa6bac Mon Sep 17 00:00:00 2001
+From 2d4379b2578236a9eac7918985b98f2cb6da151f Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sun, 14 Aug 2016 15:31:14 -0400
 Subject: [PATCH 17/33] Ironframe - Cleanup location bar code
@@ -9493,7 +9493,7 @@ index daefa4b..80bf549 100644
 2.10.0.rc0.17.gd63263a
 
 
-From d91fa52ef1966b749a705c5a173664bde6309bb1 Mon Sep 17 00:00:00 2001
+From fdde7d1e4829bb39a45a926b0676d6e1b2ffdd47 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sat, 20 Aug 2016 02:28:14 -0400
 Subject: [PATCH 18/33] Ironframe - Fix upstream merge
@@ -9565,7 +9565,7 @@ index 8577307..711c6f4 100644
 2.10.0.rc0.17.gd63263a
 
 
-From fe53f0a2b668795ac6b3d8a582ea8bfbf5d88712 Mon Sep 17 00:00:00 2001
+From 8221303c3bd0f64ef754c26496b92accb7fe15c4 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sat, 20 Aug 2016 13:53:56 -0400
 Subject: [PATCH 19/33] Ironframe - Fix build
@@ -9611,7 +9611,7 @@ index 5fcac02..6cc8255 100644
 2.10.0.rc0.17.gd63263a
 
 
-From de4a39683b9b2667ffee12777bf16e7951d3933b Mon Sep 17 00:00:00 2001
+From fc14df7a36ca3290ce796f38613a56c25517c544 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 00:04:57 -0400
 Subject: [PATCH 20/33] Ironframe - Remove unused graphics layer crossroot
@@ -9682,7 +9682,7 @@ index 940a723..832767e 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 0790d753051aa1c8428a93da7d6e4740df1878a2 Mon Sep 17 00:00:00 2001
+From 9dffa18c4b98066f4c510812c4805e6a821651e6 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 03:28:24 -0400
 Subject: [PATCH 21/33] Ironframe - Improve code formatting
@@ -9692,7 +9692,7 @@ Subject: [PATCH 21/33] Ironframe - Improve code formatting
  1 file changed, 18 insertions(+), 17 deletions(-)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 180b496..cc4227a 100644
+index fc4dbe5..f0ca62f 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -5876,49 +5876,50 @@ void Document::requestVisibilityImpl(){
@@ -9793,7 +9793,7 @@ index 180b496..cc4227a 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 0022660f8bc29693d0c9154297c6e50130090e88 Mon Sep 17 00:00:00 2001
+From ee6e4f1dd206e2f144e0c21290db025c9e376cac Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 03:30:19 -0400
 Subject: [PATCH 22/33] Ironframe - Comment out buggy scroll handling
@@ -9803,7 +9803,7 @@ Subject: [PATCH 22/33] Ironframe - Comment out buggy scroll handling
  1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index cc4227a..a1b3648 100644
+index f0ca62f..bba9fbb 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -5915,8 +5915,9 @@ void Document::requestVisibilityImpl(){
@@ -9822,7 +9822,7 @@ index cc4227a..a1b3648 100644
 2.10.0.rc0.17.gd63263a
 
 
-From f2d040b2b9c379d1a264d0c5cad7a68aedb840e6 Mon Sep 17 00:00:00 2001
+From fd7503a3f964abe108d1253e454ac5e78622bb68 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 15:57:42 -0400
 Subject: [PATCH 23/33] Ironframe - Remove commented out code
@@ -9832,7 +9832,7 @@ Subject: [PATCH 23/33] Ironframe - Remove commented out code
  1 file changed, 1 insertion(+), 6 deletions(-)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index a1b3648..cfedf08 100644
+index bba9fbb..291238c 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -5831,16 +5831,11 @@ bool Document::hasFocus() const
@@ -9857,7 +9857,7 @@ index a1b3648..cfedf08 100644
 2.10.0.rc0.17.gd63263a
 
 
-From da45d09d2ad2b4ff1e4cfdd2d59221a8a6fa245c Mon Sep 17 00:00:00 2001
+From 413f3003ffa9e13a026bddd92ca3b8b547777b89 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 16:52:23 -0400
 Subject: [PATCH 24/33] Ironframe - Add dummy scroll for LayoutTest to receive
@@ -9904,7 +9904,7 @@ index 9824401..361fc37 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 908671bc75219d71e2164271fbd38c1fd8314b0e Mon Sep 17 00:00:00 2001
+From f33cd35637beca282d5f3d4f928343c0d847e4b8 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 18:18:54 -0400
 Subject: [PATCH 25/33] Ironframe - Fix scrolling with ironframe layouttest
@@ -9928,7 +9928,7 @@ index 361fc37..9824401 100644
                   } else {
                       window.top.document.getElementById("result").innerHTML = "PASS";
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index cfedf08..51d31c5 100644
+index 291238c..837b15c 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -5910,9 +5910,8 @@ void Document::requestVisibilityImpl(){
@@ -9960,7 +9960,7 @@ index cfedf08..51d31c5 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 3aa97eff0553388d618d34737bc9fc4542acdfe5 Mon Sep 17 00:00:00 2001
+From ec3bdcb65a6a3504b5024a1a169d0d1df75887e5 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 20:18:16 -0400
 Subject: [PATCH 26/33] Ironframe - Add comment on duplicate events and page
@@ -9971,7 +9971,7 @@ Subject: [PATCH 26/33] Ironframe - Add comment on duplicate events and page
  1 file changed, 3 insertions(+)
 
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 51d31c5..94cb2d8 100644
+index 837b15c..05f3ade 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -5956,6 +5956,9 @@ void Document::requestVisibilityImpl(){
@@ -9988,7 +9988,7 @@ index 51d31c5..94cb2d8 100644
 2.10.0.rc0.17.gd63263a
 
 
-From e66068c3a87c112c2f5070edb7092d056f3d4721 Mon Sep 17 00:00:00 2001
+From ff38c534806c8317d3f5ecdd95bbdbd575cabc2c Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 24 Aug 2016 05:08:40 -0400
 Subject: [PATCH 27/33] Ironframe - Cleanup whitespace
@@ -10044,7 +10044,7 @@ index 5b60549..bcdcc9f 100644
    RecordAction(base::UserMetricsAction("SSL.DisplayedInsecureContent"));
    displayed_insecure_content_ = true;
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 7baa938..4e90a13 100644
+index dcb1d2a..12e6e78 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4179,6 +4179,7 @@ void RenderFrameImpl::ironframeOrigin(const blink::WebCString& origin) {
@@ -10056,7 +10056,7 @@ index 7baa938..4e90a13 100644
    Send(new FrameHostMsg_InvalidIronframe(routing_id_));
  }
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 94cb2d8..6a38881 100644
+index 05f3ade..9960499 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -5831,14 +5831,13 @@ bool Document::hasFocus() const
@@ -10092,7 +10092,7 @@ index 8474df5..dfc19b7 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 27a3dee1484fe83d76bc99a4f899f4d747118b5c Mon Sep 17 00:00:00 2001
+From 5cd0fbf128d644bd61b2fd0965611af2b6a4c26c Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 24 Aug 2016 05:18:31 -0400
 Subject: [PATCH 28/33] Ironframe - Restore DisplayedInsecureContent func
@@ -10161,7 +10161,7 @@ index 324635b..44f8712 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 2c31de43d3f4e1d8f760bd42b8100f042f51c722 Mon Sep 17 00:00:00 2001
+From b11a382b7184c8b6e123a9216d13384db58fde94 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 24 Aug 2016 05:23:05 -0400
 Subject: [PATCH 29/33] Ironframe - Fix code comment
@@ -10187,7 +10187,7 @@ index a5adce7..d7ad6d1 100644
 2.10.0.rc0.17.gd63263a
 
 
-From cbf5e1ad1ea2771503ff1740467041fff6988267 Mon Sep 17 00:00:00 2001
+From a5e03db28e430118d71e95ead58c6fc795c45341 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 24 Aug 2016 05:26:28 -0400
 Subject: [PATCH 30/33] Ironframe - Remove DisplayedInsecureContent func
@@ -10215,7 +10215,7 @@ index 44f8712..11e7504 100644
 2.10.0.rc0.17.gd63263a
 
 
-From b156dc9152c6b4150dec84c0400be0961304b0e2 Mon Sep 17 00:00:00 2001
+From 9051ade42c0f08446d32a7b63fc0bc06109a3738 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 24 Aug 2016 05:28:15 -0400
 Subject: [PATCH 31/33] Ironframe - Remove DisplayedInsecureContent
@@ -10240,7 +10240,7 @@ index d7ad6d1..1b99706 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 7206b04e613a9f2b0b2eb2bb232a57758f4cad82 Mon Sep 17 00:00:00 2001
+From a3fd8a25fadab59b58f5d3248f4576720a5bf400 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 24 Aug 2016 05:33:03 -0400
 Subject: [PATCH 32/33] Ironframe - Remove graphics layer crossroot parent
@@ -10273,7 +10273,7 @@ index 832767e..ef5f4744 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 2662c345cbf85f13f1207d410571d90daa2f7b06 Mon Sep 17 00:00:00 2001
+From 7893a0c285ad0eabdcb0927064384f9e363205c6 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 24 Aug 2016 05:44:24 -0400
 Subject: [PATCH 33/33] Ironframe - Remove duplicate DisplayedInsecureContent
