@@ -1,6 +1,7 @@
 ## IronFrame Layout Tests
 The IronFrame layout tests are under `third_party/WebKit/LayoutTests/http/tests/ironframe`.
 
+Compile blink (and layout) tests with `ninja -C out/Default blink_tests`.
 To run them without X11, execute:
 ```
 python testing/xvfb.py out/Default/ python third_party/WebKit/Tools/Scripts/run-webkit-tests -t Default http/tests/ironframe
