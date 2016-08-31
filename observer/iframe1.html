@@ -1,6 +1,5 @@
 <html>
     <head>
-        
     </head>
     <body>
         <input onchange="doRequestVisibility(this)"    type="checkbox">Call requestVisibility</input>.<br/>
@@ -8,21 +7,21 @@
             This is an example of intersection observer with and without ironframe.
         </div>
         <script src="observer.js"></script>
-              <script>
-       function doRequestVisibility(e){
-                   if(e.checked) {
-                       console.log("calling document.requestVisibility()");
-                       document.requestVisibility();
-                       // Add a new div to force a relayout which executes the requestVisibility codepath in LayoutView.
-                       var newdiv = document.createElement('div');
-                       var divIdName = 'divIdName';
-                       newdiv.setAttribute('id',divIdName);
-                       newdiv.innerHTML = '';
-                       var ni = document.getElementById('observerId');
-                       ni.appendChild(newdiv);
-                   }
-                   else { ; }
-               }
-              </script>
+        <script>
+         function doRequestVisibility(e){
+             if(e.checked) {
+                 console.log("calling document.requestVisibility()");
+                 document.requestVisibility();
+                 // Add a new div to force a relayout which executes the requestVisibility codepath in LayoutView.
+                 var newdiv = document.createElement('div');
+                 var divIdName = 'divIdName';
+                 newdiv.setAttribute('id',divIdName);
+                 newdiv.innerHTML = '';
+                 var ni = document.getElementById('observerId');
+                 ni.appendChild(newdiv);
+             }
+             else { ; }
+         }
+        </script>
     </body>
 </html>
