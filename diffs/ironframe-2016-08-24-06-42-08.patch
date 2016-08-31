@@ -1,7 +1,7 @@
-From 2eea8b35627be611bdb3b0d1a1d3b630ef587885 Mon Sep 17 00:00:00 2001
+From 804af71257fcfb8099fae5f7bd20de4af2681493 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 27 Jun 2016 21:20:47 -0400
-Subject: [PATCH 01/33] Ironframe - Add RequestVisibility
+Subject: [PATCH 01/18] Ironframe - Add RequestVisibility
 
 ---
  third_party/WebKit/Source/core/core.gypi           |   7 ++
@@ -29,7 +29,7 @@ Subject: [PATCH 01/33] Ironframe - Add RequestVisibility
  create mode 100644 third_party/WebKit/Source/core/events/RequestedVisibilityEventInit.idl
 
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index cf8c960..bb714e9 100644
+index 8f212a3..02ead16 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -134,6 +134,7 @@
@@ -48,7 +48,7 @@ index cf8c960..bb714e9 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2821,6 +2823,8 @@
+@@ -2819,6 +2821,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -57,7 +57,7 @@ index cf8c960..bb714e9 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3815,6 +3819,7 @@
+@@ -3813,6 +3817,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -65,7 +65,7 @@ index cf8c960..bb714e9 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3895,6 +3900,8 @@
+@@ -3893,6 +3898,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -576,7 +576,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index 3b1b7cc..ce1bd8e 100644
+index c1e3110..a802e8d 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -41,6 +41,7 @@
@@ -604,12 +604,12 @@ index 3b1b7cc..ce1bd8e 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index a4add5b..3b08b93 100644
+index 42d80f42..17d7251 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
 @@ -1308,6 +1308,9 @@ public:
-         PointerEnterLeaveFiredWhileCaptured = 1537,
          PointerOverOutFiredWhileCaptured = 1538,
+         DraggableAttribute = 1539,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1600,
 +
@@ -760,7 +760,7 @@ index 48e61ea..abe5f50 100644
  const uint64_t CompositingReasonCombo3DDescendants =
      CompositingReasonPreserve3DWith3DDescendants
 diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
-index fe76a63..1020586 100644
+index f1a74c1..760f3b2 100644
 --- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
 +++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
 @@ -131,6 +131,7 @@ GraphicsLayer::GraphicsLayer(GraphicsLayerClient* client)
@@ -835,10 +835,10 @@ index ef5f4744..940a723 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 487b7a6982b57ceabbb493045aae480a9cbb46b3 Mon Sep 17 00:00:00 2001
+From 6f86342c00b6a993ac592e41ea621d877e658452 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 03:58:00 -0400
-Subject: [PATCH 02/33] Ironframe - Add Layout test
+Subject: [PATCH 02/18] Ironframe - Add Layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt    |  35 +++++
@@ -7276,10 +7276,10 @@ HcmV?d00001
 2.10.0.rc0.17.gd63263a
 
 
-From ff3ddca527f0a47af714af78cd7b74fc548f5c4d Mon Sep 17 00:00:00 2001
+From 886136bca005c3e271bbe6d42165d77bc791da8a Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 1 Jul 2016 04:12:21 -0400
-Subject: [PATCH 03/33] Ironframe - Fix layout test
+Subject: [PATCH 03/18] Ironframe - Fix layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt          |  2 +-
@@ -7357,10 +7357,10 @@ index b79dcbd..53ad2ec 100644
 2.10.0.rc0.17.gd63263a
 
 
-From eb80f2455055826fc69d0fdcf41f5574a8f774a8 Mon Sep 17 00:00:00 2001
+From 6cfec2edee001a6fc0c8184e068b3195099fa647 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 06:53:57 -0400
-Subject: [PATCH 04/33] IronFrame - Fix nits in layout test
+Subject: [PATCH 04/18] IronFrame - Fix nits in layout test
 
 ---
  .../http/tests/ironframe/ironframe.html            | 49 +++++++++++-----------
@@ -7477,10 +7477,10 @@ index cb9bcb0..5d2f5b0f 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 221b6cbe0a66280e2d7a0064ca8779eb702286d5 Mon Sep 17 00:00:00 2001
+From 5743c629fb0cbc72413929ac7a0f392833a97af0 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:04:37 -0400
-Subject: [PATCH 05/33] IronFrame - Remove unused files from layout test
+Subject: [PATCH 05/18] IronFrame - Remove unused files from layout test
 
 ---
  .../ironframe/resources/ironframe-expected.txt     |   1 -
@@ -7665,10 +7665,10 @@ index 9e4f0f1..0000000
 2.10.0.rc0.17.gd63263a
 
 
-From 3a12635b21e44c7c0b83662703d69d7d00ca861e Mon Sep 17 00:00:00 2001
+From b30537422c00ad18db7e82a28ec660b74b09043c Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 07:14:24 -0400
-Subject: [PATCH 06/33] IronFrame - Fix nits in layout test
+Subject: [PATCH 06/18] IronFrame - Fix nits in layout test
 
 ---
  .../http/tests/ironframe/ironframe.html            | 104 ++++++++--------
@@ -7935,10 +7935,10 @@ index cb09a11..41b1a6f 100644
 2.10.0.rc0.17.gd63263a
 
 
-From fefc3fb91adcfa6552a48c5df74de24f8ced7642 Mon Sep 17 00:00:00 2001
+From 366fe62d26262b0a0b65a32299a019df2f155588 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Mon, 4 Jul 2016 09:21:04 -0400
-Subject: [PATCH 07/33] IronFrame - Use testharness.js in layout test
+Subject: [PATCH 07/18] IronFrame - Use testharness.js in layout test
 
 ---
  .../http/tests/ironframe/ironframe-expected.txt    |  35 --------
@@ -8176,10 +8176,10 @@ index 41b1a6f..6445755 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 6d4ba062cfd531cb533fb64738cc60aeeccfc95d Mon Sep 17 00:00:00 2001
+From a93532036a2d20f5695241e6fb33432ddde8d308 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 8 Jul 2016 20:05:03 -0400
-Subject: [PATCH 08/33] IronFrame - Fix regression with RequestVisibility
+Subject: [PATCH 08/18] IronFrame - Fix regression with RequestVisibility
  compositing reason
 
 ---
@@ -8235,10 +8235,10 @@ index abe5f50..c176a29 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 73e0f4676017675f450d99feb2f068028858795e Mon Sep 17 00:00:00 2001
+From 66417637110ef1c36385d0297d32b176291a4858 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 19 Jul 2016 23:23:39 -0400
-Subject: [PATCH 09/33] Ironframe - Set EventTypeName in constructor
+Subject: [PATCH 09/18] Ironframe - Set EventTypeName in constructor
 
 ---
  third_party/WebKit/Source/core/dom/Document.cpp                    | 1 -
@@ -8274,10 +8274,10 @@ index 5f17327..c32b661 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 0fdf1a1eb51b1b0093723ff5d786fd6dcc4205c5 Mon Sep 17 00:00:00 2001
+From ea9ef1786e7980fd9316f4811292d3ff96665893 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Fri, 29 Jul 2016 14:25:22 -0400
-Subject: [PATCH 10/33] IronFrame - Avoid duplicate events
+Subject: [PATCH 10/18] IronFrame - Avoid duplicate events
 
 ---
  third_party/WebKit/Source/core/dom/Document.cpp | 10 +++++++++-
@@ -8308,10 +8308,10 @@ index ccd73c3..9a6d2705 100644
 2.10.0.rc0.17.gd63263a
 
 
-From af0311ed555489526ca61a9bd1fe829a74f8ca5f Mon Sep 17 00:00:00 2001
+From 7f3284740c96d9b2a3699524e6e6e16f2dbf0c5c Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 07:43:24 -0400
-Subject: [PATCH 11/33] Ironframe - First pass on adding ironframe to the
+Subject: [PATCH 11/18] Ironframe - First pass on adding ironframe to the
  location_bar
 
 ---
@@ -8380,10 +8380,10 @@ index 3d4a437..6a31d9c 100644
    void OnDidRunInsecureContent(const GURL& security_origin,
                                 const GURL& target_url);
 diff --git a/content/common/frame_messages.h b/content/common/frame_messages.h
-index 5868a5d..809d794 100644
+index 64ef075..c8a1a7b 100644
 --- a/content/common/frame_messages.h
 +++ b/content/common/frame_messages.h
-@@ -1462,6 +1462,10 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
+@@ -1460,6 +1460,10 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
  IPC_MESSAGE_ROUTED1(FrameHostMsg_RouteMessageEvent,
                      FrameMsg_PostMessage_Params)
  
@@ -8395,7 +8395,7 @@ index 5868a5d..809d794 100644
  IPC_MESSAGE_ROUTED0(FrameHostMsg_DidDisplayInsecureContent)
  
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index b83427f..a61e354 100644
+index 0cbd5d8..213981c 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4172,6 +4172,13 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
@@ -8557,10 +8557,10 @@ index 523b2d7..732a3a5 100644
 2.10.0.rc0.17.gd63263a
 
 
-From a3b8e845ca992ffc398489aa3e6973c497925c3a Mon Sep 17 00:00:00 2001
+From b2a03631a3b29a57b687abf035fb508db8b76b1c Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 18:29:14 -0400
-Subject: [PATCH 12/33] Ironframe - Working version of valid/InvalidIronframe()
+Subject: [PATCH 12/18] Ironframe - Working version of valid/InvalidIronframe()
  functions
 
 ---
@@ -8682,10 +8682,10 @@ index efa8ae5..a897f1cc 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 7b8f7dc6692bc769fc31d97e9ea0c0ff9fc773ff Mon Sep 17 00:00:00 2001
+From 29b10215dd25e497c7288c2cd5609c234e59d554 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 2 Aug 2016 22:06:37 -0400
-Subject: [PATCH 13/33] Ironframe - Add IronframeStatus api
+Subject: [PATCH 13/18] Ironframe - Add IronframeStatus api
 
 ---
  .../ui/toolbar/chrome_toolbar_model_delegate.cc    | 47 ++++++++++++++++++++++
@@ -8771,7 +8771,7 @@ index 42806b9..b30e934 100644
  
    // Returns the navigation controller used to retrieve the navigation entry
 diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-index 7ffa3e9..4baadfd 100644
+index e181c52..4da1ad7 100644
 --- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
 +++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
 @@ -860,8 +860,20 @@ void LocationBarView::RefreshLocationIcon() {
@@ -8943,10 +8943,10 @@ index d511e98..760ca96 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 4d6fb6d77c8550b1a0feb68b05e4c7ba9500fb50 Mon Sep 17 00:00:00 2001
+From c173ad56f3ee6dffdce69cbcc16da2e6062365c4 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Wed, 3 Aug 2016 04:02:03 -0400
-Subject: [PATCH 14/33] Ironframe - Add origin text to location bar
+Subject: [PATCH 14/18] Ironframe - Add origin text to location bar
 
 ---
  chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc |  8 ++++++++
@@ -9002,7 +9002,7 @@ index b30e934..8577307 100644
    scoped_refptr<net::X509Certificate> GetCertificate() const override;
  
 diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-index 4baadfd..daefa4b 100644
+index 4da1ad7..86b35f2 100644
 --- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
 +++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
 @@ -567,7 +567,7 @@ void LocationBarView::Layout() {
@@ -9162,10 +9162,10 @@ index 55076ee..0fbb3d1 100644
    bool displayed_insecure_content_;
  
 diff --git a/content/common/frame_messages.h b/content/common/frame_messages.h
-index 809d794..b63f677 100644
+index c8a1a7b..6724bdd 100644
 --- a/content/common/frame_messages.h
 +++ b/content/common/frame_messages.h
-@@ -1462,7 +1462,7 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
+@@ -1460,7 +1460,7 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
  IPC_MESSAGE_ROUTED1(FrameHostMsg_RouteMessageEvent,
                      FrameMsg_PostMessage_Params)
  
@@ -9189,7 +9189,7 @@ index a897f1cc..a3c6ea0 100644
  
    // Internal state ------------------------------------------------------------
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index a61e354..dcb1d2a 100644
+index 213981c..183fe6d 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4172,6 +4172,10 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
@@ -9297,10 +9297,10 @@ index 732a3a5..d888dd1 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 6bff431af203e8066e84e1159cbc11b615fa1b9e Mon Sep 17 00:00:00 2001
+From 79b340589377d26babe00be675ad29f336f5cf71 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 9 Aug 2016 03:44:25 -0400
-Subject: [PATCH 15/33] Ironframe - Remove commented out code
+Subject: [PATCH 15/18] Ironframe - Remove commented out code
 
 ---
  chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc |  2 --
@@ -9385,123 +9385,19 @@ index a3c6ea0..324635b 100644
 2.10.0.rc0.17.gd63263a
 
 
-From 09fd7975f2bf4bc9b6cd99ebede0a23085883bc4 Mon Sep 17 00:00:00 2001
+From b370421f489bef2341a37c3b6ae69d230ae87186 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sun, 14 Aug 2016 00:53:41 -0400
-Subject: [PATCH 16/33] Merge upstream master
-
----
- content/browser/web_contents/web_contents_impl.cc | 4 ----
- content/browser/web_contents/web_contents_impl.h  | 4 ----
- 2 files changed, 8 deletions(-)
-
-diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 57aff45..5b60549 100644
---- a/content/browser/web_contents/web_contents_impl.cc
-+++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -2524,10 +2524,6 @@ void WebContentsImpl::ResizeDueToAutoResize(
-     delegate_->ResizeDueToAutoResize(this, new_size);
- }
- 
--bool WebContentsImpl::DisplayedInsecureContent() const {
--  return displayed_insecure_content_;
--}
--
- bool WebContentsImpl::DisplayedContentWithCertErrors() const {
-   return displayed_content_with_cert_errors_;
- }
-diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
-index 0fbb3d1..3b31082 100644
---- a/content/browser/web_contents/web_contents_impl.h
-+++ b/content/browser/web_contents/web_contents_impl.h
-@@ -410,10 +410,6 @@ class CONTENT_EXPORT WebContentsImpl
-   bool GetAllowOtherViews() override;
- #endif
- 
--  // Returns true if this is a secure page which has displayed content
--  // loaded over insecure HTTP.
--  bool DisplayedInsecureContent() const;
--
-   // Returns true if this page has displayed content loaded over HTTPS
-   // with certificate errors.
-   bool DisplayedContentWithCertErrors() const;
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From f9224626d46071a655d66991bdfa36137839a32c Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Sun, 14 Aug 2016 15:31:14 -0400
-Subject: [PATCH 17/33] Ironframe - Cleanup location bar code
-
----
- chrome/browser/ui/views/location_bar/location_bar_view.cc | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-index daefa4b..80bf549 100644
---- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
-+++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-@@ -567,7 +567,7 @@ void LocationBarView::Layout() {
-     return;
- 
-   selected_keyword_view_->SetVisible(false);
--  //location_icon_view_->SetVisible(false);
-+  location_icon_view_->SetVisible(false);
-   keyword_hint_view_->SetVisible(false);
- 
-   const int item_padding = GetLayoutConstant(LOCATION_BAR_HORIZONTAL_PADDING);
-@@ -590,7 +590,9 @@ void LocationBarView::Layout() {
-   const int vertical_padding = GetVerticalEdgeThicknessWithPadding();
-   const int location_height = std::max(height() - (vertical_padding * 2), 0);
- 
--  //location_icon_view_->SetLabel(base::string16(base::ASCIIToUTF16("ironframe")));
-+  if (GetToolbarModel()->GetIronframeStatus() == 0) {
-+          location_icon_view_->SetLabel(base::string16());
-+  }
-   location_icon_view_->SetBackground(false);
-   if (ShouldShowKeywordBubble()) {
-     leading_decorations.AddDecoration(vertical_padding, location_height, true,
-@@ -613,7 +615,9 @@ void LocationBarView::Layout() {
-       }
-     }
-   } else if (ShouldShowEVBubble()) {
--      //GetToolbarModel()->GetEVCertName());
-+    if (GetToolbarModel()->GetIronframeStatus() == 0) {
-+            location_icon_view_->SetLabel(GetToolbarModel()->GetEVCertName());
-+    }
-     location_icon_view_->SetBackground(true);
-     // The largest fraction of the omnibox that can be taken by the EV bubble.
-     const double kMaxBubbleFraction = 0.5;
-@@ -861,7 +865,6 @@ void LocationBarView::RefreshLocationIcon() {
- 
-   if (ui::MaterialDesignController::IsModeMaterial()) {
-       int ironframe_status = GetToolbarModel()->GetIronframeStatus();
--
-       security_state::SecurityStateModel::SecurityLevel security_level =
-           GetToolbarModel()->GetSecurityLevel(false);
- 
-@@ -1058,7 +1061,6 @@ bool LocationBarView::ShouldShowKeywordBubble() const {
- 
- bool LocationBarView::ShouldShowEVBubble() const {
-     int ironframe_status = GetToolbarModel()->GetIronframeStatus();
--
-     if (ironframe_status == 1) {
-         return security_state::SecurityStateModel::EV_SECURE;
-     }
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From f8276384e281ee4fa5ab7ea619b308ac9da6dc26 Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Sat, 20 Aug 2016 02:28:14 -0400
-Subject: [PATCH 18/33] Ironframe - Fix upstream merge
+Subject: [PATCH 16/18] Ironframe - Merge upstream master
 
 ---
  .../ui/toolbar/chrome_toolbar_model_delegate.cc    | 35 ----------------------
  .../ui/toolbar/chrome_toolbar_model_delegate.h     |  1 -
- 2 files changed, 36 deletions(-)
+ components/toolbar/toolbar_model.h                 |  4 ---
+ components/toolbar/toolbar_model_delegate.h        |  6 ----
+ content/browser/web_contents/web_contents_impl.cc  |  4 ---
+ content/browser/web_contents/web_contents_impl.h   |  4 ---
+ 6 files changed, 54 deletions(-)
 
 diff --git a/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc b/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc
 index 563c7248..604ccf5 100644
@@ -9561,20 +9457,6 @@ index 8577307..711c6f4 100644
    scoped_refptr<net::X509Certificate> GetCertificate() const override;
  
    // Returns the navigation controller used to retrieve the navigation entry
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From 7022a4157c5aa978d8a8403568f07215f22cec02 Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Sat, 20 Aug 2016 13:53:56 -0400
-Subject: [PATCH 19/33] Ironframe - Fix build
-
----
- components/toolbar/toolbar_model.h          | 4 ----
- components/toolbar/toolbar_model_delegate.h | 6 ------
- 2 files changed, 10 deletions(-)
-
 diff --git a/components/toolbar/toolbar_model.h b/components/toolbar/toolbar_model.h
 index 8194919..4787c84 100644
 --- a/components/toolbar/toolbar_model.h
@@ -9607,95 +9489,222 @@ index 5fcac02..6cc8255 100644
    // Returns the certificate for the current navigation entry.
    virtual scoped_refptr<net::X509Certificate> GetCertificate() const = 0;
  
+diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
+index 57aff45..5b60549 100644
+--- a/content/browser/web_contents/web_contents_impl.cc
++++ b/content/browser/web_contents/web_contents_impl.cc
+@@ -2524,10 +2524,6 @@ void WebContentsImpl::ResizeDueToAutoResize(
+     delegate_->ResizeDueToAutoResize(this, new_size);
+ }
+ 
+-bool WebContentsImpl::DisplayedInsecureContent() const {
+-  return displayed_insecure_content_;
+-}
+-
+ bool WebContentsImpl::DisplayedContentWithCertErrors() const {
+   return displayed_content_with_cert_errors_;
+ }
+diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
+index 0fbb3d1..3b31082 100644
+--- a/content/browser/web_contents/web_contents_impl.h
++++ b/content/browser/web_contents/web_contents_impl.h
+@@ -410,10 +410,6 @@ class CONTENT_EXPORT WebContentsImpl
+   bool GetAllowOtherViews() override;
+ #endif
+ 
+-  // Returns true if this is a secure page which has displayed content
+-  // loaded over insecure HTTP.
+-  bool DisplayedInsecureContent() const;
+-
+   // Returns true if this page has displayed content loaded over HTTPS
+   // with certificate errors.
+   bool DisplayedContentWithCertErrors() const;
 -- 
 2.10.0.rc0.17.gd63263a
 
 
-From a7b181de065124346652add25616d8c33bbb64aa Mon Sep 17 00:00:00 2001
+From 4812548c4a2b8b50ec1e0e080585e85c8b12fea2 Mon Sep 17 00:00:00 2001
+From: JW Bell <bjwbell@gmail.com>
+Date: Sun, 14 Aug 2016 15:31:14 -0400
+Subject: [PATCH 17/18] Ironframe - Cleanup location bar code
+
+---
+ chrome/browser/ui/views/location_bar/location_bar_view.cc | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
+index 86b35f2..50649d3 100644
+--- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
++++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
+@@ -567,7 +567,7 @@ void LocationBarView::Layout() {
+     return;
+ 
+   selected_keyword_view_->SetVisible(false);
+-  //location_icon_view_->SetVisible(false);
++  location_icon_view_->SetVisible(false);
+   keyword_hint_view_->SetVisible(false);
+ 
+   const int item_padding = GetLayoutConstant(LOCATION_BAR_HORIZONTAL_PADDING);
+@@ -590,7 +590,9 @@ void LocationBarView::Layout() {
+   const int vertical_padding = GetVerticalEdgeThicknessWithPadding();
+   const int location_height = std::max(height() - (vertical_padding * 2), 0);
+ 
+-  //location_icon_view_->SetLabel(base::string16(base::ASCIIToUTF16("ironframe")));
++  if (GetToolbarModel()->GetIronframeStatus() == 0) {
++          location_icon_view_->SetLabel(base::string16());
++  }
+   location_icon_view_->SetBackground(false);
+   if (ShouldShowKeywordBubble()) {
+     leading_decorations.AddDecoration(vertical_padding, location_height, true,
+@@ -613,7 +615,9 @@ void LocationBarView::Layout() {
+       }
+     }
+   } else if (ShouldShowEVBubble()) {
+-      //GetToolbarModel()->GetEVCertName());
++    if (GetToolbarModel()->GetIronframeStatus() == 0) {
++            location_icon_view_->SetLabel(GetToolbarModel()->GetEVCertName());
++    }
+     location_icon_view_->SetBackground(true);
+     // The largest fraction of the omnibox that can be taken by the EV bubble.
+     const double kMaxBubbleFraction = 0.5;
+@@ -861,7 +865,6 @@ void LocationBarView::RefreshLocationIcon() {
+ 
+   if (ui::MaterialDesignController::IsModeMaterial()) {
+       int ironframe_status = GetToolbarModel()->GetIronframeStatus();
+-
+       security_state::SecurityStateModel::SecurityLevel security_level =
+           GetToolbarModel()->GetSecurityLevel(false);
+ 
+@@ -1058,7 +1061,6 @@ bool LocationBarView::ShouldShowKeywordBubble() const {
+ 
+ bool LocationBarView::ShouldShowEVBubble() const {
+     int ironframe_status = GetToolbarModel()->GetIronframeStatus();
+-
+     if (ironframe_status == 1) {
+         return security_state::SecurityStateModel::EV_SECURE;
+     }
+-- 
+2.10.0.rc0.17.gd63263a
+
+
+From d443eb33fc1dfe74a249fbfd2559a82a600e44f6 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Tue, 23 Aug 2016 00:04:57 -0400
-Subject: [PATCH 20/33] Ironframe - Remove unused graphics layer crossroot
+Subject: [PATCH 18/18] Ironframe - Remove unused graphics layer crossroot
  parent
 
----
- .../WebKit/Source/platform/graphics/GraphicsLayer.cpp   | 17 -----------------
- .../WebKit/Source/platform/graphics/GraphicsLayer.h     |  3 ---
- 2 files changed, 20 deletions(-)
+- Add dummy scroll for LayoutTest to receive initial event
 
-diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
-index 1020586..fe76a63 100644
---- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
-+++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
-@@ -131,7 +131,6 @@ GraphicsLayer::GraphicsLayer(GraphicsLayerClient* client)
-     , m_isTrackingPaintInvalidations(client && client->isTrackingPaintInvalidations())
-     , m_paintingPhase(GraphicsLayerPaintAllWithOverflowClip)
-     , m_parent(0)
--    , m_crossroot_parent(0)
-     , m_maskLayer(0)
-     , m_contentsClippingMaskLayer(0)
-     , m_replicaLayer(0)
-@@ -195,12 +194,6 @@ void GraphicsLayer::setParent(GraphicsLayer* layer)
-     m_parent = layer;
+- Add comment on duplicate events and page reload interaction
+- Cleanup whitespace
+---
+ .../ui/views/location_bar/location_bar_view.cc     |  4 +-
+ content/browser/web_contents/web_contents_impl.cc  |  2 -
+ content/renderer/render_frame_impl.cc              |  1 +
+ .../http/tests/ironframe/ironframe.html            |  5 ++-
+ third_party/WebKit/Source/core/dom/Document.cpp    | 50 +++++++++++-----------
+ .../WebKit/Source/core/loader/FrameLoaderClient.h  |  2 +-
+ .../Source/platform/graphics/GraphicsLayer.cpp     | 17 --------
+ .../Source/platform/graphics/GraphicsLayer.h       |  5 ---
+ 8 files changed, 33 insertions(+), 53 deletions(-)
+
+diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
+index 50649d3..e57b187 100644
+--- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
++++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
+@@ -877,7 +877,7 @@ void LocationBarView::RefreshLocationIcon() {
+               security_level = security_state::SecurityStateModel::SECURITY_ERROR;
+           }
+       }
+-      
++
+     SkColor icon_color =
+         (security_level == security_state::SecurityStateModel::NONE)
+             ? color_utils::DeriveDefaultIconColor(GetColor(TEXT))
+@@ -1064,7 +1064,7 @@ bool LocationBarView::ShouldShowEVBubble() const {
+     if (ironframe_status == 1) {
+         return security_state::SecurityStateModel::EV_SECURE;
+     }
+-      
++
+     return (GetToolbarModel()->GetSecurityLevel(false) ==
+             security_state::SecurityStateModel::EV_SECURE);
+ }
+diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
+index 5b60549..bcdcc9f 100644
+--- a/content/browser/web_contents/web_contents_impl.cc
++++ b/content/browser/web_contents/web_contents_impl.cc
+@@ -3491,7 +3491,6 @@ std::string WebContentsImpl::IronframeOrigin() const {
+       return ironframe_origin_;
  }
  
--void GraphicsLayer::setCrossrootParent(GraphicsLayer* layer)
--{
--    ASSERT(!layer || !layer->hasAncestor(this));
--    m_crossroot_parent = layer;
--}
 -
- #if ENABLE(ASSERT)
- 
- bool GraphicsLayer::hasAncestor(GraphicsLayer* ancestor) const
-@@ -294,16 +287,6 @@ void GraphicsLayer::removeFromParent()
-     platformLayer()->removeFromParent();
+ void WebContentsImpl::OnIronframeOrigin(const std::string& origin) {
+     ironframe_origin_ = origin;
+ }
+@@ -3507,7 +3506,6 @@ void WebContentsImpl::OnInvalidIronframe() {
+   this->DidChangeVisibleSSLState();
  }
  
--void GraphicsLayer::removeFromCrossrootParent()
--{
--    if (m_crossroot_parent) {
--        // We use reverseFind so that removeAllChildren() isn't n^2.
--        m_crossroot_parent->m_children.remove(m_crossroot_parent->m_children.reverseFind(this));
--        setParent(0);
--    }
--    platformLayer()->removeFromParent();
--}
 -
- void GraphicsLayer::setReplicatedByLayer(GraphicsLayer* layer)
- {
-     // FIXME: this could probably be a full early exit.
-diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
-index 940a723..832767e 100644
---- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
-+++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
-@@ -87,9 +87,6 @@ public:
-     GraphicsLayer* parent() const { return m_parent; }
-     void setParent(GraphicsLayer*); // Internal use only.
- 
--    GraphicsLayer* crossrootParent() const { return m_crossroot_parent; }
--    void setCrossrootParent(GraphicsLayer*); // Internal use only.
--
-     const Vector<GraphicsLayer*>& children() const { return m_children; }
-     // Returns true if the child list changed.
-     bool setChildren(const GraphicsLayerVector&);
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From a516e21b205a3d33e28759b03eea07a3be5d41b3 Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Tue, 23 Aug 2016 03:28:24 -0400
-Subject: [PATCH 21/33] Ironframe - Improve code formatting
-
----
- third_party/WebKit/Source/core/dom/Document.cpp | 35 +++++++++++++------------
- 1 file changed, 18 insertions(+), 17 deletions(-)
-
+ void WebContentsImpl::OnDidDisplayInsecureContent() {
+   RecordAction(base::UserMetricsAction("SSL.DisplayedInsecureContent"));
+   displayed_insecure_content_ = true;
+diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
+index 183fe6d..73d4d9f 100644
+--- a/content/renderer/render_frame_impl.cc
++++ b/content/renderer/render_frame_impl.cc
+@@ -4179,6 +4179,7 @@ void RenderFrameImpl::ironframeOrigin(const blink::WebCString& origin) {
+ void RenderFrameImpl::validIronframe() {
+   Send(new FrameHostMsg_ValidIronframe(routing_id_));
+ }
++
+ void RenderFrameImpl::invalidIronframe() {
+   Send(new FrameHostMsg_InvalidIronframe(routing_id_));
+ }
+diff --git a/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html b/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
+index 1bc6cdc..79978b4 100644
+--- a/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
++++ b/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
+@@ -16,11 +16,12 @@
+              assert_equals(document.getElementById("result").innerHTML, "PASS", "Scroll incorrect");
+          });
+          t.done();
+-     }, 2000);
++     }, 3000);
+     </script>
+     <script>
+      function scrollWindow() {
+-         setTimeout(function(){window.scrollTo(0, 100);}, 1000);
++         setTimeout(function(){window.scrollTo(0, 1);}, 1000);
++         setTimeout(function(){window.scrollTo(0, 100);}, 2000);
+      }
+      window.addEventListener("load", scrollWindow, false);
+     </script>
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index fc4dbe5..f0ca62f 100644
+index fc4dbe5..9960499 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
-@@ -5876,49 +5876,50 @@ void Document::requestVisibilityImpl(){
+@@ -5832,18 +5832,12 @@ bool Document::hasFocus() const
+ void Document::validIronframe(){
+     m_frame->loader().client()->ironframeOrigin(this->origin().ascii());
+     m_frame->loader().client()->validIronframe();
+-    
+-    // Set attribute.
+-    //this->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
+ }
+ 
+ void Document::invalidIronframe(){
+     m_frame->loader().client()->invalidIronframe();
+-    // Set attribute.
+-    //this->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
+ }
+ 
+-
+ VisibilityDocumentSet *Document::requestedVisibility() {
+     return m_requestedVisibility;
+ }
+@@ -5876,49 +5870,50 @@ void Document::requestVisibilityImpl(){
  
      IntRect bounds = this->documentElement()->boundsInViewport();
      IntRect origBounds = bounds;
@@ -9759,7 +9768,7 @@ index fc4dbe5..f0ca62f 100644
      // XXX for each registered visibility req, look for collisions with us, if so block the raise
      VisibilityDocumentSet *ds = this->domWindow()->top()->document()->requestedVisibility();
  
-@@ -5928,17 +5929,17 @@ void Document::requestVisibilityImpl(){
+@@ -5928,34 +5923,41 @@ void Document::requestVisibilityImpl(){
              // XXX DMK better would be to run bounds.subtract but then there'd have to *be* a bounds.subtract method.
              //         Also, subtraction is a not quite so defined as intersection.  Largest contiguous from 0,0?
              //         Largest contiguous from any corner?  God forbid, pile-o-rects?  Let's just run for the hills for now
@@ -9780,172 +9789,6 @@ index fc4dbe5..f0ca62f 100644
      if (do_move) {
          FloatRect fbounds = bounds;
          this->set_requestVisibilityRect(&fbounds);
-@@ -5949,7 +5950,7 @@ void Document::requestVisibilityImpl(){
-         iframeGraphicsLayer->setMasksToBounds(true);
-         iframeGraphicsLayer->setOpacity(1.0);
-         IntSize offset = IntSize(bounds.x()-origBounds.x()-topDocument().domWindow()->scrollX(), bounds.y()-origBounds.y()-topDocument().domWindow()->scrollY());
--        iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);// const IntSize & offset,ShouldSetNeedsDisplay shouldSetNeedsDisplay)
-+        iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);
-     }
-     // report.  sx and sy are
-     bounds.setWidth(fmax(bounds.size().width() - sx, 0));
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From f2be8b8a15ed2d9db08640c5f94e32fe6c6d0c83 Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Tue, 23 Aug 2016 03:30:19 -0400
-Subject: [PATCH 22/33] Ironframe - Comment out buggy scroll handling
-
----
- third_party/WebKit/Source/core/dom/Document.cpp | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index f0ca62f..bba9fbb 100644
---- a/third_party/WebKit/Source/core/dom/Document.cpp
-+++ b/third_party/WebKit/Source/core/dom/Document.cpp
-@@ -5915,8 +5915,9 @@ void Document::requestVisibilityImpl(){
-     FrameView *mainFrameView = this->page()->deprecatedLocalMainFrame()->view();
-     LayoutRect mainViewRect = mainFrameView->layoutView()->viewRect();
- 
--    IntRect mainViewIntRect = IntRect(mainViewRect);
--    bounds.intersect(mainViewIntRect);
-+    // TODO: Buggy interaction with scrolling.
-+    // IntRect mainViewIntRect = IntRect(mainViewRect);
-+    // bounds.intersect(mainViewIntRect);
- 
-     FloatRect mainViewFloatRect = FloatRect(mainViewRect);
-     if(!bounds.size().width() || !bounds.size().height()) do_move = false;
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From 1b03fef0b7663c4929eb50907db12e66302cfaec Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Tue, 23 Aug 2016 15:57:42 -0400
-Subject: [PATCH 23/33] Ironframe - Remove commented out code
-
----
- third_party/WebKit/Source/core/dom/Document.cpp | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
-
-diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index bba9fbb..291238c 100644
---- a/third_party/WebKit/Source/core/dom/Document.cpp
-+++ b/third_party/WebKit/Source/core/dom/Document.cpp
-@@ -5831,16 +5831,11 @@ bool Document::hasFocus() const
- 
- void Document::validIronframe(){
-     m_frame->loader().client()->ironframeOrigin(this->origin().ascii());
--    m_frame->loader().client()->validIronframe();
--    
--    // Set attribute.
--    //this->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
-+    m_frame->loader().client()->validIronframe();    
- }
- 
- void Document::invalidIronframe(){
-     m_frame->loader().client()->invalidIronframe();
--    // Set attribute.
--    //this->documentElement()->setAttribute("requestVisibility", "1", ASSERT_NO_EXCEPTION);
- }
- 
- 
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From 91850adc39cbfbec3619954aee8243f05c7bc1d5 Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Tue, 23 Aug 2016 16:52:23 -0400
-Subject: [PATCH 24/33] Ironframe - Add dummy scroll for LayoutTest to receive
- initial event
-
----
- third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html   | 5 +++--
- .../LayoutTests/http/tests/ironframe/resources/protected3.html       | 2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html b/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
-index 1bc6cdc..79978b4 100644
---- a/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
-+++ b/third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
-@@ -16,11 +16,12 @@
-              assert_equals(document.getElementById("result").innerHTML, "PASS", "Scroll incorrect");
-          });
-          t.done();
--     }, 2000);
-+     }, 3000);
-     </script>
-     <script>
-      function scrollWindow() {
--         setTimeout(function(){window.scrollTo(0, 100);}, 1000);
-+         setTimeout(function(){window.scrollTo(0, 1);}, 1000);
-+         setTimeout(function(){window.scrollTo(0, 100);}, 2000);
-      }
-      window.addEventListener("load", scrollWindow, false);
-     </script>
-diff --git a/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html b/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
-index 9824401..361fc37 100644
---- a/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
-+++ b/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
-@@ -30,7 +30,7 @@
-                  width0 = v.visible.width;
-                  height0 = v.visible.height;
-              } else if (width0 != v.visible.width || height0 != v.visible.height) {
--                 if (v.visible.width != 300 || v.visible.height != 92) {
-+                 if (v.visible.width != 300 || v.visible.height != 91) {
-                      window.top.document.getElementById("result").innerHTML = "FAIL";
-                  } else {
-                      window.top.document.getElementById("result").innerHTML = "PASS";
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From eeb3e0e3055af0a915590496455f57d994e74a69 Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Tue, 23 Aug 2016 18:18:54 -0400
-Subject: [PATCH 25/33] Ironframe - Fix scrolling with ironframe layouttest
-
----
- .../http/tests/ironframe/resources/protected3.html            |  2 +-
- third_party/WebKit/Source/core/dom/Document.cpp               | 11 +++++++----
- 2 files changed, 8 insertions(+), 5 deletions(-)
-
-diff --git a/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html b/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
-index 361fc37..9824401 100644
---- a/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
-+++ b/third_party/WebKit/LayoutTests/http/tests/ironframe/resources/protected3.html
-@@ -30,7 +30,7 @@
-                  width0 = v.visible.width;
-                  height0 = v.visible.height;
-              } else if (width0 != v.visible.width || height0 != v.visible.height) {
--                 if (v.visible.width != 300 || v.visible.height != 91) {
-+                 if (v.visible.width != 300 || v.visible.height != 92) {
-                      window.top.document.getElementById("result").innerHTML = "FAIL";
-                  } else {
-                      window.top.document.getElementById("result").innerHTML = "PASS";
-diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 291238c..837b15c 100644
---- a/third_party/WebKit/Source/core/dom/Document.cpp
-+++ b/third_party/WebKit/Source/core/dom/Document.cpp
-@@ -5910,9 +5910,8 @@ void Document::requestVisibilityImpl(){
-     FrameView *mainFrameView = this->page()->deprecatedLocalMainFrame()->view();
-     LayoutRect mainViewRect = mainFrameView->layoutView()->viewRect();
- 
--    // TODO: Buggy interaction with scrolling.
--    // IntRect mainViewIntRect = IntRect(mainViewRect);
--    // bounds.intersect(mainViewIntRect);
-+    IntRect mainViewIntRect = IntRect(mainViewRect);
-+    bounds.intersect(mainViewIntRect);
- 
-     FloatRect mainViewFloatRect = FloatRect(mainViewRect);
-     if(!bounds.size().width() || !bounds.size().height()) do_move = false;
-@@ -5940,7 +5939,11 @@ void Document::requestVisibilityImpl(){
-         FloatRect fbounds = bounds;
-         this->set_requestVisibilityRect(&fbounds);
          rootGraphicsLayer->addChild(iframeGraphicsLayer);
 -        iframeGraphicsLayer->setPosition(FloatPoint(bounds.x(), bounds.y()));
 +
@@ -9956,25 +9799,13 @@ index 291238c..837b15c 100644
          iframeGraphicsLayer->setSize(FloatSize(bounds.size().width(), bounds.size().height()));
          iframeGraphicsLayer->setBackgroundColor(Color::black);
          iframeGraphicsLayer->setMasksToBounds(true);
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From 74d5ca0df40e5eb07679d453a4dc2d5c58b69bc9 Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Tue, 23 Aug 2016 20:18:16 -0400
-Subject: [PATCH 26/33] Ironframe - Add comment on duplicate events and page
- reload interaction
-
----
- third_party/WebKit/Source/core/dom/Document.cpp | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 837b15c..05f3ade 100644
---- a/third_party/WebKit/Source/core/dom/Document.cpp
-+++ b/third_party/WebKit/Source/core/dom/Document.cpp
-@@ -5956,6 +5956,9 @@ void Document::requestVisibilityImpl(){
+         iframeGraphicsLayer->setOpacity(1.0);
+         IntSize offset = IntSize(bounds.x()-origBounds.x()-topDocument().domWindow()->scrollX(), bounds.y()-origBounds.y()-topDocument().domWindow()->scrollY());
+-        iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);// const IntSize & offset,ShouldSetNeedsDisplay shouldSetNeedsDisplay)
++        iframeGraphicsLayer->setOffsetFromLayoutObject(offset, GraphicsLayer::ShouldSetNeedsDisplay::SetNeedsDisplay);
+     }
+     // report.  sx and sy are
+     bounds.setWidth(fmax(bounds.size().width() - sx, 0));
      bounds.setHeight(fmax(bounds.size().height()- sy, 0));
      //XXX DMK correctly integrate ancestorOrigins and return a clientRect for the visible region of the frame
      String s = String("{\"viewport\": {\"x\": " + String::number((int)mainViewFloatRect.x()) + ", \"y\": " + String::number((int)mainViewFloatRect.y()) + ", \"width\": " + String::number((int)mainViewFloatRect.size().width()) + ", \"height\": " + String::number((int)mainViewFloatRect.size().height()) + "},  \"visible\": {\"x\": " + String::number((int)bounds.x()) + ",  \"y\": " + String::number((int)bounds.y()) + ", \"width\": " + String::number((int)bounds.size().width()) + ", \"height\": " + String::number((int)bounds.size().height()) + "}}");
@@ -9984,97 +9815,6 @@ index 837b15c..05f3ade 100644
      DEFINE_STATIC_LOCAL(String, prev_event, ());
      bool duplicate = false;
      if (s == prev_event) {
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From d2a7d9529a697f075b678eac2632cb0d0682bb82 Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Wed, 24 Aug 2016 05:08:40 -0400
-Subject: [PATCH 27/33] Ironframe - Cleanup whitespace
-
----
- chrome/browser/ui/views/location_bar/location_bar_view.cc | 4 ++--
- content/browser/web_contents/web_contents_impl.cc         | 2 --
- content/renderer/render_frame_impl.cc                     | 1 +
- third_party/WebKit/Source/core/dom/Document.cpp           | 3 +--
- third_party/WebKit/Source/core/loader/FrameLoaderClient.h | 2 +-
- 5 files changed, 5 insertions(+), 7 deletions(-)
-
-diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-index 80bf549..6243be5 100644
---- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
-+++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-@@ -877,7 +877,7 @@ void LocationBarView::RefreshLocationIcon() {
-               security_level = security_state::SecurityStateModel::SECURITY_ERROR;
-           }
-       }
--      
-+
-     SkColor icon_color =
-         (security_level == security_state::SecurityStateModel::NONE)
-             ? color_utils::DeriveDefaultIconColor(GetColor(TEXT))
-@@ -1064,7 +1064,7 @@ bool LocationBarView::ShouldShowEVBubble() const {
-     if (ironframe_status == 1) {
-         return security_state::SecurityStateModel::EV_SECURE;
-     }
--      
-+
-     return (GetToolbarModel()->GetSecurityLevel(false) ==
-             security_state::SecurityStateModel::EV_SECURE);
- }
-diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 5b60549..bcdcc9f 100644
---- a/content/browser/web_contents/web_contents_impl.cc
-+++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -3491,7 +3491,6 @@ std::string WebContentsImpl::IronframeOrigin() const {
-       return ironframe_origin_;
- }
- 
--
- void WebContentsImpl::OnIronframeOrigin(const std::string& origin) {
-     ironframe_origin_ = origin;
- }
-@@ -3507,7 +3506,6 @@ void WebContentsImpl::OnInvalidIronframe() {
-   this->DidChangeVisibleSSLState();
- }
- 
--
- void WebContentsImpl::OnDidDisplayInsecureContent() {
-   RecordAction(base::UserMetricsAction("SSL.DisplayedInsecureContent"));
-   displayed_insecure_content_ = true;
-diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index dcb1d2a..12e6e78 100644
---- a/content/renderer/render_frame_impl.cc
-+++ b/content/renderer/render_frame_impl.cc
-@@ -4179,6 +4179,7 @@ void RenderFrameImpl::ironframeOrigin(const blink::WebCString& origin) {
- void RenderFrameImpl::validIronframe() {
-   Send(new FrameHostMsg_ValidIronframe(routing_id_));
- }
-+
- void RenderFrameImpl::invalidIronframe() {
-   Send(new FrameHostMsg_InvalidIronframe(routing_id_));
- }
-diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 05f3ade..9960499 100644
---- a/third_party/WebKit/Source/core/dom/Document.cpp
-+++ b/third_party/WebKit/Source/core/dom/Document.cpp
-@@ -5831,14 +5831,13 @@ bool Document::hasFocus() const
- 
- void Document::validIronframe(){
-     m_frame->loader().client()->ironframeOrigin(this->origin().ascii());
--    m_frame->loader().client()->validIronframe();    
-+    m_frame->loader().client()->validIronframe();
- }
- 
- void Document::invalidIronframe(){
-     m_frame->loader().client()->invalidIronframe();
- }
- 
--
- VisibilityDocumentSet *Document::requestedVisibility() {
-     return m_requestedVisibility;
- }
 diff --git a/third_party/WebKit/Source/core/loader/FrameLoaderClient.h b/third_party/WebKit/Source/core/loader/FrameLoaderClient.h
 index 8474df5..dfc19b7 100644
 --- a/third_party/WebKit/Source/core/loader/FrameLoaderClient.h
@@ -10088,172 +9828,63 @@ index 8474df5..dfc19b7 100644
      // This frame has displayed inactive content (such as an image) from an
      // insecure source.  Inactive content cannot spread to other frames.
      virtual void didDisplayInsecureContent() = 0;
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From 6313bf06258ec37d0f83e5a3ae4a0047962f63fa Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Wed, 24 Aug 2016 05:18:31 -0400
-Subject: [PATCH 28/33] Ironframe - Restore DisplayedInsecureContent func
-
----
- content/browser/web_contents/web_contents_impl.cc | 4 ++++
- content/browser/web_contents/web_contents_impl.h  | 7 ++++++-
- content/public/browser/web_contents.h             | 3 ++-
- 3 files changed, 12 insertions(+), 2 deletions(-)
-
-diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index bcdcc9f..ebc9f43 100644
---- a/content/browser/web_contents/web_contents_impl.cc
-+++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -2524,6 +2524,10 @@ void WebContentsImpl::ResizeDueToAutoResize(
-     delegate_->ResizeDueToAutoResize(this, new_size);
+diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
+index 760f3b2..f1a74c1 100644
+--- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
++++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.cpp
+@@ -131,7 +131,6 @@ GraphicsLayer::GraphicsLayer(GraphicsLayerClient* client)
+     , m_isTrackingPaintInvalidations(client && client->isTrackingPaintInvalidations())
+     , m_paintingPhase(GraphicsLayerPaintAllWithOverflowClip)
+     , m_parent(0)
+-    , m_crossroot_parent(0)
+     , m_maskLayer(0)
+     , m_contentsClippingMaskLayer(0)
+     , m_replicaLayer(0)
+@@ -195,12 +194,6 @@ void GraphicsLayer::setParent(GraphicsLayer* layer)
+     m_parent = layer;
  }
  
-+bool WebContentsImpl::DisplayedInsecureContent() const {
-+  return displayed_insecure_content_;
-+}
-+
- bool WebContentsImpl::DisplayedContentWithCertErrors() const {
-   return displayed_content_with_cert_errors_;
- }
-diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
-index 3b31082..a5adce7 100644
---- a/content/browser/web_contents/web_contents_impl.h
-+++ b/content/browser/web_contents/web_contents_impl.h
-@@ -410,6 +410,10 @@ class CONTENT_EXPORT WebContentsImpl
-   bool GetAllowOtherViews() override;
- #endif
- 
-+  // Returns true if this is a secure page which has displayed content
-+  // loaded over insecure HTTP.
-+  bool DisplayedInsecureContent() const;
-+
-   // Returns true if this page has displayed content loaded over HTTPS
-   // with certificate errors.
-   bool DisplayedContentWithCertErrors() const;
-@@ -1216,7 +1220,8 @@ class CONTENT_EXPORT WebContentsImpl
-   int  ironframe_status_;
-   std::string ironframe_origin_;
- 
--  // True if this is a secure page which displayed insecure content.
-+  // True if this is a secure page which displayed insecure content (loaded
-+  // over HTTP).
-   bool displayed_insecure_content_;
- 
-   // True if this page displayed subresources loaded with HTTPS
-diff --git a/content/public/browser/web_contents.h b/content/public/browser/web_contents.h
-index 324635b..44f8712 100644
---- a/content/public/browser/web_contents.h
-+++ b/content/public/browser/web_contents.h
-@@ -367,7 +367,8 @@ class WebContents : public PageNavigator,
-   virtual int IronframeStatus() const = 0;
-   virtual std::string IronframeOrigin() const = 0;
- 
--  // True if this is a secure page which displayed insecure content.
-+  // True if this is a secure page which displayed insecure content  (loaded
-+  // over HTTP).
-   virtual bool DisplayedInsecureContent() const = 0;
- 
-   // Internal state ------------------------------------------------------------
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From 0f04b607cbde8f6894bb76f011e92af0d8f9dd54 Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Wed, 24 Aug 2016 05:23:05 -0400
-Subject: [PATCH 29/33] Ironframe - Fix code comment
-
----
- content/browser/web_contents/web_contents_impl.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
-index a5adce7..d7ad6d1 100644
---- a/content/browser/web_contents/web_contents_impl.h
-+++ b/content/browser/web_contents/web_contents_impl.h
-@@ -1220,7 +1220,7 @@ class CONTENT_EXPORT WebContentsImpl
-   int  ironframe_status_;
-   std::string ironframe_origin_;
- 
--  // True if this is a secure page which displayed insecure content (loaded
-+  // True if this is a secure page which displayed mixed content (loaded
-   // over HTTP).
-   bool displayed_insecure_content_;
- 
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From 6e42d8b1ac458fef8af0814da4d9f7349da176c6 Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Wed, 24 Aug 2016 05:26:28 -0400
-Subject: [PATCH 30/33] Ironframe - Remove DisplayedInsecureContent func
-
----
- content/public/browser/web_contents.h | 4 ----
- 1 file changed, 4 deletions(-)
-
-diff --git a/content/public/browser/web_contents.h b/content/public/browser/web_contents.h
-index 44f8712..11e7504 100644
---- a/content/public/browser/web_contents.h
-+++ b/content/public/browser/web_contents.h
-@@ -367,10 +367,6 @@ class WebContents : public PageNavigator,
-   virtual int IronframeStatus() const = 0;
-   virtual std::string IronframeOrigin() const = 0;
- 
--  // True if this is a secure page which displayed insecure content  (loaded
--  // over HTTP).
--  virtual bool DisplayedInsecureContent() const = 0;
+-void GraphicsLayer::setCrossrootParent(GraphicsLayer* layer)
+-{
+-    ASSERT(!layer || !layer->hasAncestor(this));
+-    m_crossroot_parent = layer;
+-}
 -
-   // Internal state ------------------------------------------------------------
+ #if ENABLE(ASSERT)
  
-   // Indicates whether the WebContents is being captured (e.g., for screenshots
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From 2bd55490ea8ffcdd798f25bcdaf9eb955f396ba9 Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Wed, 24 Aug 2016 05:28:15 -0400
-Subject: [PATCH 31/33] Ironframe - Remove DisplayedInsecureContent
-
----
- content/browser/web_contents/web_contents_impl.h | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
-index d7ad6d1..1b99706 100644
---- a/content/browser/web_contents/web_contents_impl.h
-+++ b/content/browser/web_contents/web_contents_impl.h
-@@ -293,7 +293,6 @@ class CONTENT_EXPORT WebContentsImpl
-   const std::string& GetEncoding() const override;
-   int IronframeStatus() const override;
-   std::string IronframeOrigin() const override;
--  bool DisplayedInsecureContent() const override;
-   void IncrementCapturerCount(const gfx::Size& capture_size) override;
-   void DecrementCapturerCount() override;
-   int GetCapturerCount() const override;
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From 20677eed615d3c45f528f1f5dbeeb57727b22741 Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Wed, 24 Aug 2016 05:33:03 -0400
-Subject: [PATCH 32/33] Ironframe - Remove graphics layer crossroot parent
-
----
- third_party/WebKit/Source/platform/graphics/GraphicsLayer.h | 2 --
- 1 file changed, 2 deletions(-)
-
+ bool GraphicsLayer::hasAncestor(GraphicsLayer* ancestor) const
+@@ -294,16 +287,6 @@ void GraphicsLayer::removeFromParent()
+     platformLayer()->removeFromParent();
+ }
+ 
+-void GraphicsLayer::removeFromCrossrootParent()
+-{
+-    if (m_crossroot_parent) {
+-        // We use reverseFind so that removeAllChildren() isn't n^2.
+-        m_crossroot_parent->m_children.remove(m_crossroot_parent->m_children.reverseFind(this));
+-        setParent(0);
+-    }
+-    platformLayer()->removeFromParent();
+-}
+-
+ void GraphicsLayer::setReplicatedByLayer(GraphicsLayer* layer)
+ {
+     // FIXME: this could probably be a full early exit.
 diff --git a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
-index 832767e..ef5f4744 100644
+index 940a723..ef5f4744 100644
 --- a/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
 +++ b/third_party/WebKit/Source/platform/graphics/GraphicsLayer.h
-@@ -97,7 +97,6 @@ public:
+@@ -87,9 +87,6 @@ public:
+     GraphicsLayer* parent() const { return m_parent; }
+     void setParent(GraphicsLayer*); // Internal use only.
+ 
+-    GraphicsLayer* crossrootParent() const { return m_crossroot_parent; }
+-    void setCrossrootParent(GraphicsLayer*); // Internal use only.
+-
+     const Vector<GraphicsLayer*>& children() const { return m_children; }
+     // Returns true if the child list changed.
+     bool setChildren(const GraphicsLayerVector&);
+@@ -100,7 +97,6 @@ public:
  
      void removeAllChildren();
      void removeFromParent();
@@ -10261,7 +9892,7 @@ index 832767e..ef5f4744 100644
  
      GraphicsLayer* maskLayer() const { return m_maskLayer; }
      void setMaskLayer(GraphicsLayer*);
-@@ -341,7 +340,6 @@ private:
+@@ -344,7 +340,6 @@ private:
  
      Vector<GraphicsLayer*> m_children;
      GraphicsLayer* m_parent;
@@ -10269,34 +9900,6 @@ index 832767e..ef5f4744 100644
  
      GraphicsLayer* m_maskLayer; // Reference to mask layer. We don't own this.
      GraphicsLayer* m_contentsClippingMaskLayer; // Reference to clipping mask layer. We don't own this.
--- 
-2.10.0.rc0.17.gd63263a
-
-
-From 97d85fa4a38e7ab9ef660d25b88be2182a41c189 Mon Sep 17 00:00:00 2001
-From: JW Bell <bjwbell@gmail.com>
-Date: Wed, 24 Aug 2016 05:44:24 -0400
-Subject: [PATCH 33/33] Ironframe - Remove duplicate DisplayedInsecureContent
-
----
- content/browser/web_contents/web_contents_impl.cc | 4 ----
- 1 file changed, 4 deletions(-)
-
-diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index ebc9f43..4f7065e 100644
---- a/content/browser/web_contents/web_contents_impl.cc
-+++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -1196,10 +1196,6 @@ int WebContentsImpl::IronframeStatus() const {
-   return ironframe_status_;
- }
- 
--bool WebContentsImpl::DisplayedInsecureContent() const {
--  return displayed_insecure_content_;
--}
--
- void WebContentsImpl::IncrementCapturerCount(const gfx::Size& capture_size) {
-   DCHECK(!is_being_destroyed_);
-   ++capturer_count_;
 -- 
 2.10.0.rc0.17.gd63263a
 
