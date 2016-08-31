@@ -41,7 +41,7 @@ index 42806b9..711c6f4 100644
  
    // Returns the navigation controller used to retrieve the navigation entry
 diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-index 7ffa3e9..6243be5 100644
+index e181c52..e57b187 100644
 --- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
 +++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
 @@ -590,7 +590,9 @@ void LocationBarView::Layout() {
@@ -176,7 +176,7 @@ index 6cc3914..176e47d 100644
    gfx::VectorIconId GetVectorIcon() const override;
    base::string16 GetEVCertName() const override;
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 51f3bba..4f7065e 100644
+index 51f3bba..bcdcc9f 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
 @@ -692,6 +692,12 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
@@ -192,7 +192,7 @@ index 51f3bba..4f7065e 100644
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidDisplayInsecureContent,
                          OnDidDisplayInsecureContent)
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidRunInsecureContent,
-@@ -1186,6 +1192,10 @@ const std::string& WebContentsImpl::GetEncoding() const {
+@@ -1186,6 +1192,14 @@ const std::string& WebContentsImpl::GetEncoding() const {
    return canonical_encoding_;
  }
  
@@ -200,9 +200,24 @@ index 51f3bba..4f7065e 100644
 +  return ironframe_status_;
 +}
 +
++bool WebContentsImpl::DisplayedInsecureContent() const {
++  return displayed_insecure_content_;
++}
++
  void WebContentsImpl::IncrementCapturerCount(const gfx::Size& capture_size) {
    DCHECK(!is_being_destroyed_);
    ++capturer_count_;
+@@ -2510,10 +2524,6 @@ void WebContentsImpl::ResizeDueToAutoResize(
+     delegate_->ResizeDueToAutoResize(this, new_size);
+ }
+ 
+-bool WebContentsImpl::DisplayedInsecureContent() const {
+-  return displayed_insecure_content_;
+-}
+-
+ bool WebContentsImpl::DisplayedContentWithCertErrors() const {
+   return displayed_content_with_cert_errors_;
+ }
 @@ -3475,6 +3485,27 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
    }
  }
@@ -232,19 +247,31 @@ index 51f3bba..4f7065e 100644
    RecordAction(base::UserMetricsAction("SSL.DisplayedInsecureContent"));
    displayed_insecure_content_ = true;
 diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
-index 3d4a437..1b99706 100644
+index 3d4a437..3b31082 100644
 --- a/content/browser/web_contents/web_contents_impl.h
 +++ b/content/browser/web_contents/web_contents_impl.h
-@@ -291,6 +291,8 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -291,6 +291,9 @@ class CONTENT_EXPORT WebContentsImpl
    uint64_t GetUploadSize() const override;
    uint64_t GetUploadPosition() const override;
    const std::string& GetEncoding() const override;
 +  int IronframeStatus() const override;
 +  std::string IronframeOrigin() const override;
++  bool DisplayedInsecureContent() const override;
    void IncrementCapturerCount(const gfx::Size& capture_size) override;
    void DecrementCapturerCount() override;
    int GetCapturerCount() const override;
-@@ -920,6 +922,9 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -407,10 +410,6 @@ class CONTENT_EXPORT WebContentsImpl
+   bool GetAllowOtherViews() override;
+ #endif
+ 
+-  // Returns true if this is a secure page which has displayed content
+-  // loaded over insecure HTTP.
+-  bool DisplayedInsecureContent() const;
+-
+   // Returns true if this page has displayed content loaded over HTTPS
+   // with certificate errors.
+   bool DisplayedContentWithCertErrors() const;
+@@ -920,6 +919,9 @@ class CONTENT_EXPORT WebContentsImpl
                                          const std::string& http_request,
                                          const std::string& mime_type,
                                          ResourceType resource_type);
@@ -254,22 +281,25 @@ index 3d4a437..1b99706 100644
    void OnDidDisplayInsecureContent();
    void OnDidRunInsecureContent(const GURL& security_origin,
                                 const GURL& target_url);
-@@ -1210,6 +1215,10 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -1210,8 +1212,11 @@ class CONTENT_EXPORT WebContentsImpl
    // The canonicalized character encoding.
    std::string canonical_encoding_;
  
+-  // True if this is a secure page which displayed mixed content (loaded
+-  // over HTTP).
 +  //   0 - no ironframe, 1 - valid ironframe, 2 - invalid ironframe
 +  int  ironframe_status_;
 +  std::string ironframe_origin_;
 +
-   // True if this is a secure page which displayed mixed content (loaded
-   // over HTTP).
++  // True if this is a secure page which displayed insecure content.
    bool displayed_insecure_content_;
+ 
+   // True if this page displayed subresources loaded with HTTPS
 diff --git a/content/common/frame_messages.h b/content/common/frame_messages.h
-index 5868a5d..b63f677 100644
+index 64ef075..6724bdd 100644
 --- a/content/common/frame_messages.h
 +++ b/content/common/frame_messages.h
-@@ -1462,6 +1462,10 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
+@@ -1460,6 +1460,10 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DispatchLoad)
  IPC_MESSAGE_ROUTED1(FrameHostMsg_RouteMessageEvent,
                      FrameMsg_PostMessage_Params)
  
@@ -281,21 +311,24 @@ index 5868a5d..b63f677 100644
  IPC_MESSAGE_ROUTED0(FrameHostMsg_DidDisplayInsecureContent)
  
 diff --git a/content/public/browser/web_contents.h b/content/public/browser/web_contents.h
-index efa8ae5..11e7504 100644
+index efa8ae5..324635b 100644
 --- a/content/public/browser/web_contents.h
 +++ b/content/public/browser/web_contents.h
-@@ -364,6 +364,9 @@ class WebContents : public PageNavigator,
+@@ -364,6 +364,12 @@ class WebContents : public PageNavigator,
    // Returns the character encoding of the page.
    virtual const std::string& GetEncoding() const = 0;
  
 +  virtual int IronframeStatus() const = 0;
 +  virtual std::string IronframeOrigin() const = 0;
 +
++  // True if this is a secure page which displayed insecure content.
++  virtual bool DisplayedInsecureContent() const = 0;
++
    // Internal state ------------------------------------------------------------
  
    // Indicates whether the WebContents is being captured (e.g., for screenshots
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index b83427f..12e6e78 100644
+index 0cbd5d8..73d4d9f 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
 @@ -4172,6 +4172,18 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
@@ -635,7 +668,7 @@ new file mode 100644
 index 0000000..6c950c8
 Binary files /dev/null and b/third_party/WebKit/LayoutTests/http/tests/ironframe/tile.gif differ
 diff --git a/third_party/WebKit/Source/core/core.gypi b/third_party/WebKit/Source/core/core.gypi
-index cf8c960..bb714e9 100644
+index 8f212a3..02ead16 100644
 --- a/third_party/WebKit/Source/core/core.gypi
 +++ b/third_party/WebKit/Source/core/core.gypi
 @@ -134,6 +134,7 @@
@@ -654,7 +687,7 @@ index cf8c960..bb714e9 100644
              'events/Event.idl',
              'events/FocusEvent.idl',
              'events/HashChangeEvent.idl',
-@@ -2821,6 +2823,8 @@
+@@ -2819,6 +2821,8 @@
              'events/DragEvent.h',
              'events/ErrorEvent.cpp',
              'events/ErrorEvent.h',
@@ -663,7 +696,7 @@ index cf8c960..bb714e9 100644
              'events/Event.cpp',
              'events/EventDispatchMediator.cpp',
              'events/EventDispatchMediator.h',
-@@ -3815,6 +3819,7 @@
+@@ -3813,6 +3817,7 @@
              'events/CustomEventInit.idl',
              'events/DragEventInit.idl',
              'events/ErrorEventInit.idl',
@@ -671,7 +704,7 @@ index cf8c960..bb714e9 100644
              'events/EventInit.idl',
              'events/EventListenerOptions.idl',
              'events/EventModifierInit.idl',
-@@ -3895,6 +3900,8 @@
+@@ -3893,6 +3898,8 @@
              '<(blink_core_output_dir)/events/DragEventInit.h',
              '<(blink_core_output_dir)/events/ErrorEventInit.cpp',
              '<(blink_core_output_dir)/events/ErrorEventInit.h',
@@ -1211,7 +1244,7 @@ index 0000000..9d42ea9
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index 3b1b7cc..ce1bd8e 100644
+index c1e3110..a802e8d 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -41,6 +41,7 @@
@@ -1239,12 +1272,12 @@ index 3b1b7cc..ce1bd8e 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index a4add5b..3b08b93 100644
+index 42d80f42..17d7251 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
 @@ -1308,6 +1308,9 @@ public:
-         PointerEnterLeaveFiredWhileCaptured = 1537,
          PointerOverOutFiredWhileCaptured = 1538,
+         DraggableAttribute = 1539,
  
 +        DocumentCreateEventRequestedVisibilityEvent = 1600,
 +
