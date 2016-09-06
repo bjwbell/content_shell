@@ -32,7 +32,7 @@
              }
          }
          function go() {
-             document.documentElement.addEventListener('requestedvisibility', function(e) {
+             document.documentElement.addEventListener('requestvisibility', function(e) {
                  if(e.message!=prevMsg){
                      prev=e.timeStamp;
                      prevMsg=e.message;
