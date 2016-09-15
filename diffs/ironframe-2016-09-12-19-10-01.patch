@@ -1,4 +1,4 @@
-From 289a1c00808030ae0b5bef92db6f8d6cd0f70e7e Mon Sep 17 00:00:00 2001
+From f4c52c3f6a839a34c0ec310bca0ba7043b12bce3 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sun, 11 Sep 2016 15:59:36 -0400
 Subject: [PATCH] Ironframe - Add RequestVisibility
@@ -344,10 +344,10 @@ index 163a2ad..071d515 100644
  
    // Indicates whether the WebContents is being captured (e.g., for screenshots
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 32e04de..5d4fda8 100644
+index 7f7349a..e4c616f 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
-@@ -4171,6 +4171,18 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
+@@ -4191,6 +4191,18 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
        WebURLRequestToResourceType(request)));
  }
  
@@ -367,10 +367,10 @@ index 32e04de..5d4fda8 100644
    Send(new FrameHostMsg_DidDisplayInsecureContent(routing_id_));
  }
 diff --git a/content/renderer/render_frame_impl.h b/content/renderer/render_frame_impl.h
-index faf1288..b124dea 100644
+index 9147590..23da268 100644
 --- a/content/renderer/render_frame_impl.h
 +++ b/content/renderer/render_frame_impl.h
-@@ -567,6 +567,9 @@ class CONTENT_EXPORT RenderFrameImpl
+@@ -568,6 +568,9 @@ class CONTENT_EXPORT RenderFrameImpl
    void didLoadResourceFromMemoryCache(
        const blink::WebURLRequest& request,
        const blink::WebURLResponse& response) override;
@@ -1952,7 +1952,7 @@ literal 0
 HcmV?d00001
 
 diff --git a/third_party/WebKit/Source/bindings/core/v8/BUILD.gn b/third_party/WebKit/Source/bindings/core/v8/BUILD.gn
-index 63c1080..8cb1ffb 100644
+index 84b5dec..a73f49a 100644
 --- a/third_party/WebKit/Source/bindings/core/v8/BUILD.gn
 +++ b/third_party/WebKit/Source/bindings/core/v8/BUILD.gn
 @@ -58,6 +58,8 @@ generated_core_dictionary_files = [
@@ -1965,7 +1965,7 @@ index 63c1080..8cb1ffb 100644
    "$blink_core_output_dir/events/EventInit.h",
    "$blink_core_output_dir/events/EventListenerOptions.cpp",
 diff --git a/third_party/WebKit/Source/core/BUILD.gn b/third_party/WebKit/Source/core/BUILD.gn
-index 8207107..939d979 100644
+index f034954..9f5bb3eb 100644
 --- a/third_party/WebKit/Source/core/BUILD.gn
 +++ b/third_party/WebKit/Source/core/BUILD.gn
 @@ -271,6 +271,7 @@ generate_event_interfaces("core_event_interfaces") {
@@ -2291,7 +2291,7 @@ index 8598cce..c3eb26d 100644
      [NewObject, DoNotTestNewObject, CustomElementCallbacks, RaisesException] Element createElementNS(DOMString? namespaceURI, DOMString qualifiedName);
      [NewObject] DocumentFragment createDocumentFragment();
 diff --git a/third_party/WebKit/Source/core/events/BUILD.gn b/third_party/WebKit/Source/core/events/BUILD.gn
-index 778429d..0584a19 100644
+index 0acc1a7..dff0511 100644
 --- a/third_party/WebKit/Source/core/events/BUILD.gn
 +++ b/third_party/WebKit/Source/core/events/BUILD.gn
 @@ -30,6 +30,8 @@ blink_core_sources("events") {
@@ -2543,7 +2543,7 @@ index 0000000..966ff22
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index ff7feaa..2442d2d 100644
+index e106030..06991d7 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -41,6 +41,7 @@
@@ -2554,7 +2554,7 @@ index ff7feaa..2442d2d 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2626,6 +2627,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+@@ -2627,6 +2628,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
              // This was required for slimming paint v1 but is only temporarily
              // needed for slimming paint v2.
              view.compositor()->updateIfNeededRecursive();
@@ -2571,10 +2571,10 @@ index ff7feaa..2442d2d 100644
  
              DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index 0a9bec8..0c91f97 100644
+index 2188eef..d7b8167 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1289,6 +1289,10 @@ public:
+@@ -1294,6 +1294,10 @@ public:
          RTCPeerConnectionCreateOfferOptionsOfferToReceive = 1553,
          DragAndDropScrollStart = 1554,
          PresentationConnectionListConnectionAvailableEventListener = 1555,
@@ -2627,7 +2627,7 @@ index c8197c8..f3a05d5 100644
      return reasons;
  }
 diff --git a/third_party/WebKit/Source/core/loader/EmptyClients.h b/third_party/WebKit/Source/core/loader/EmptyClients.h
-index 17fc91e..e45fe0f 100644
+index e1eeff8..0b44e1f 100644
 --- a/third_party/WebKit/Source/core/loader/EmptyClients.h
 +++ b/third_party/WebKit/Source/core/loader/EmptyClients.h
 @@ -240,6 +240,9 @@ public:
@@ -2830,10 +2830,10 @@ index 2d6c7b4..a507120 100644
      void didRunInsecureContent(SecurityOrigin*, const KURL& insecureURL) override;
      void didDetectXSS(const KURL&, bool didBlockEntirePage) override;
 diff --git a/third_party/WebKit/public/web/WebFrameClient.h b/third_party/WebKit/public/web/WebFrameClient.h
-index e9efceb..93378fa 100644
+index 6f9ff25..10ab701 100644
 --- a/third_party/WebKit/public/web/WebFrameClient.h
 +++ b/third_party/WebKit/public/web/WebFrameClient.h
-@@ -461,6 +461,10 @@ public:
+@@ -469,6 +469,10 @@ public:
      virtual void didLoadResourceFromMemoryCache(
          const WebURLRequest&, const WebURLResponse&) { }
  
