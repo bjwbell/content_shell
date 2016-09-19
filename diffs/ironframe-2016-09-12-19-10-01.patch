@@ -1,4 +1,4 @@
-From f4c52c3f6a839a34c0ec310bca0ba7043b12bce3 Mon Sep 17 00:00:00 2001
+From 9a7150e678b304da0ede6be56c896605650029c3 Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sun, 11 Sep 2016 15:59:36 -0400
 Subject: [PATCH] Ironframe - Add RequestVisibility
@@ -34,8 +34,8 @@ Subject: [PATCH] Ironframe - Add RequestVisibility
  .../Source/core/events/RequestVisibilityEvent.h    |  84 +++++++++++
  .../Source/core/events/RequestVisibilityEvent.idl  |  35 +++++
  .../core/events/RequestVisibilityEventInit.idl     |   7 +
- third_party/WebKit/Source/core/frame/FrameView.cpp |  10 ++
- third_party/WebKit/Source/core/frame/UseCounter.h  |   4 +
+ third_party/WebKit/Source/core/frame/FrameView.cpp |   9 ++
+ third_party/WebKit/Source/core/frame/UseCounter.h  |   3 +
  .../WebKit/Source/core/layout/LayoutView.cpp       |   7 +
  .../layout/compositing/CompositingReasonFinder.cpp |   4 +
  .../WebKit/Source/core/loader/EmptyClients.h       |   3 +
@@ -46,7 +46,7 @@ Subject: [PATCH] Ironframe - Add RequestVisibility
  .../WebKit/Source/web/FrameLoaderClientImpl.cpp    |  18 +++
  .../WebKit/Source/web/FrameLoaderClientImpl.h      |   3 +
  third_party/WebKit/public/web/WebFrameClient.h     |   4 +
- 42 files changed, 764 insertions(+), 7 deletions(-)
+ 42 files changed, 762 insertions(+), 7 deletions(-)
  create mode 100644 third_party/WebKit/LayoutTests/http/tests/ironframe/ironframe.html
  create mode 100644 third_party/WebKit/LayoutTests/http/tests/ironframe/resources/openskies3.html
  create mode 100644 third_party/WebKit/LayoutTests/http/tests/ironframe/resources/paypal.png
@@ -58,7 +58,7 @@ Subject: [PATCH] Ironframe - Add RequestVisibility
  create mode 100644 third_party/WebKit/Source/core/events/RequestVisibilityEventInit.idl
 
 diff --git a/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc b/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc
-index 9c43bc7..495938f 100644
+index 03a141d..8342391 100644
 --- a/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc
 +++ b/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.cc
 @@ -79,6 +79,24 @@ ChromeToolbarModelDelegate::GetSecurityLevel() const {
@@ -87,7 +87,7 @@ index 9c43bc7..495938f 100644
      const {
    content::NavigationEntry* entry = GetNavigationEntry();
 diff --git a/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.h b/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.h
-index 42806b9..711c6f4 100644
+index 4a377e8..b3f733f 100644
 --- a/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.h
 +++ b/chrome/browser/ui/toolbar/chrome_toolbar_model_delegate.h
 @@ -34,6 +34,8 @@ class ChromeToolbarModelDelegate : public ToolbarModelDelegate {
@@ -97,8 +97,8 @@ index 42806b9..711c6f4 100644
 +  int GetIronframeStatus() const override;
 +  std::string GetIronframeOrigin() const override;
    scoped_refptr<net::X509Certificate> GetCertificate() const override;
+   bool FailsMalwareCheck() const override;
  
-   // Returns the navigation controller used to retrieve the navigation entry
 diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
 index 1946e31..0f22f20 100644
 --- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
@@ -170,7 +170,7 @@ index 19c60d1..145b659 100644
    // based on the current URL.  When search term replacement is active, this
    // returns a search icon.  This doesn't cover specialized icons while the
 diff --git a/components/toolbar/toolbar_model_delegate.h b/components/toolbar/toolbar_model_delegate.h
-index 4bec77c..859d28c 100644
+index 1fb8e83..b530cb6 100644
 --- a/components/toolbar/toolbar_model_delegate.h
 +++ b/components/toolbar/toolbar_model_delegate.h
 @@ -40,6 +40,9 @@ class ToolbarModelDelegate {
@@ -184,7 +184,7 @@ index 4bec77c..859d28c 100644
    virtual scoped_refptr<net::X509Certificate> GetCertificate() const = 0;
  
 diff --git a/components/toolbar/toolbar_model_impl.cc b/components/toolbar/toolbar_model_impl.cc
-index 47388f7..862df4b 100644
+index 16e25b0..d93b91f 100644
 --- a/components/toolbar/toolbar_model_impl.cc
 +++ b/components/toolbar/toolbar_model_impl.cc
 @@ -70,6 +70,21 @@ SecurityStateModel::SecurityLevel ToolbarModelImpl::GetSecurityLevel(
@@ -225,10 +225,10 @@ index c60177e..725a234 100644
    gfx::VectorIconId GetVectorIcon() const override;
    base::string16 GetSecureVerboseText() const override;
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 683bd71..32fccce 100644
+index 4d9458a..99e4cae 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -692,6 +692,12 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
+@@ -696,6 +696,12 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
                          OnFirstVisuallyNonEmptyPaint)
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidLoadResourceFromMemoryCache,
                          OnDidLoadResourceFromMemoryCache)
@@ -241,7 +241,7 @@ index 683bd71..32fccce 100644
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidDisplayInsecureContent,
                          OnDidDisplayInsecureContent)
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidRunInsecureContent,
-@@ -1186,6 +1192,10 @@ const std::string& WebContentsImpl::GetEncoding() const {
+@@ -1200,6 +1206,10 @@ const std::string& WebContentsImpl::GetEncoding() const {
    return canonical_encoding_;
  }
  
@@ -252,7 +252,7 @@ index 683bd71..32fccce 100644
  void WebContentsImpl::IncrementCapturerCount(const gfx::Size& capture_size) {
    DCHECK(!is_being_destroyed_);
    ++capturer_count_;
-@@ -3487,6 +3497,27 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
+@@ -3501,6 +3511,27 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
    }
  }
  
@@ -281,10 +281,10 @@ index 683bd71..32fccce 100644
    RecordAction(base::UserMetricsAction("SSL.DisplayedInsecureContent"));
    displayed_insecure_content_ = true;
 diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
-index 829f024..3967a62 100644
+index e4b786f..807620e 100644
 --- a/content/browser/web_contents/web_contents_impl.h
 +++ b/content/browser/web_contents/web_contents_impl.h
-@@ -296,6 +296,8 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -306,6 +306,8 @@ class CONTENT_EXPORT WebContentsImpl
    uint64_t GetUploadSize() const override;
    uint64_t GetUploadPosition() const override;
    const std::string& GetEncoding() const override;
@@ -293,7 +293,7 @@ index 829f024..3967a62 100644
    void IncrementCapturerCount(const gfx::Size& capture_size) override;
    void DecrementCapturerCount() override;
    int GetCapturerCount() const override;
-@@ -918,6 +920,9 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -932,6 +934,9 @@ class CONTENT_EXPORT WebContentsImpl
                                          const std::string& http_request,
                                          const std::string& mime_type,
                                          ResourceType resource_type);
@@ -303,7 +303,7 @@ index 829f024..3967a62 100644
    void OnDidDisplayInsecureContent();
    void OnDidRunInsecureContent(const GURL& security_origin,
                                 const GURL& target_url);
-@@ -1208,6 +1213,10 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -1228,6 +1233,10 @@ class CONTENT_EXPORT WebContentsImpl
    // The canonicalized character encoding.
    std::string canonical_encoding_;
  
@@ -344,10 +344,10 @@ index 163a2ad..071d515 100644
  
    // Indicates whether the WebContents is being captured (e.g., for screenshots
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 7f7349a..e4c616f 100644
+index 6fba008..2df0bd6 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
-@@ -4191,6 +4191,18 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
+@@ -4209,6 +4209,18 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
        WebURLRequestToResourceType(request)));
  }
  
@@ -367,10 +367,10 @@ index 7f7349a..e4c616f 100644
    Send(new FrameHostMsg_DidDisplayInsecureContent(routing_id_));
  }
 diff --git a/content/renderer/render_frame_impl.h b/content/renderer/render_frame_impl.h
-index 9147590..23da268 100644
+index 30d6ffa..82dd9d6 100644
 --- a/content/renderer/render_frame_impl.h
 +++ b/content/renderer/render_frame_impl.h
-@@ -568,6 +568,9 @@ class CONTENT_EXPORT RenderFrameImpl
+@@ -578,6 +578,9 @@ class CONTENT_EXPORT RenderFrameImpl
    void didLoadResourceFromMemoryCache(
        const blink::WebURLRequest& request,
        const blink::WebURLResponse& response) override;
@@ -1952,10 +1952,10 @@ literal 0
 HcmV?d00001
 
 diff --git a/third_party/WebKit/Source/bindings/core/v8/BUILD.gn b/third_party/WebKit/Source/bindings/core/v8/BUILD.gn
-index 84b5dec..a73f49a 100644
+index 7b10b33..8769eeb 100644
 --- a/third_party/WebKit/Source/bindings/core/v8/BUILD.gn
 +++ b/third_party/WebKit/Source/bindings/core/v8/BUILD.gn
-@@ -58,6 +58,8 @@ generated_core_dictionary_files = [
+@@ -60,6 +60,8 @@ generated_core_dictionary_files = [
    "$blink_core_output_dir/events/DragEventInit.h",
    "$blink_core_output_dir/events/ErrorEventInit.cpp",
    "$blink_core_output_dir/events/ErrorEventInit.h",
@@ -1965,10 +1965,10 @@ index 84b5dec..a73f49a 100644
    "$blink_core_output_dir/events/EventInit.h",
    "$blink_core_output_dir/events/EventListenerOptions.cpp",
 diff --git a/third_party/WebKit/Source/core/BUILD.gn b/third_party/WebKit/Source/core/BUILD.gn
-index f034954..9f5bb3eb 100644
+index 149b33a..6de9f30 100644
 --- a/third_party/WebKit/Source/core/BUILD.gn
 +++ b/third_party/WebKit/Source/core/BUILD.gn
-@@ -271,6 +271,7 @@ generate_event_interfaces("core_event_interfaces") {
+@@ -274,6 +274,7 @@ generate_event_interfaces("core_event_interfaces") {
      "events/CustomEvent.idl",
      "events/DragEvent.idl",
      "events/ErrorEvent.idl",
@@ -1977,10 +1977,10 @@ index f034954..9f5bb3eb 100644
      "events/FocusEvent.idl",
      "events/HashChangeEvent.idl",
 diff --git a/third_party/WebKit/Source/core/core_idl_files.gni b/third_party/WebKit/Source/core/core_idl_files.gni
-index 4617cbb..aa7d686 100644
+index e37079e..b15b8c2 100644
 --- a/third_party/WebKit/Source/core/core_idl_files.gni
 +++ b/third_party/WebKit/Source/core/core_idl_files.gni
-@@ -155,6 +155,7 @@ core_idl_files = get_path_info([
+@@ -154,6 +154,7 @@ core_idl_files = get_path_info([
                                   "events/CustomEvent.idl",
                                   "events/DragEvent.idl",
                                   "events/ErrorEvent.idl",
@@ -1997,7 +1997,7 @@ index 4617cbb..aa7d686 100644
                      "events/EventListenerOptions.idl",
                      "events/EventModifierInit.idl",
 diff --git a/third_party/WebKit/Source/core/dom/Document.cpp b/third_party/WebKit/Source/core/dom/Document.cpp
-index 19a0e0d..2ace2b2 100644
+index 6be3a6b..bf6147f 100644
 --- a/third_party/WebKit/Source/core/dom/Document.cpp
 +++ b/third_party/WebKit/Source/core/dom/Document.cpp
 @@ -26,6 +26,7 @@
@@ -2050,7 +2050,7 @@ index 19a0e0d..2ace2b2 100644
      , m_wellFormed(false)
      , m_printing(false)
      , m_wasPrinting(false)
-@@ -3942,6 +3952,13 @@ void Document::enqueueAnimationFrameEvent(Event* event)
+@@ -3940,6 +3950,13 @@ void Document::enqueueAnimationFrameEvent(Event* event)
      ensureScriptedAnimationController().enqueueEvent(event);
  }
  
@@ -2064,7 +2064,7 @@ index 19a0e0d..2ace2b2 100644
  void Document::enqueueUniqueAnimationFrameEvent(Event* event)
  {
      ensureScriptedAnimationController().enqueuePerFrameEvent(event);
-@@ -5834,6 +5851,149 @@ bool Document::hasFocus() const
+@@ -5832,6 +5849,149 @@ bool Document::hasFocus() const
      return page() && page()->focusController().isDocumentFocused(*this);
  }
  
@@ -2214,7 +2214,7 @@ index 19a0e0d..2ace2b2 100644
  template<unsigned type>
  bool shouldInvalidateNodeListCachesForAttr(const HeapHashSet<WeakMember<const LiveNodeListBase>> nodeLists[], const QualifiedName& attrName)
  {
-@@ -6042,6 +6202,7 @@ DEFINE_TRACE(Document)
+@@ -6040,6 +6200,7 @@ DEFINE_TRACE(Document)
      visitor->trace(m_snapCoordinator);
      visitor->trace(m_resizeObserverController);
      visitor->trace(m_propertyRegistry);
@@ -2223,7 +2223,7 @@ index 19a0e0d..2ace2b2 100644
      TreeScope::trace(visitor);
      ContainerNode::trace(visitor);
 diff --git a/third_party/WebKit/Source/core/dom/Document.h b/third_party/WebKit/Source/core/dom/Document.h
-index b16dc30..11aaeb5 100644
+index 748444a..56f6fd8 100644
 --- a/third_party/WebKit/Source/core/dom/Document.h
 +++ b/third_party/WebKit/Source/core/dom/Document.h
 @@ -177,6 +177,7 @@ struct AnnotatedRegionValue;
@@ -2234,7 +2234,7 @@ index b16dc30..11aaeb5 100644
  using MouseEventWithHitTestResults = EventWithHitTestResults<PlatformMouseEvent>;
  using ExceptionCode = int;
  
-@@ -725,6 +726,8 @@ public:
+@@ -726,6 +727,8 @@ public:
      ResizeObserverController* resizeObserverController() const { return m_resizeObserverController; }
      ResizeObserverController& ensureResizeObserverController();
  
@@ -2243,7 +2243,7 @@ index b16dc30..11aaeb5 100644
      void updateViewportDescription();
  
      // Returns the owning element in the parent document. Returns nullptr if
-@@ -940,6 +943,7 @@ public:
+@@ -941,6 +944,7 @@ public:
      void enqueueMediaQueryChangeListeners(HeapVector<Member<MediaQueryListListener>>&);
      void enqueueVisualViewportScrollEvent();
      void enqueueVisualViewportResizeEvent();
@@ -2251,7 +2251,7 @@ index b16dc30..11aaeb5 100644
  
      void dispatchEventsForPrinting();
  
-@@ -1107,6 +1111,11 @@ public:
+@@ -1108,6 +1112,11 @@ public:
      void onVisibilityMaybeChanged(bool visible);
  
      PropertyRegistry* propertyRegistry();
@@ -2263,7 +2263,7 @@ index b16dc30..11aaeb5 100644
  
  protected:
      Document(const DocumentInit&, DocumentClassFlags = DefaultDocumentClass);
-@@ -1220,6 +1229,10 @@ private:
+@@ -1221,6 +1230,10 @@ private:
      Member<DocumentParser> m_parser;
      Member<ContextFeatures> m_contextFeatures;
  
@@ -2291,7 +2291,7 @@ index 8598cce..c3eb26d 100644
      [NewObject, DoNotTestNewObject, CustomElementCallbacks, RaisesException] Element createElementNS(DOMString? namespaceURI, DOMString qualifiedName);
      [NewObject] DocumentFragment createDocumentFragment();
 diff --git a/third_party/WebKit/Source/core/events/BUILD.gn b/third_party/WebKit/Source/core/events/BUILD.gn
-index 0acc1a7..dff0511 100644
+index 6768ebb..f34189a 100644
 --- a/third_party/WebKit/Source/core/events/BUILD.gn
 +++ b/third_party/WebKit/Source/core/events/BUILD.gn
 @@ -30,6 +30,8 @@ blink_core_sources("events") {
@@ -2543,10 +2543,10 @@ index 0000000..966ff22
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index e106030..06991d7 100644
+index 2d787cd..fd0004a 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
-@@ -41,6 +41,7 @@
+@@ -42,6 +42,7 @@
  #include "core/events/ErrorEvent.h"
  #include "core/fetch/ResourceFetcher.h"
  #include "core/frame/EventHandlerRegistry.h"
@@ -2554,11 +2554,10 @@ index e106030..06991d7 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2627,6 +2628,15 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
-             // This was required for slimming paint v1 but is only temporarily
-             // needed for slimming paint v2.
-             view.compositor()->updateIfNeededRecursive();
-+
+@@ -2660,6 +2661,14 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+                 forAllNonThrottledFrameViews([](FrameView& frameView) { frameView.layoutView()->commitPendingSelection(); });
+             }
+ 
 +	    Document *d = frame().document();
 +	    VisibilityDocumentSet *ds = d->requestedVisibility();
 +	    if (ds != nullptr) {
@@ -2568,25 +2567,24 @@ index e106030..06991d7 100644
 +	    }
 +
              scrollContentsIfNeededRecursive();
+             DCHECK(RuntimeEnabledFeatures::slimmingPaintInvalidationEnabled() || lifecycle().state() >= DocumentLifecycle::CompositingClean);
  
-             DCHECK(lifecycle().state() >= DocumentLifecycle::CompositingClean);
 diff --git a/third_party/WebKit/Source/core/frame/UseCounter.h b/third_party/WebKit/Source/core/frame/UseCounter.h
-index 2188eef..d7b8167 100644
+index d688683..c233c28 100644
 --- a/third_party/WebKit/Source/core/frame/UseCounter.h
 +++ b/third_party/WebKit/Source/core/frame/UseCounter.h
-@@ -1294,6 +1294,10 @@ public:
-         RTCPeerConnectionCreateOfferOptionsOfferToReceive = 1553,
-         DragAndDropScrollStart = 1554,
-         PresentationConnectionListConnectionAvailableEventListener = 1555,
+@@ -1318,6 +1318,9 @@ public:
+         WebAudioWaveShaperNode = 1577,
+         CSSZoomReset = 1578,
+         CSSZoomDocument = 1579,
 +
 +        DocumentCreateEventRequestedVisibilityEvent = 1600,
-+
 +
          // Add new features immediately above this line. Don't change assigned
          // numbers of any item, and don't reuse removed slots.
          // Also, run update_use_counter_feature_enum.py in chromium/src/tools/metrics/histograms/
 diff --git a/third_party/WebKit/Source/core/layout/LayoutView.cpp b/third_party/WebKit/Source/core/layout/LayoutView.cpp
-index 551f865..9d262fe 100644
+index bb9eb0e..e92bdd6 100644
 --- a/third_party/WebKit/Source/core/layout/LayoutView.cpp
 +++ b/third_party/WebKit/Source/core/layout/LayoutView.cpp
 @@ -24,7 +24,9 @@
@@ -2627,10 +2625,10 @@ index c8197c8..f3a05d5 100644
      return reasons;
  }
 diff --git a/third_party/WebKit/Source/core/loader/EmptyClients.h b/third_party/WebKit/Source/core/loader/EmptyClients.h
-index e1eeff8..0b44e1f 100644
+index 86480a2..e267f92 100644
 --- a/third_party/WebKit/Source/core/loader/EmptyClients.h
 +++ b/third_party/WebKit/Source/core/loader/EmptyClients.h
-@@ -240,6 +240,9 @@ public:
+@@ -241,6 +241,9 @@ public:
      void transitionToCommittedForNewPage() override {}
  
      bool navigateBackForward(int offset) const override { return false; }
