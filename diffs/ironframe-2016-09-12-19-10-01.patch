@@ -1,4 +1,4 @@
-From 9a7150e678b304da0ede6be56c896605650029c3 Mon Sep 17 00:00:00 2001
+From 476f8adaa22a7aa94c91c1184825da6d00cb0f5b Mon Sep 17 00:00:00 2001
 From: JW Bell <bjwbell@gmail.com>
 Date: Sun, 11 Sep 2016 15:59:36 -0400
 Subject: [PATCH] Ironframe - Add RequestVisibility
