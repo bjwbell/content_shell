@@ -125,7 +125,7 @@ index 1fb8e83..b530cb6 100644
    virtual scoped_refptr<net::X509Certificate> GetCertificate() const = 0;
  
 diff --git a/components/toolbar/toolbar_model_impl.cc b/components/toolbar/toolbar_model_impl.cc
-index 16e25b0..d93b91f 100644
+index ce04602..f1b77b3 100644
 --- a/components/toolbar/toolbar_model_impl.cc
 +++ b/components/toolbar/toolbar_model_impl.cc
 @@ -70,6 +70,21 @@ SecurityStateModel::SecurityLevel ToolbarModelImpl::GetSecurityLevel(
@@ -496,10 +496,10 @@ index 7b10b33..8769eeb 100644
    "$blink_core_output_dir/events/EventInit.h",
    "$blink_core_output_dir/events/EventListenerOptions.cpp",
 diff --git a/third_party/WebKit/Source/core/BUILD.gn b/third_party/WebKit/Source/core/BUILD.gn
-index 149b33a..6de9f30 100644
+index 8e267ba..d39ca0c 100644
 --- a/third_party/WebKit/Source/core/BUILD.gn
 +++ b/third_party/WebKit/Source/core/BUILD.gn
-@@ -274,6 +274,7 @@ generate_event_interfaces("core_event_interfaces") {
+@@ -272,6 +272,7 @@ generate_event_interfaces("core_event_interfaces") {
      "events/CustomEvent.idl",
      "events/DragEvent.idl",
      "events/ErrorEvent.idl",
@@ -508,7 +508,7 @@ index 149b33a..6de9f30 100644
      "events/FocusEvent.idl",
      "events/HashChangeEvent.idl",
 diff --git a/third_party/WebKit/Source/core/core_idl_files.gni b/third_party/WebKit/Source/core/core_idl_files.gni
-index e37079e..b15b8c2 100644
+index 8650261..f5b040db 100644
 --- a/third_party/WebKit/Source/core/core_idl_files.gni
 +++ b/third_party/WebKit/Source/core/core_idl_files.gni
 @@ -154,6 +154,7 @@ core_idl_files = get_path_info([
@@ -1074,7 +1074,7 @@ index 0000000..966ff22
 +    DOMString message;
 +};
 diff --git a/third_party/WebKit/Source/core/frame/FrameView.cpp b/third_party/WebKit/Source/core/frame/FrameView.cpp
-index 2d787cd..fd0004a 100644
+index 83321cd..45d8750 100644
 --- a/third_party/WebKit/Source/core/frame/FrameView.cpp
 +++ b/third_party/WebKit/Source/core/frame/FrameView.cpp
 @@ -42,6 +42,7 @@
@@ -1085,7 +1085,7 @@ index 2d787cd..fd0004a 100644
  #include "core/frame/FrameHost.h"
  #include "core/frame/LocalFrame.h"
  #include "core/frame/Location.h"
-@@ -2660,6 +2661,14 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
+@@ -2666,6 +2667,14 @@ void FrameView::updateLifecyclePhasesInternal(DocumentLifecycle::LifecycleState
                  forAllNonThrottledFrameViews([](FrameView& frameView) { frameView.layoutView()->commitPendingSelection(); });
              }
  
