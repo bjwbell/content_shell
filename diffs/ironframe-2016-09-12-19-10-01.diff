@@ -41,10 +41,10 @@ index 4a377e8..b3f733f 100644
    bool FailsMalwareCheck() const override;
  
 diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-index 1946e31..0f22f20 100644
+index 3eb2653..3d9a1b6 100644
 --- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
 +++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-@@ -590,7 +590,9 @@ void LocationBarView::Layout() {
+@@ -612,7 +612,9 @@ void LocationBarView::Layout() {
    const int vertical_padding = GetVerticalEdgeThicknessWithPadding();
    const int location_height = std::max(height() - (vertical_padding * 2), 0);
  
@@ -55,7 +55,7 @@ index 1946e31..0f22f20 100644
    location_icon_view_->SetBackground(false);
    if (ShouldShowKeywordBubble()) {
      leading_decorations.AddDecoration(vertical_padding, location_height, true,
-@@ -613,7 +615,9 @@ void LocationBarView::Layout() {
+@@ -635,7 +637,9 @@ void LocationBarView::Layout() {
        }
      }
    } else if (ShouldShowSecurityChip()) {
@@ -66,7 +66,7 @@ index 1946e31..0f22f20 100644
      location_icon_view_->SetBackground(true);
      // The largest fraction of the omnibox that can be taken by the EV bubble.
      const double kMaxBubbleFraction = 0.5;
-@@ -861,6 +865,17 @@ void LocationBarView::RefreshLocationIcon() {
+@@ -884,6 +888,17 @@ void LocationBarView::RefreshLocationIcon() {
    if (ui::MaterialDesignController::IsModeMaterial()) {
      security_state::SecurityStateModel::SecurityLevel security_level =
          GetToolbarModel()->GetSecurityLevel(false);
@@ -84,7 +84,7 @@ index 1946e31..0f22f20 100644
      SkColor icon_color =
          (security_level == security_state::SecurityStateModel::NONE)
              ? color_utils::DeriveDefaultIconColor(GetColor(TEXT))
-@@ -1048,6 +1063,11 @@ bool LocationBarView::ShouldShowKeywordBubble() const {
+@@ -1071,6 +1086,11 @@ bool LocationBarView::ShouldShowKeywordBubble() const {
  }
  
  bool LocationBarView::ShouldShowEVBubble() const {
@@ -94,8 +94,8 @@ index 1946e31..0f22f20 100644
 +  }
 +
    return (GetToolbarModel()->GetSecurityLevel(false) ==
-           security_state::SecurityStateModel::EV_SECURE);
- }
+           security_state::SecurityStateModel::EV_SECURE) &&
+          should_show_secure_state_;
 diff --git a/components/toolbar/toolbar_model.h b/components/toolbar/toolbar_model.h
 index 19c60d1..145b659 100644
 --- a/components/toolbar/toolbar_model.h
@@ -166,10 +166,10 @@ index c60177e..725a234 100644
    gfx::VectorIconId GetVectorIcon() const override;
    base::string16 GetSecureVerboseText() const override;
 diff --git a/content/browser/web_contents/web_contents_impl.cc b/content/browser/web_contents/web_contents_impl.cc
-index 4d9458a..99e4cae 100644
+index 10187d1..71cc6cd 100644
 --- a/content/browser/web_contents/web_contents_impl.cc
 +++ b/content/browser/web_contents/web_contents_impl.cc
-@@ -696,6 +696,12 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
+@@ -698,6 +698,12 @@ bool WebContentsImpl::OnMessageReceived(RenderViewHost* render_view_host,
                          OnFirstVisuallyNonEmptyPaint)
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidLoadResourceFromMemoryCache,
                          OnDidLoadResourceFromMemoryCache)
@@ -182,7 +182,7 @@ index 4d9458a..99e4cae 100644
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidDisplayInsecureContent,
                          OnDidDisplayInsecureContent)
      IPC_MESSAGE_HANDLER(FrameHostMsg_DidRunInsecureContent,
-@@ -1200,6 +1206,10 @@ const std::string& WebContentsImpl::GetEncoding() const {
+@@ -1202,6 +1208,10 @@ const std::string& WebContentsImpl::GetEncoding() const {
    return canonical_encoding_;
  }
  
@@ -193,7 +193,7 @@ index 4d9458a..99e4cae 100644
  void WebContentsImpl::IncrementCapturerCount(const gfx::Size& capture_size) {
    DCHECK(!is_being_destroyed_);
    ++capturer_count_;
-@@ -3501,6 +3511,27 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
+@@ -3503,6 +3513,27 @@ void WebContentsImpl::OnDidLoadResourceFromMemoryCache(
    }
  }
  
@@ -222,10 +222,10 @@ index 4d9458a..99e4cae 100644
    RecordAction(base::UserMetricsAction("SSL.DisplayedInsecureContent"));
    displayed_insecure_content_ = true;
 diff --git a/content/browser/web_contents/web_contents_impl.h b/content/browser/web_contents/web_contents_impl.h
-index e4b786f..807620e 100644
+index 935dc7d..1063645 100644
 --- a/content/browser/web_contents/web_contents_impl.h
 +++ b/content/browser/web_contents/web_contents_impl.h
-@@ -306,6 +306,8 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -310,6 +310,8 @@ class CONTENT_EXPORT WebContentsImpl
    uint64_t GetUploadSize() const override;
    uint64_t GetUploadPosition() const override;
    const std::string& GetEncoding() const override;
@@ -234,7 +234,7 @@ index e4b786f..807620e 100644
    void IncrementCapturerCount(const gfx::Size& capture_size) override;
    void DecrementCapturerCount() override;
    int GetCapturerCount() const override;
-@@ -932,6 +934,9 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -937,6 +939,9 @@ class CONTENT_EXPORT WebContentsImpl
                                          const std::string& http_request,
                                          const std::string& mime_type,
                                          ResourceType resource_type);
@@ -244,7 +244,7 @@ index e4b786f..807620e 100644
    void OnDidDisplayInsecureContent();
    void OnDidRunInsecureContent(const GURL& security_origin,
                                 const GURL& target_url);
-@@ -1228,6 +1233,10 @@ class CONTENT_EXPORT WebContentsImpl
+@@ -1233,6 +1238,10 @@ class CONTENT_EXPORT WebContentsImpl
    // The canonicalized character encoding.
    std::string canonical_encoding_;
  
@@ -271,10 +271,10 @@ index 64ef075..6724bdd 100644
  IPC_MESSAGE_ROUTED0(FrameHostMsg_DidDisplayInsecureContent)
  
 diff --git a/content/public/browser/web_contents.h b/content/public/browser/web_contents.h
-index 163a2ad..071d515 100644
+index 37b3bf2..5a841f2 100644
 --- a/content/public/browser/web_contents.h
 +++ b/content/public/browser/web_contents.h
-@@ -364,6 +364,9 @@ class WebContents : public PageNavigator,
+@@ -368,6 +368,9 @@ class WebContents : public PageNavigator,
    // Returns the character encoding of the page.
    virtual const std::string& GetEncoding() const = 0;
  
@@ -285,10 +285,10 @@ index 163a2ad..071d515 100644
  
    // Indicates whether the WebContents is being captured (e.g., for screenshots
 diff --git a/content/renderer/render_frame_impl.cc b/content/renderer/render_frame_impl.cc
-index 6fba008..2df0bd6 100644
+index 48f0183..897e49e 100644
 --- a/content/renderer/render_frame_impl.cc
 +++ b/content/renderer/render_frame_impl.cc
-@@ -4209,6 +4209,18 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
+@@ -4218,6 +4218,18 @@ void RenderFrameImpl::didLoadResourceFromMemoryCache(
        WebURLRequestToResourceType(request)));
  }
  
@@ -483,7 +483,7 @@ new file mode 100644
 index 0000000..6c950c8
 Binary files /dev/null and b/third_party/WebKit/LayoutTests/http/tests/ironframe/tile.gif differ
 diff --git a/third_party/WebKit/Source/bindings/core/v8/BUILD.gn b/third_party/WebKit/Source/bindings/core/v8/BUILD.gn
-index 7b10b33..8769eeb 100644
+index 32ae72c..37d4316 100644
 --- a/third_party/WebKit/Source/bindings/core/v8/BUILD.gn
 +++ b/third_party/WebKit/Source/bindings/core/v8/BUILD.gn
 @@ -60,6 +60,8 @@ generated_core_dictionary_files = [
@@ -496,10 +496,10 @@ index 7b10b33..8769eeb 100644
    "$blink_core_output_dir/events/EventInit.h",
    "$blink_core_output_dir/events/EventListenerOptions.cpp",
 diff --git a/third_party/WebKit/Source/core/BUILD.gn b/third_party/WebKit/Source/core/BUILD.gn
-index 8e267ba..d39ca0c 100644
+index 51a4b50..5a6317d 100644
 --- a/third_party/WebKit/Source/core/BUILD.gn
 +++ b/third_party/WebKit/Source/core/BUILD.gn
-@@ -272,6 +272,7 @@ generate_event_interfaces("core_event_interfaces") {
+@@ -274,6 +274,7 @@ generate_event_interfaces("core_event_interfaces") {
      "events/CustomEvent.idl",
      "events/DragEvent.idl",
      "events/ErrorEvent.idl",
@@ -508,7 +508,7 @@ index 8e267ba..d39ca0c 100644
      "events/FocusEvent.idl",
      "events/HashChangeEvent.idl",
 diff --git a/third_party/WebKit/Source/core/core_idl_files.gni b/third_party/WebKit/Source/core/core_idl_files.gni
-index 8650261..f5b040db 100644
+index e514f46..8364c51 100644
 --- a/third_party/WebKit/Source/core/core_idl_files.gni
 +++ b/third_party/WebKit/Source/core/core_idl_files.gni
 @@ -154,6 +154,7 @@ core_idl_files = get_path_info([
